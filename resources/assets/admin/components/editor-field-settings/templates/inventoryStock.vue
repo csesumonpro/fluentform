@@ -61,7 +61,7 @@
                 return  false;
             },
             isInventoryEnabled(){
-                if ( this.editItem.settings.inventory_type != false){
+                if ( this.editItem.settings.inventory_type == 'simple' ){
                     return true;
                 }
                 return  false;

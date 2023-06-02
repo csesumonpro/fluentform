@@ -33,7 +33,7 @@ use FluentForm\Framework\Helpers\ArrayHelper;
             <div class="ff_settings_sidebar ff_layout_section_sidebar">
                 <ul class="ff_settings_list ff_list_button">
                     <li class="ff_list_button_item has_sub_menu">
-                        <a 
+                        <a
                             class="ff_list_button_link"
                             href="#">
                             <?php echo __('General'); ?>
@@ -152,7 +152,7 @@ use FluentForm\Framework\Helpers\ArrayHelper;
                             href="<?php echo esc_url(Helper::makeMenuUrl('fluent_forms_settings', [
                                 'hash' => 'managers'
                             ])); ?>">
-                            <?php echo __('Managers'); ?>
+                            <?php echo __('Managers','fluentform'); ?>
                         </a>
                     </li>
                     
@@ -166,7 +166,23 @@ use FluentForm\Framework\Helpers\ArrayHelper;
                             <?php echo __('Double Opt-in', 'fluentform'); ?>
                         </a>
                     </li>
-                    
+                    <?php
+                    if (ArrayHelper::exists($components, 'InventoryManager')) { ?>
+                        <li class="<?php echo esc_attr(Helper::getHtmlElementClass('inventory', $currentComponent)); ?> ff_list_button_item">
+                            <a
+                                    class="ff_list_button_link"
+                                    data-hash="inventory_manager"
+                                    href="<?php
+                                    echo esc_url(Helper::makeMenuUrl('fluent_forms_settings', [
+                                        'hash' => 'inventory_manager'
+                                    ])); ?>">
+                                <?php
+                                echo __('Inventory Managers', 'fluentform'); ?>
+                            </a>
+                        </li>
+                    <?php } ?>
+
+
                     <li class="ff_list_button_item has_sub_menu">
                         <a class="ff_list_button_link" href="#">
                             <?php echo __('Configure Integrations', 'fluentform'); ?>
@@ -176,6 +192,7 @@ use FluentForm\Framework\Helpers\ArrayHelper;
                                 <?php if (ArrayHelper::get($component, 'hash') != 're_captcha'
                                     && ArrayHelper::get($component, 'hash') != 'h_captcha'
                                     && ArrayHelper::get($component, 'hash') != 'turnstile'
+                                    && ArrayHelper::get($component, 'hash') != 'inventory_manager'
                                     && ArrayHelper::get($component, 'query.component') != 'payment_settings'
                                     && ArrayHelper::get($component, 'query.component') != 'license_page'
                                 ) : ?>

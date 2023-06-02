@@ -1025,7 +1025,8 @@ class Menu
             'title' => 'Turnstile (Beta)',
         ];
 
-        $this->app->view->render('admin.settings.index', [
+      
+        $this->app->view->render('admin.settings.global_settings', [
             'components'       => $components,
             'currentComponent' => $currentComponent,
         ]);
