@@ -1034,7 +1034,7 @@ class Component
     }
 
     /**
-     * Register filter to check whether the form is renderable
+     * Register filter to check whether the form is renderable or active
      *
      * @return mixed
      */
@@ -1052,6 +1052,10 @@ class Component
                     }
                 }
             }
+           if($form->status == 'unpublished'){
+               $isRenderable['status'] = false;
+               $isRenderable['message'] = apply_filters('fluentform/unpublished_form_submission_message',__('Invalid Form!'));
+           }
 
             return $isRenderable;
         }, 10, 2);
