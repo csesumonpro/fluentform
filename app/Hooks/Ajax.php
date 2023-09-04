@@ -477,12 +477,12 @@ $app->addAction('wp_ajax_fluentform_del_managers', function () {
 });
 
 // General Integration Settings Here
-$app->addAction('wp_ajax_fluentform_get_global_integration_settings', function () use ($app) {
-    vdd('x');
-    Acl::verify('fluentform_settings_manager');
-    $globalIntegrationManager = new \FluentForm\App\Services\Integrations\GlobalIntegrationManager($app);
-    $globalIntegrationManager->getGlobalSettingsAjax();
-});
+//$app->addAction('wp_ajax_fluentform_get_global_integration_settings', function () use ($app) {
+//    vdd('x');
+//    Acl::verify('fluentform_settings_manager');
+//    $globalIntegrationManager = new \FluentForm\App\Services\Integrations\GlobalIntegrationManager($app);
+//    $globalIntegrationManager->getGlobalSettingsAjax();
+//});
 
 $app->addAction('wp_ajax_fluentform_post_global_integration_settings', function () use ($app) {
     vdd('x');

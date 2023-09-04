@@ -34,7 +34,7 @@ class Settings
     {
         $this->enqueue();
 
-        $this->app->view->render('admin.settings.settings');
+        $this->app->view->render('admin.global_settings.settings');
     }
 
     /**

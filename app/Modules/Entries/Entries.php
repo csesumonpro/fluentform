@@ -186,6 +186,7 @@ class Entries extends EntryQuery
             'available_countries' => getFluentFormCountryList(),
             'upgrade_url'      => fluentform_upgrade_url(),
             'form_entries_str' => TranslationString::getEntriesI18n(),
+            'update_status'    => isset($_REQUEST['update_status']) ? sanitize_text_field($_REQUEST['update_status']) : '',
         ];
     
         $data = apply_filters_deprecated(

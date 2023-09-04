@@ -35,7 +35,7 @@
         methods: {
             fetchInputs() {
                 const url = FluentFormsGlobal.$rest.route('getFormFields', this.form_id);
-                
+
                 FluentFormsGlobal.$rest.get(url)
                     .then(response => {
                         this.inputs = Object.assign({}, response);
@@ -46,7 +46,7 @@
             },
             fetchAllEditorShortcodes() {
                 const url = FluentFormsGlobal.$rest.route('getFormShortcodes', this.form_id);
-                
+
                 FluentFormsGlobal.$rest.get(url, {input_only: true})
                     .then(response => {
                         let allShortCodes = response;
@@ -67,10 +67,11 @@
                     jQuery(this).on("click", function(e){
                         let targetHash = e.target.hash;
                         e.preventDefault();
-                        
+
                         jQuery(targetHash).addClass('highlight-border');
 
                         const $settingsForm = jQuery('.ff_settings_form');
+                        console.log($settingsForm)
                         if($settingsForm.length){
                             const top = jQuery(targetHash).offset().top - 34 - $settingsForm.position().top + $settingsForm.scrollTop();
                             scrollTop(top, 'fast', '.ff_settings_form').then((_) => {
@@ -82,7 +83,7 @@
                                 }
                             })
                         }
-                
+
                     });
                 });
             },

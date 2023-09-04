@@ -29,6 +29,12 @@
 								<?php echo __('Double Opt-in Confirmation', 'fluentform'); ?>
 							</a>
 						</li>
+						<li>
+							<a class="ff-page-scroll"
+								href="#admin_approval">
+								<?php echo __('Admin Approval', 'fluentform'); ?>
+							</a>
+						</li>
 					<?php endif?>
 					<li>
 						<a class="ff-page-scroll"
@@ -81,11 +87,11 @@
                             <?php echo esc_html($settings_menu['title']); ?>
                         </a>
                     <?php else: ?>
-                    <a 
-						class="ff_list_button_link" <?php if(isset($settings_menu['class'])) { echo 'class="'. esc_attr($settings_menu['class']).'"'; } ?> 
-						data-settings_key="<?php echo (isset($settings_menu['settings_key'])) ? esc_attr($settings_menu['settings_key']) : '';?>" 
-						data-component="<?php echo (isset($settings_menu['component'])) ? esc_attr($settings_menu['component']) : '';?>" 
-						data-hash="<?php echo (isset($settings_menu['hash'])) ? esc_attr($settings_menu['hash']) : '';?>" 
+                    <a
+						class="ff_list_button_link" <?php if(isset($settings_menu['class'])) { echo 'class="'. esc_attr($settings_menu['class']).'"'; } ?>
+						data-settings_key="<?php echo (isset($settings_menu['settings_key'])) ? esc_attr($settings_menu['settings_key']) : '';?>"
+						data-component="<?php echo (isset($settings_menu['component'])) ? esc_attr($settings_menu['component']) : '';?>"
+						data-hash="<?php echo (isset($settings_menu['hash'])) ? esc_attr($settings_menu['hash']) : '';?>"
 						href="<?php echo esc_url($settings_base_url).'&sub_route='. esc_attr($settings_menu['slug']); ?><?php if(isset($settings_menu['hash'])) { echo '#'. esc_attr($settings_menu['hash']); } ?>">
 						<?php echo esc_html($settings_menu['title']); ?>
 					</a>

@@ -10,5 +10,5 @@ return array (
   'hook_prefix' => 'fluentform',
   'rest_namespace' => 'fluentform',
   'rest_version' => 'v1',
-  'env' => 'production',
+  'env' => 'dev',
 );

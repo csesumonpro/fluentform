@@ -1014,19 +1014,22 @@ class Menu
         $components['reCAPTCHA'] = [
             'hash'  => 're_captcha',
             'title' => 'reCAPTCHA',
+            'top_level_menu' => true
         ];
 
         $components['hCAPTCHA'] = [
             'hash'  => 'h_captcha',
             'title' => 'hCaptcha',
+            'top_level_menu' => true
         ];
 
         $components['Turnstile'] = [
             'hash'  => 'turnstile',
             'title' => 'Turnstile (Beta)',
+            'top_level_menu' => true
         ];
 
-        $this->app->view->render('admin.settings.index', [
+        $this->app->view->render('admin.global_settings.index', [
             'components'       => $components,
             'currentComponent' => $currentComponent,
         ]);
