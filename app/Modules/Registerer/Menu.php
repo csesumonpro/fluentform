@@ -958,6 +958,8 @@ class Menu
         );
 
         wp_localize_script('fluentform_editor_script', 'FluentFormApp', apply_filters('fluentform/editor_vars', $data));
+
+        do_action('fluentform/editor_script_loaded', $form);
     }
 
     /**

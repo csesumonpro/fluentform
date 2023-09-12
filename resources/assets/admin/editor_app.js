@@ -99,7 +99,9 @@ Vue.mixin(mixins);
 
 global.Errors = Errors;
 
-new Vue({
+window.ffEditorOptionsCustomComponents = window.ffEditorOptionsCustomComponents || {};
+
+window.fluentFormEditorApp = new Vue({
     el: "#ff_form_editor_app",
     store,
     components: {

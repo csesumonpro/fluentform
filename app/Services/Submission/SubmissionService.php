@@ -295,7 +295,6 @@ class SubmissionService
                 'fluentform/before_deleting_entries'
             );
         }
-
         $this->deleteFiles($submissionIds, $formId);
 
         Submission::remove($submissionIds);
@@ -314,7 +313,7 @@ class SubmissionService
 
     public function deleteFiles($submissionIds, $formId)
     {
-        apply_filters_deprecated(
+        $disableAttachmentDelete = apply_filters_deprecated(
             'fluentform_disable_attachment_delete',
             [
                 false,
@@ -326,14 +325,13 @@ class SubmissionService
         );
 
         $disableAttachmentDelete = apply_filters(
-            'fluentform/disable_attachment_delete', false, $formId
+            'fluentform/disable_attachment_delete', $disableAttachmentDelete, $formId
         );
 
         $shouldDelete = defined('FLUENTFORMPRO') && $formId && !$disableAttachmentDelete;
 
         if ($shouldDelete) {
             $deletables = $this->getAttachments($submissionIds, $formId);
-
             foreach ($deletables as $file) {
                 $file = wp_upload_dir()['basedir'] . FLUENTFORM_UPLOAD_DIR . '/' . basename($file);
 
@@ -341,6 +339,7 @@ class SubmissionService
                     @unlink($file);
                 }
             }
+            
         }
     }
 
