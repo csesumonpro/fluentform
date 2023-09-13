@@ -35,7 +35,7 @@
         methods: {
             fetchInputs() {
                 const url = FluentFormsGlobal.$rest.route('getFormFields', this.form_id);
-                
+
                 FluentFormsGlobal.$rest.get(url)
                     .then(response => {
                         this.inputs = Object.assign({}, response);
@@ -46,7 +46,7 @@
             },
             fetchAllEditorShortcodes() {
                 const url = FluentFormsGlobal.$rest.route('getFormShortcodes', this.form_id);
-                
+
                 FluentFormsGlobal.$rest.get(url, {input_only: true})
                     .then(response => {
                         let allShortCodes = response;
@@ -67,7 +67,7 @@
                     jQuery(this).on("click", function(e){
                         let targetHash = e.target.hash;
                         e.preventDefault();
-                        
+
                         jQuery(targetHash).addClass('highlight-border');
 
                         const $settingsForm = jQuery('.ff_settings_form');
@@ -82,7 +82,7 @@
                                 }
                             })
                         }
-                
+
                     });
                 });
             },
@@ -103,7 +103,8 @@
                 handleSidebarActiveLink($el.parent())
             } else {
                 const $firstLink = jQuery('.ff_settings_list li:first-child').first();
-                handleSidebarActiveLink($firstLink)
+                const firstLoad  = true
+                handleSidebarActiveLink($firstLink,false ,firstLoad)
             }
 
             const that = this;
