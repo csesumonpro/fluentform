@@ -88,12 +88,12 @@ export default function ($, $form, form, fluentFormVars, formSelector) {
 
             function getFormData($form) {
                 const formData = $form.serializeArray();
-
+                
                 formData.push({
                     name: 'action',
                     value: 'fluentform_file_upload'
                 });
-                
+
                 formData.push({
                     name: 'formId',
                     value: form.id
@@ -211,7 +211,7 @@ export default function ($, $form, form, fluentFormVars, formSelector) {
                                 'data-href': data.result.data.files[0].file,
                                 'data-attachment-id': data.result.data.files[0].attachment_id
                             });
-
+                            data.context.addClass('ff_uploading_complete');
                             $form.find('input[name=' + $el.data('name') + ']').trigger('change');
                         }
                     } else {
