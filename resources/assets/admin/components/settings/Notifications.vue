@@ -311,7 +311,7 @@
                                 <div class="ff_file_upload_result"
                                      v-for="(attachment, index) in selected.value.media_attachments" :key="index">
                                     <div class="ff_file_upload_preview">
-                                        <img :src="attachment.url" :alt="attachment.name"/>
+                                        <img  v-if="attachment.type != 'pdf'" :src="attachment.url" :alt="attachment.name"/>
                                     </div>
                                     <div class="ff_file_upload_data">
                                         <el-button
@@ -683,7 +683,8 @@ export default {
                         this.selected.value.media_attachments.push({
                             name: attachment.filename,
                             url: attachment.url,
-                            size: attachment.filesizeHumanReadable
+                            size: attachment.filesizeHumanReadable,
+                            type: attachment.subtype
                         })
                     }
                 };
