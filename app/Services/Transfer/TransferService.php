@@ -20,15 +20,17 @@ class TransferService
         $result = Form::with(['formMeta'])
             ->whereIn('id', $formIds)
             ->get();
-
         $forms = [];
         foreach ($result as $item) {
             $form = json_decode($item);
-            $form->metas = $form->form_meta;
+            $formMetaFiltered = array_filter($form->form_meta, function ($item) {
+                return ($item->meta_key !== '_total_views');
+            });
+            $form->metas = $formMetaFiltered;
             $form->form_fields = json_decode($form->form_fields);
             $forms[] = $form;
         }
-
+    
         $fileName = 'fluentform-export-forms-' . count($forms) . '-' . date('d-m-Y') . '.json';
 
         header('Content-disposition: attachment; filename=' . $fileName);
