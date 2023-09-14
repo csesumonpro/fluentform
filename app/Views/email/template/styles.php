@@ -10,13 +10,6 @@ $colors = array(
     'base_color'            => '#444444',
     'text_color'            => '#444444'
 );
-$colors = apply_filters_deprecated(
-    'fluentform_email_template_colors',
-    [$colors],
-    FLUENTFORM_FRAMEWORK_UPGRADE,
-    'fluentform/email_template_colors',
-    'Use fluentform/email_template_colors instead of fluentform_email_template_colors.'
-);
 $settings =  apply_filters('fluentform/email_template_colors', $colors);
 
 // Load colours
