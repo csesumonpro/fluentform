@@ -296,23 +296,17 @@ class SubmissionHandlerService
             if ('customPage' == $confirmation['redirectTo']) {
                 $redirectUrl = get_permalink($confirmation['customPage']);
             }
-            if (
-                ('yes' == Arr::get($confirmation, 'enable_query_string')) &&
-                Arr::get($confirmation, 'query_strings')
-            ) {
-                if (strpos($redirectUrl, '?')) {
-                    $redirectUrl .= '&' . Arr::get($confirmation, 'query_strings');
-                } else {
-                    $redirectUrl .= '?' . Arr::get($confirmation, 'query_strings');
-                }
+            $enableQueryString = Arr::get($confirmation, 'enable_query_string') === 'yes';
+            $queryStrings = Arr::get($confirmation, 'query_strings');
+    
+            if ($enableQueryString && $queryStrings) {
+                $separator = strpos($redirectUrl, '?') !== false ? '&' : '?';
+                $redirectUrl .= $separator . $queryStrings;
             }
-
-             $parseUrl =  apply_filters_deprecated(
-                'fluentform_will_parse_url_value',
-                [
-                    true,
-                    $form
-                ],
+            $parseUrl = apply_filters_deprecated('fluentform_will_parse_url_value', [
+                true,
+                $form
+            ],
                 FLUENTFORM_FRAMEWORK_UPGRADE,
                 'fluentform/will_parse_url_value',
                 'Use fluentform/will_parse_url_value instead of fluentform_will_parse_url_value.'
@@ -328,21 +322,21 @@ class SubmissionHandlerService
             );
             if ($isUrlParser) {
                 /*
-                 * For Empty Redirect Value
+                 * Encode Redirect Value
                  */
-                if (strpos($redirectUrl, '=&') || '=' == substr($redirectUrl, -1)) {
+                $encodeUrl = apply_filters('fluentform/will_encode_url_value',false,$redirectUrl, $insertId, $form, $formData);
+                if (strpos($redirectUrl, '&') || '=' == substr($redirectUrl, -1) || $encodeUrl) {
                     $urlArray = explode('?', $redirectUrl);
                     $baseUrl = array_shift($urlArray);
                     
                     $query = wp_parse_url($redirectUrl)['query'];
-                    
                     $queryParams = explode('&', $query);
                     
                     $params = [];
                     foreach ($queryParams as $queryParam) {
                         $paramArray = explode('=', $queryParam);
                         if (!empty($paramArray[1])) {
-                            $params[$paramArray[0]] = $paramArray[1];
+                            $params[$paramArray[0]] = urlencode($paramArray[1]);
                         }
                     }
                     $redirectUrl = add_query_arg($params, $baseUrl);
@@ -357,19 +351,20 @@ class SubmissionHandlerService
                 false,
                 true
             );
-            
+    
+            $redirectUrl = apply_filters('fluentform/redirect_url_value', wp_sanitize_redirect(urldecode($redirectUrl)), $insertId, $form, $formData);
             $returnData = [
-                'redirectUrl' => wp_sanitize_redirect(urldecode($redirectUrl)),
+                'redirectUrl' => $redirectUrl,
                 'message'     => fluentform_sanitize_html($message),
             ];
         }
     
-        $returnData = apply_filters_deprecated(
-            'fluentform_submission_confirmation',
-            [
+        $returnData = apply_filters_deprecated('fluentform_submission_confirmation', [
                 $returnData,
                 $form,
-                $confirmation
+                $confirmation,
+                $insertId,
+                $formData
             ],
             FLUENTFORM_FRAMEWORK_UPGRADE,
             'fluentform/submission_confirmation',
@@ -380,7 +375,9 @@ class SubmissionHandlerService
             'fluentform/submission_confirmation',
             $returnData,
             $form,
-            $confirmation
+            $confirmation,
+            $insertId,
+            $formData
         );
     }
     
@@ -442,7 +439,6 @@ class SubmissionHandlerService
         
         $uidHash = md5(wp_generate_uuid4() . $insertId);
         Helper::setSubmissionMeta($insertId, '_entry_uid_hash', $uidHash, $formId);
-        
         
         return $insertId;
     }

@@ -1,6 +1,6 @@
 <template>
     <div class="ff_settings_form">
-        <el-skeleton :loading="!formSettings" animated :rows="10" :class="!formSettings ? 'ff_card' : ''">
+        <el-skeleton :loading="!formSettings" animated :rows="14" :class="!formSettings ? 'ff_card' : ''">
             <template v-if="formSettings">
                 <!-- Confirmation Settings -->
                 <card id="confirmation-settings">
@@ -88,8 +88,8 @@
                                             <i class="ff-icon ff-icon-info-filled text-primary"/>
                                         </el-tooltip>
                                     </template>
-                                    <wp-editor 
-                                        :height="75" 
+                                    <wp-editor
+                                        :height="75"
                                         :editor-shortcodes="editorShortcodes"
                                         v-model="double_optin.confirmation_message"/>
 
@@ -132,8 +132,8 @@
                                                 <i class="ff-icon ff-icon-info-filled text-primary"/>
                                             </el-tooltip>
                                         </template>
-                                        <input-popover 
-                                            :rows="10" 
+                                        <input-popover
+                                            :rows="10"
                                             v-if="double_optin.asPlainText == 'yes'" fieldType="textarea"
                                             v-model="double_optin.email_body"
                                             :placeholder="$t('Double Opt-in Email Body HTML')"
@@ -195,12 +195,12 @@
                                                 <i class="ff-icon ff-icon-info-filled text-primary"></i>
                                             </el-tooltip>
                                         </template>
-                                        
+
                                         <el-select class="w-100 ff-input-s1" v-model="formSettings.layout.labelPlacement">
-                                            <el-option 
-                                                v-for="(label, value) in labelPlacementOptions" 
+                                            <el-option
+                                                v-for="(label, value) in labelPlacementOptions"
                                                 :label="label"
-                                                :key="value" 
+                                                :key="value"
                                                 :value="value"
                                             >
                                             </el-option>
@@ -225,10 +225,10 @@
                                         </template>
 
                                         <el-select class="w-100 ff-input-s1" v-model="formSettings.layout.helpMessagePlacement">
-                                            <el-option 
-                                                v-for="(label, value) in helpMessagePlacementOptions" 
+                                            <el-option
+                                                v-for="(label, value) in helpMessagePlacementOptions"
                                                 :label="label"
-                                                :key="value" 
+                                                :key="value"
                                                 :value="value"
                                             >
                                             </el-option>
@@ -253,10 +253,10 @@
                                         </template>
 
                                         <el-select class="w-100 ff-input-s1" v-model="formSettings.layout.errorMessagePlacement">
-                                            <el-option 
-                                                v-for="(label, value) in errorMessagesPlacement" 
+                                            <el-option
+                                                v-for="(label, value) in errorMessagesPlacement"
                                                 :label="label"
-                                                :key="value" 
+                                                :key="value"
                                                 :value="value"
                                             >
                                             </el-option>
@@ -281,10 +281,10 @@
                                         </template>
 
                                         <el-select class="w-100 ff-input-s1" v-model="formSettings.layout.asteriskPlacement">
-                                            <el-option 
-                                                v-for="(label, value) in asteriskPlacementMock" 
+                                            <el-option
+                                                v-for="(label, value) in asteriskPlacementMock"
                                                 :label="label"
-                                                :key="value" 
+                                                :key="value"
                                                 :value="value"
                                             >
                                             </el-option>
@@ -328,7 +328,7 @@
 
                     <card-body>
                         <advanced-validation v-if="hasPro" :hasPro="hasPro" :inputs="inputs" :settings="advancedValidationSettings"></advanced-validation>
-                        
+
                         <notice class="ff_alert_between" type="danger-soft" v-if="!hasPro">
                             <div>
                                 <h6 class="title">{{$t('Advanced Form Validation is available in the pro version')}}</h6>
@@ -360,7 +360,7 @@
                         </notice>
                     </card-body>
                 </card>
-                
+
                 <!-- Compliance Settings -->
                 <card id="compliance-settings">
                     <card-head>
@@ -390,9 +390,9 @@
                         </p>
 
                         <div v-if="formSettings.delete_entry_on_submission != 'yes'" class="ff_auto_delete_section mt-3">
-                            <el-checkbox  
-                                v-if="hasPro" 
-                                true-label="yes" 
+                            <el-checkbox
+                                v-if="hasPro"
+                                true-label="yes"
                                 false-label="no"
                                 v-model="formSettings.delete_after_x_days"
                             >
@@ -408,14 +408,14 @@
                                         <el-input-number :min="1" v-model="formSettings.auto_delete_days"/>
                                     </div>
                                     <p class="mt-2 text-danger" v-if="formSettings.auto_delete_days">
-                                        {{ $t('Entries older than ') }} 
-                                        <b>{{formSettings.auto_delete_days}} {{ $t(' days ') }}</b> 
+                                        {{ $t('Entries older than ') }}
+                                        <b>{{formSettings.auto_delete_days}} {{ $t(' days ') }}</b>
                                         {{ $t('will be deleted automatically') }}
                                     </p>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <notice class="ff_alert_between" type="danger-soft" v-if="!hasPro">
                             <div>
                                 <h6 class="title">{{$t('Compliance Settings is available in the pro version')}}</h6>
@@ -450,7 +450,7 @@
                             </label>
                             <div class="el-form-item__content">
                                 <el-input
-                                    :placeholder="$t('extra css class')" 
+                                    :placeholder="$t('extra css class')"
                                     v-model="formSettings.form_extra_css_class"
                                 />
                             </div>
@@ -466,7 +466,7 @@
                         </notice>
                     </card-body>
                 </card>
-                
+
                 <!-- Affiliate Setting -->
                 <card v-if="affiliate_wp">
                     <card-head>
@@ -495,7 +495,7 @@
                                 </el-option>
                             </el-select>
                         </div>
-                        
+
                         <notice class="ff_alert_between" type="danger-soft" v-if="!hasPro">
                             <div>
                                 <h6 class="title">{{$t('This is available in the pro version')}}</h6>
@@ -671,7 +671,7 @@
             },
             fetchSettings() {
                 const url = FluentFormsGlobal.$rest.route('getGeneralFormSettings', this.form_id);
-            
+
                 FluentFormsGlobal.$rest.get(url)
                     .then(response => {
                         if (response.generalSettings) {
