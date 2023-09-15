@@ -22,7 +22,7 @@ class HoneyPot
         ?>
         <span style="display: none !important;"><input type="checkbox"
                 name="<?php echo esc_attr($this->getFieldName($form->id)); ?>"
-                value="1" style="display:none !important;" tabindex="-1"></span>
+                value="1" style="display:none !important;" tabindex="-1" aria-hidden="true"></span>
         <?php
     }
 
