@@ -41,6 +41,7 @@ class ContactForm7Migrator extends BaseMigrator
         $formattedArray = [];
         $fluentFields = [];
 
+        //remove all label and empty line
         foreach ($formMetaDataArray as $formMetaString) {
             if (!empty($formMetaString)) {
                 if (strpos($formMetaString, '<label>') !== false || strpos($formMetaString, '</label>') !== false) {
@@ -50,45 +51,35 @@ class ContactForm7Migrator extends BaseMigrator
             }
         }
 
-        foreach ($formattedArray as $formattedKey => $formattedValue) {
-            preg_match_all('/\[[^\]]*\]/', $formattedValue, $fieldStringArray);
-            $fieldStringArray = isset($fieldStringArray[0]) ?? $fieldStringArray[0];
+        //format array with field label and remove quiz field
+        $fieldStringArray = [];
+        foreach ($formattedArray as $formattedKey => &$formattedValue) {
+            preg_match_all('/\[[^\]]*\]/', $formattedValue, $fieldStringMatches);
+            $fieldString = isset($fieldStringMatches[0][0]) ? $fieldStringMatches[0][0] : '';
 
-            if (count($fieldStringArray) > 1) {
-                $desiredKey = 0;
-                foreach ($fieldStringArray as $stringKey => $fieldString) {
-                    $desiredKey = $formattedKey + $stringKey;
+            if (preg_match('/\[(.*?)\](.*?)\[.*?\]/', $formattedValue, $withoutBracketMatches)) {
+                $withoutBracketString = isset($withoutBracketMatches[2]) ? trim($withoutBracketMatches[2]) : '';
+                $fieldString = str_replace(']',' "'. $withoutBracketString . '"]', $fieldString);
+            }
 
-                    if (preg_match('/\[.*?\].*?\[.*?\]/', $fieldString, $matches)) {
-                        $fieldString = isset($matches[0]) ?? $matches[0];
+            if (strpos($formattedValue,'[quiz') !== 0) {
+                if (strpos($formattedValue, '[') === false) {
+                    if (
+                        isset($formattedArray[$formattedKey + 1]) &&
+                        strpos($formattedArray[$formattedKey + 1], '[') !== false
+                    ) {
+                        $fieldStringArray[] = $formattedValue . $formattedArray[$formattedKey + 1];
+                        unset($formattedArray[$formattedKey + 1]);
                     }
-                    array_splice($formattedArray, $desiredKey, 0, $fieldString);
+                } else {
+                    $fieldStringArray[] = $fieldString;
+                    unset($formattedArray[$formattedKey]);
                 }
-                unset($formattedArray[$desiredKey + 1]);
             }
         }
 
-        $superFormatted = [];
-        foreach ($formattedArray as $key => &$formattedString) {
-            $fieldStringArray = [];
-
-            if ($formattedString['0'] !== '[' && $formattedString[strlen($formattedString) - 1] !== ']') {
-                if (
-                    isset($formattedArray[$key + 1]) &&
-                    $formattedArray[$key + 1]['0'] === '[' &&
-                    $formattedArray[$key + 1][strlen($formattedArray[$key + 1]) - 1] === ']'
-                ) {
-                    $superFormatted[] = $formattedString . $formattedArray[$key + 1];
-                    unset($formattedArray[$key + 1]);
-                }
-            } else {
-                $superFormatted[] = $formattedString;
-                unset($formattedArray[$key]);
-            }
-        }
-
-        $fields = [];
-        foreach ($superFormatted as $superKey => &$superValue) {
+        // format fields as fluent forms field
+        foreach ($fieldStringArray as $superKey => &$superValue) {
             $fieldLabel = '';
             $fieldElement = '';
             $fieldName = '';
@@ -106,8 +97,8 @@ class ContactForm7Migrator extends BaseMigrator
             $fieldMultiple = false;
             $fieldFileTypes = '';
             $fieldMaxFileSize = '';
-            $fieldMaxFileSizeUnit = 'KB';
-            $withoutSquareBrackets = '';
+            $fieldFileSizeUnit = 'KB';
+            $tncHtml = '';
 
             $fieldString = '';
 
@@ -122,26 +113,10 @@ class ContactForm7Migrator extends BaseMigrator
             $words = preg_split('/\s+/', $fieldString);
             $fieldRequired = isset($words[0]) && strpos($words[0], '*') !== false ?? true;
             $fieldElement = isset($words[0]) ? trim($words[0], '*') : '';
-            $fieldName = $fieldElement . '-' . rand(100, 999);
-
-            if ($fieldElement === 'quiz') {
-                continue;
-            }
-
-            if (preg_match('/\[.*?\].*?\[.*?\]/', $superValue, $matches)) {
-                preg_match('/\[(.*?)\](.*?)\[/', $matches[0], $withoutBracketMatches);
-                if ($fieldElement === 'acceptance' || $fieldElement === 'textarea') {
-                    $withoutSquareBrackets = isset($withoutBracketMatches[2]) ? $withoutBracketMatches[2] : '';
-                }
-            }
-
-            if ($fieldElement === 'textarea' && preg_match('/\[.*?\].*?\[.*?\]/', $fieldString, $matches)) {
-                $withoutSquareBrackets = isset($matches[0]) ? preg_replace('/\[.*?\]/', '', $fieldString) : '';
-            }
 
             if ($fieldElement === 'submit') {
                 preg_match_all('/(["\'])(.*?)\1/', $fieldString, $matches);
-                $submitBtn = $this->getSubmitBtn([
+                $submitBtn = $this->getSubmitBttn([
                     'uniqElKey' => $fieldElement . '-' . time(),
                     'label'     => isset($matches[2][0]) ? $matches[2][0] : 'Submit'
                 ]);
@@ -180,17 +155,16 @@ class ContactForm7Migrator extends BaseMigrator
                 $fieldPlaceholder = isset($matches[1]) ? $matches[1] : '';
             }
 
-            if (preg_match('/filetypes:([a-zA-Z0-9]+)/', $fieldString, $matches)) {
+            if (preg_match('/filetypes:([a-zA-Z0-9|]+)/', $fieldString, $matches)) {
                 $fieldFileTypes = isset($matches[1]) ? $matches[1] : '';
             }
 
             if (preg_match_all('/(["\'])(.*?)\1/', $fieldString, $matches)) {
-                error_log(print_r($matches, true));
                 if (isset($matches[2])) {
                     if (count($matches[2]) > 1) {
                         $fieldMultipleValues = $matches[2];
                     } else {
-                        if (isset($matches[2]) && count($matches[2]) === 1) {
+                        if (count($matches[2]) === 1) {
                             $fieldValue = isset($matches[2][0]) ? $matches[2][0] : '';
                         }
                     }
@@ -202,10 +176,10 @@ class ContactForm7Migrator extends BaseMigrator
             }
 
             if (preg_match('/limit:([a-zA-Z0-9]+)/', $fieldString, $matches)) {
-                $fieldMaxFileSize = isset($matches[1]) ? $matches[1] : '';
+                $fieldMaxFileSize = isset($matches[1]) ? $matches[1] : '1mb';
 
                 if (strpos($fieldMaxFileSize, 'mb') !== false) {
-                    $fieldMaxFileSizeUnit = 'MB';
+                    $fieldFileSizeUnit = 'MB';
                 }
 
                 $fieldMaxFileSize = str_replace(['mb', 'kb'], '', $fieldMaxFileSize);
@@ -215,8 +189,8 @@ class ContactForm7Migrator extends BaseMigrator
                 $fieldValue = isset($matches[1]) ? $matches[1] : '';
             }
 
-            if (!$fieldValue) {
-                $fieldValue = $withoutSquareBrackets;
+            if ($fieldElement === 'acceptance') {
+                $tncHtml = $fieldValue;
             }
 
             if (!$fieldLabel) {
@@ -225,8 +199,10 @@ class ContactForm7Migrator extends BaseMigrator
 
             $fieldType = ArrayHelper::get($this->fieldTypeMap(), $fieldElement);
 
+            $fieldName = $fieldType . '_' . $superKey;
+
             $args = [
-                'uniqElKey'          => $fieldElement . '-' . time(),
+                'uniqElKey'          => 'el_'. $superKey . time(),
                 'type'               => $fieldType,
                 'index'              => $superKey,
                 'required'           => $fieldRequired,
@@ -237,6 +213,8 @@ class ContactForm7Migrator extends BaseMigrator
                 'value'              => $fieldValue,
                 'help_message'       => '',
                 'container_class'    => '',
+                'prefix'             => '',
+                'suffix'             => '',
                 'min'                => $fieldMin,
                 'max'                => $fieldMax,
                 'minlength'          => $fieldMinLength,
@@ -248,11 +226,15 @@ class ContactForm7Migrator extends BaseMigrator
                 'multiple'           => $fieldMultiple,
                 'allowed_file_types' => $fieldFileTypes,
                 'max_file_size'      => $fieldMaxFileSize,
-                'max_size_unit'      => $fieldMaxFileSizeUnit,
-                'tnc_html'           => $withoutSquareBrackets
+                'max_size_unit'      => $fieldFileSizeUnit,
+                'tnc_html'           => $tncHtml
             ];
 
             $fields = $this->formatFieldData($args, $fieldType);
+
+            if ($fieldMultiple) {
+                $fieldType = 'multi_select';
+            }
 
             if ($fieldData = $this->getFluentClassicField($fieldType, $fields)) {
                 $fluentFields['fields'][$args['index']] = $fieldData;
@@ -264,7 +246,7 @@ class ContactForm7Migrator extends BaseMigrator
         return $fluentFields;
     }
 
-    public function getSubmitBtn($args)
+    public function getSubmitBttn($args)
     {
         return [
             'uniqElKey'      => 'submit-' . time(),
@@ -275,43 +257,57 @@ class ContactForm7Migrator extends BaseMigrator
                 'id'    => ''
             ],
             'settings'       => [
-                'container_class'  => '',
                 'align'            => 'left',
                 'button_style'     => 'default',
+                'container_class'  => '',
+                'help_message'     => '',
+                'background_color' => '#1a7efb',
                 'button_size'      => 'md',
                 'color'            => '#ffffff',
-                'background_color' => '#409EFF',
                 'button_ui'        => [
-                    'type' => 'default',
-                    'text' => $args['label'],
+                    'type'    => 'default',
+                    'text'    => $args['label'],
+                    'img_url' => ''
                 ],
-                'normal_styles'    => [],
-                'hover_styles'     => [],
+                'normal_styles'    => [
+                    'backgroundColor' => '#1a7efb',
+                    'borderColor'     => '#1a7efb',
+                    'color'           => '#ffffff',
+                    'borderRadius'    => '',
+                    'minWidth'        => ''
+                ],
+                'hover_styles'     => [
+                    'backgroundColor' => '#1a7efb',
+                    'borderColor'     => '#1a7efb',
+                    'color'           => '#ffffff',
+                    'borderRadius'    => '',
+                    'minWidth'        => ''
+                ],
                 'current_state'    => "normal_styles"
             ],
             'editor_options' => [
                 'title' => 'Submit Button',
             ],
-
         ];
     }
 
     private function fieldTypeMap()
     {
         return [
-            'email'      => 'email',
-            'text'       => 'input_text',
-            'url'        => 'input_url',
-            'tel'        => 'phone',
-            'textarea'   => 'input_textarea',
-            'number'     => 'input_number',
-            'range'      => 'rangeslider',
-            'date'       => 'input_date',
-            'checkbox'   => 'input_checkbox',
-            'radio'      => 'input_radio',
-            'select'     => 'select',
-            'file'       => 'input_file',
-            'acceptance' => 'terms_and_condition'
+            'email'        => 'email',
+            'text'         => 'input_text',
+            'url'          => 'input_url',
+            'tel'          => 'phone',
+            'textarea'     => 'input_textarea',
+            'number'       => 'input_number',
+            'range'        => 'rangeslider',
+            'date'         => 'input_date',
+            'checkbox'     => 'input_checkbox',
+            'radio'        => 'input_radio',
+            'select'       => 'select',
+            'multi_select' => 'multi_select',
+            'file'         => 'input_file',
+            'acceptance'   => 'terms_and_condition'
         ];
     }
 
@@ -340,16 +336,15 @@ class ContactForm7Migrator extends BaseMigrator
                 if ($type == 'select') {
                     $isMulti = ArrayHelper::isTrue($args, 'multiple');
                     if ($isMulti) {
-                        $args['type'] = 'multi-select';
                         $args['multiple'] = true;
                         $args['value'] = $defaultVal;
                     } else {
-                        $args['value'] = array_shift($defaultVal) ?: "";
+                        $args['value'] = is_array($defaultVal) ? array_shift($defaultVal) : "";
                     }
                 } elseif ($type == 'input_checkbox') {
                     $args['value'] = $defaultVal;
                 } elseif ($type == 'input_radio') {
-                    $args['value'] = array_shift($defaultVal) ?: "";
+                    $args['value'] = is_array($defaultVal) ? array_shift($defaultVal) : "";
                 }
                 break;
             case 'input_file':
@@ -363,9 +358,12 @@ class ContactForm7Migrator extends BaseMigrator
                 $args['upload_btn_text'] = 'File Upload';
                 break;
             case 'terms_and_condition':
-                $args['tnc_html'] = ArrayHelper::get($args, 'tnc_html',
-                    'I have read and agree to the Terms and Conditions and Privacy Policy.'
-                );
+                if (ArrayHelper::get($args, 'tnc_html') !== '') {
+                    $args['tnc_html'] = ArrayHelper::get($args, 'tnc_html',
+                        'I have read and agree to the Terms and Conditions and Privacy Policy.'
+                    );
+                    $args['required'] = true;
+                }
                 break;
             default :
                 break;
@@ -407,7 +405,7 @@ class ContactForm7Migrator extends BaseMigrator
             "image/*|jpg|jpeg|gif|png|bmp",
             "audio/*|mp3|wav|ogg|oga|wma|mka|m4a|ra|mid|midi|mpga",
             "video/*|avi|divx|flv|mov|ogv|mkv|mp4|m4v|mpg|mpeg|mpe|video/quicktime|qt",
-            "application/pdf|pdf",
+            "pdf",
             "text/*|doc|ppt|pps|xls|mdb|docx|xlsx|pptx|odt|odp|ods|odg|odc|odb|odf|rtf|txt",
             "zip|gz|gzip|rar|7z",
             "exe",
@@ -419,12 +417,11 @@ class ContactForm7Migrator extends BaseMigrator
 
         foreach ($formattedTypes as $format) {
             foreach ($allFileTypes as $fileTypes) {
-                if (!empty($format) && (strpos($fileTypes, $format) !== false)) {
-                    if (strpos($format, '/*')) {
-                        $parts = explode('|', $fileTypes);
-                        $afterFirstPipe = isset($parts[1]) ? implode('|', array_slice($parts, 1)) : '';
-                        $fileTypeOptions[] = $afterFirstPipe;
+                if (!empty($format) && strpos($fileTypes, $format) !== false) {
+                    if (strpos($fileTypes, '/*|') !== false) {
+                        $fileTypes = explode('/*|', $fileTypes)[1];
                     }
+                    $fileTypeOptions[] = $fileTypes;
                 }
             }
         }
@@ -440,7 +437,20 @@ class ContactForm7Migrator extends BaseMigrator
     protected function getFormMetas($form)
     {
         $formObject = new Form(wpFluentForm());
-        return $formObject->getFormsDefaultSettings();
+        $defaults = $formObject->getFormsDefaultSettings();
+
+        return [
+            'formSettings'                 => [
+                'confirmation' => ArrayHelper::get($defaults, 'confirmation'),
+                'restrictions' => ArrayHelper::get($defaults, 'restrictions'),
+                'layout'       => ArrayHelper::get($defaults, 'layout'),
+            ],
+            'advancedValidationSettings'   => $this->getAdvancedValidation(),
+            'delete_entry_on_submission'   => 'no',
+            'notifications'                => $this->getNotifications(),
+            'step_data_persistency_status' => 'no',
+            'form_save_state_status'       => 'no'
+        ];
     }
 
     protected function getFormId($form)
@@ -460,5 +470,143 @@ class ContactForm7Migrator extends BaseMigrator
             ];
         }
         return $forms;
+    }
+
+    private function getNotifications()
+    {
+        return [
+            'name'      => __('Admin Notification Email', 'fluentform'),
+            'sendTo'    => [
+                'type'    => 'email',
+                'email'   => '{wp.admin_email}',
+                'field'   => '',
+                'routing' => [],
+            ],
+            'fromName'  => '',
+            'fromEmail' => '',
+            'replyTo'   => '',
+            'bcc'       => '',
+            'subject'   => __('New Form Submission', 'fluentform'),
+            'message'   => '<p>{all_data}</p><p>This form submitted at: {embed_post.permalink}</p>',
+            'conditionals' => [],
+            'enabled'   => false
+        ];
+    }
+
+    private function getAdvancedValidation()
+    {
+        return [
+            'status'          => false,
+            'type'            => 'all',
+            'conditions'      => [
+                [
+                    'field'    => '',
+                    'operator' => '=',
+                    'value'    => ''
+                ]
+            ],
+            'error_message'   => '',
+            'validation_type' => 'fail_on_condition_met'
+        ];
+    }
+
+    public function getEntries($formId)
+    {
+        if(!wpforms()->is_pro()){
+            wp_send_json([
+                'message' => __("Entries not available in WPForms Lite",'fluentform')
+            ], 200);
+        }
+        $form = $this->getForm($formId);
+        if (empty($form)) {
+            return false;
+        }
+        $formFields = $this->getFields($form);
+        if ($formFields) {
+            $formFields = $formFields['fields'];
+        }
+        $args = [
+            'form_id' => $form['ID'],
+            'order'  => 'asc',
+        ];
+        $totalEntries = wpforms()->entry->get_entries($args, true);// 2nd parameter 'true' means return total entries count
+        $args['number'] = apply_filters('fluentform/entry_migration_max_limit', static::DEFAULT_ENTRY_MIGRATION_MAX_LIMIT, $this->key,  $totalEntries, $formId);
+        $submissions = wpforms()->entry->get_entries($args);
+        $entries = [];
+        if (!$submissions || !is_array($submissions)) {
+            return $entries;
+        }
+        foreach ($submissions as $submission) {
+            $fields = \json_decode( $submission->fields , true);
+            if (!$fields) {
+                continue;
+            }
+            $entry = [];
+            foreach ($fields as $fieldId => $field) {
+                if (!isset($formFields[$fieldId])) {
+                    continue;
+                }
+                $formField = $formFields[$fieldId];
+                $name = ArrayHelper::get($formField, 'attributes.name');
+                if (!$name) {
+                    continue;
+                }
+                $type = ArrayHelper::get($formField, 'element');
+                // format entry value by field name
+                $finalValue = ArrayHelper::get($field, 'value');
+                if ("input_name" == $type) {
+                    $finalValue = $this->getSubmissionNameValue($formField['fields'], $field);
+                } elseif (
+                    "input_checkbox" == $type ||
+                    (
+                        "select" == $type &&
+                        ArrayHelper::isTrue($formField, 'attributes.multiple')
+                    )
+                ) {
+                    $finalValue = explode("\n", $finalValue);
+                } elseif ("address" == $type) {
+                    $finalValue = [
+                        "address_line_1" => ArrayHelper::get($field, 'address1', ''),
+                        "address_line_2" => ArrayHelper::get($field, 'address2', ''),
+                        "city" => ArrayHelper::get($field, 'city', ''),
+                        "state" => ArrayHelper::get($field, 'state', ''),
+                        "zip" => ArrayHelper::get($field, 'postal', ''),
+                        "country" => ArrayHelper::get($field, 'country', ''),
+                    ];
+                } elseif ("input_file" == $type && $value = ArrayHelper::get($field, 'value')) {
+                    $finalValue = $this->migrateFilesAndGetUrls($value);
+                }
+                if (null == $finalValue) {
+                    $finalValue = "";
+                }
+                $entry[$name] = $finalValue;
+            }
+            if ($submission->date) {
+                $entry['created_at'] = $submission->date;
+            }
+            if ($submission->date_modified) {
+                $entry['updated_at'] = $submission->date_modified;
+            }
+            $entries[] = $entry;
+        }
+        return $entries;
+    }
+
+    protected function getSubmissionNameValue($nameFields, $submissionField) {
+        $finalValue = [];
+        foreach ($nameFields as $key => $field) {
+            if ($name = ArrayHelper::get($field, 'attributes.name')) {
+                $value = "";
+                if ("first_name" == $key) {
+                    $value = ArrayHelper::get($submissionField, 'first');
+                } elseif ("middle_name" == $key) {
+                    $value = ArrayHelper::get($submissionField, 'middle');
+                } elseif ("last_name" == $key) {
+                    $value = ArrayHelper::get($submissionField, 'last');
+                }
+                $finalValue[$name] = $value;
+            }
+        }
+        return $finalValue;
     }
 }
