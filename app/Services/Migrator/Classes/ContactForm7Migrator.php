@@ -113,6 +113,7 @@ class ContactForm7Migrator extends BaseMigrator
             $words = preg_split('/\s+/', $fieldString);
             $fieldRequired = isset($words[0]) && strpos($words[0], '*') !== false ?? true;
             $fieldElement = isset($words[0]) ? trim($words[0], '*') : '';
+            $fieldName =  isset($words[1]) ? trim($words[1]) : '';
 
             if ($fieldElement === 'submit') {
                 preg_match_all('/(["\'])(.*?)\1/', $fieldString, $matches);
@@ -198,8 +199,6 @@ class ContactForm7Migrator extends BaseMigrator
             }
 
             $fieldType = ArrayHelper::get($this->fieldTypeMap(), $fieldElement);
-
-            $fieldName = $fieldType . '_' . $superKey;
 
             $args = [
                 'uniqElKey'          => 'el_'. $superKey . time(),
@@ -512,101 +511,16 @@ class ContactForm7Migrator extends BaseMigrator
 
     public function getEntries($formId)
     {
-        if(!wpforms()->is_pro()){
-            wp_send_json([
-                'message' => __("Entries not available in WPForms Lite",'fluentform')
-            ], 200);
-        }
-        $form = $this->getForm($formId);
-        if (empty($form)) {
-            return false;
-        }
-        $formFields = $this->getFields($form);
-        if ($formFields) {
-            $formFields = $formFields['fields'];
-        }
-        $args = [
-            'form_id' => $form['ID'],
-            'order'  => 'asc',
-        ];
-        $totalEntries = wpforms()->entry->get_entries($args, true);// 2nd parameter 'true' means return total entries count
-        $args['number'] = apply_filters('fluentform/entry_migration_max_limit', static::DEFAULT_ENTRY_MIGRATION_MAX_LIMIT, $this->key,  $totalEntries, $formId);
-        $submissions = wpforms()->entry->get_entries($args);
-        $entries = [];
-        if (!$submissions || !is_array($submissions)) {
+        if (class_exists('Flamingo_Inbound_Message')) {
+            $post = get_post($formId);
+            $formName = $post->post_name;
+            $allPosts = \Flamingo_Inbound_Message::find(['channel' => $formName]);
+            $entries = [];
+
+            foreach ($allPosts as $post) {
+                $entries[] = $post->fields;
+            }
             return $entries;
         }
-        foreach ($submissions as $submission) {
-            $fields = \json_decode( $submission->fields , true);
-            if (!$fields) {
-                continue;
-            }
-            $entry = [];
-            foreach ($fields as $fieldId => $field) {
-                if (!isset($formFields[$fieldId])) {
-                    continue;
-                }
-                $formField = $formFields[$fieldId];
-                $name = ArrayHelper::get($formField, 'attributes.name');
-                if (!$name) {
-                    continue;
-                }
-                $type = ArrayHelper::get($formField, 'element');
-                // format entry value by field name
-                $finalValue = ArrayHelper::get($field, 'value');
-                if ("input_name" == $type) {
-                    $finalValue = $this->getSubmissionNameValue($formField['fields'], $field);
-                } elseif (
-                    "input_checkbox" == $type ||
-                    (
-                        "select" == $type &&
-                        ArrayHelper::isTrue($formField, 'attributes.multiple')
-                    )
-                ) {
-                    $finalValue = explode("\n", $finalValue);
-                } elseif ("address" == $type) {
-                    $finalValue = [
-                        "address_line_1" => ArrayHelper::get($field, 'address1', ''),
-                        "address_line_2" => ArrayHelper::get($field, 'address2', ''),
-                        "city" => ArrayHelper::get($field, 'city', ''),
-                        "state" => ArrayHelper::get($field, 'state', ''),
-                        "zip" => ArrayHelper::get($field, 'postal', ''),
-                        "country" => ArrayHelper::get($field, 'country', ''),
-                    ];
-                } elseif ("input_file" == $type && $value = ArrayHelper::get($field, 'value')) {
-                    $finalValue = $this->migrateFilesAndGetUrls($value);
-                }
-                if (null == $finalValue) {
-                    $finalValue = "";
-                }
-                $entry[$name] = $finalValue;
-            }
-            if ($submission->date) {
-                $entry['created_at'] = $submission->date;
-            }
-            if ($submission->date_modified) {
-                $entry['updated_at'] = $submission->date_modified;
-            }
-            $entries[] = $entry;
-        }
-        return $entries;
-    }
-
-    protected function getSubmissionNameValue($nameFields, $submissionField) {
-        $finalValue = [];
-        foreach ($nameFields as $key => $field) {
-            if ($name = ArrayHelper::get($field, 'attributes.name')) {
-                $value = "";
-                if ("first_name" == $key) {
-                    $value = ArrayHelper::get($submissionField, 'first');
-                } elseif ("middle_name" == $key) {
-                    $value = ArrayHelper::get($submissionField, 'middle');
-                } elseif ("last_name" == $key) {
-                    $value = ArrayHelper::get($submissionField, 'last');
-                }
-                $finalValue[$name] = $value;
-            }
-        }
-        return $finalValue;
     }
 }
