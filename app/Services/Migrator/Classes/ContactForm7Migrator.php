@@ -37,212 +37,15 @@ class ContactForm7Migrator extends BaseMigrator
     {
         $formPostMeta = get_post_meta($form['ID'], '_form', true);
         $formMetaDataArray = preg_split('/\r\n|\r|\n/', $formPostMeta);
-        $submitBtn = [];
-        $formattedArray = [];
-        $fluentFields = [];
 
         //remove all label and empty line
-        foreach ($formMetaDataArray as $formMetaString) {
-            if (!empty($formMetaString)) {
-                if (strpos($formMetaString, '<label>') !== false || strpos($formMetaString, '</label>') !== false) {
-                    $formMetaString = trim(str_replace(['<label>', '</label>'], '', $formMetaString));
-                }
-                $formattedArray[] = $formMetaString;
-            }
-        }
+        $formattedArray = $this->removeLabelsAndNewLine($formMetaDataArray);
 
         //format array with field label and remove quiz field
-        $fieldStringArray = [];
-        foreach ($formattedArray as $formattedKey => &$formattedValue) {
-            preg_match_all('/\[[^\]]*\]/', $formattedValue, $fieldStringMatches);
-            $fieldString = isset($fieldStringMatches[0][0]) ? $fieldStringMatches[0][0] : '';
-
-            if (preg_match('/\[(.*?)\](.*?)\[.*?\]/', $formattedValue, $withoutBracketMatches)) {
-                $withoutBracketString = isset($withoutBracketMatches[2]) ? trim($withoutBracketMatches[2]) : '';
-                $fieldString = str_replace(']',' "'. $withoutBracketString . '"]', $fieldString);
-            }
-
-            if (strpos($formattedValue,'[quiz') !== 0) {
-                if (strpos($formattedValue, '[') === false) {
-                    if (
-                        isset($formattedArray[$formattedKey + 1]) &&
-                        strpos($formattedArray[$formattedKey + 1], '[') !== false
-                    ) {
-                        $fieldStringArray[] = $formattedValue . $formattedArray[$formattedKey + 1];
-                        unset($formattedArray[$formattedKey + 1]);
-                    }
-                } else {
-                    $fieldStringArray[] = $fieldString;
-                    unset($formattedArray[$formattedKey]);
-                }
-            }
-        }
+        $fieldStringArray = $this->formatFieldArray($formattedArray);
 
         // format fields as fluent forms field
-        foreach ($fieldStringArray as $superKey => &$superValue) {
-            $fieldLabel = '';
-            $fieldElement = '';
-            $fieldName = '';
-            $fieldRequired = false;
-            $fieldPlaceholder = '';
-            $fieldValue = '';
-            $fieldMinLength = '';
-            $fieldMaxLength = '';
-            $fieldSize = '';
-            $fieldStep = '';
-            $fieldMultipleValues = [];
-            $fieldMin = '';
-            $fieldMax = '';
-            $fieldDefault = '';
-            $fieldMultiple = false;
-            $fieldFileTypes = '';
-            $fieldMaxFileSize = '';
-            $fieldFileSizeUnit = 'KB';
-            $tncHtml = '';
-
-            $fieldString = '';
-
-            if (preg_match('/^(.*?)\[/', $superValue, $matches)) {
-                $fieldLabel = isset($matches[1]) ? $matches[1] : '';
-            }
-
-            if (preg_match('/\[([^]]+)\]/', $superValue, $matches)) {
-                $fieldString = isset($matches[1]) ? $matches[1] : '';
-            }
-
-            $words = preg_split('/\s+/', $fieldString);
-            $fieldRequired = isset($words[0]) && strpos($words[0], '*') !== false ?? true;
-            $fieldElement = isset($words[0]) ? trim($words[0], '*') : '';
-            $fieldName =  isset($words[1]) ? trim($words[1]) : '';
-
-            if ($fieldElement === 'submit') {
-                preg_match_all('/(["\'])(.*?)\1/', $fieldString, $matches);
-                $submitBtn = $this->getSubmitBttn([
-                    'uniqElKey' => $fieldElement . '-' . time(),
-                    'label'     => isset($matches[2][0]) ? $matches[2][0] : 'Submit'
-                ]);
-                continue;
-            }
-
-            if ($fieldElement === 'select' && strpos($fieldString, 'multiple') !== false) {
-                $fieldMultiple = true;
-            }
-
-            if (preg_match('/min:([a-zA-Z0-9]+)/', $fieldString, $matches)) {
-                $fieldMin = isset($matches[1]) ? $matches[1] : '';
-            }
-
-            if (preg_match('/max:([a-zA-Z0-9]+)/', $fieldString, $matches)) {
-                $fieldMax = isset($matches[1]) ? $matches[1] : '';
-            }
-
-            if (preg_match('/minlength:([a-zA-Z0-9]+)/', $fieldString, $matches)) {
-                $fieldMinLength = isset($matches[1]) ? $matches[1] : '';
-            }
-
-            if (preg_match('/maxlength:([a-zA-Z0-9]+)/', $fieldString, $matches)) {
-                $fieldMaxLength = isset($matches[1]) ? $matches[1] : '';
-            }
-
-            if (preg_match('/size:([a-zA-Z0-9]+)/', $fieldString, $matches)) {
-                $fieldSize = isset($matches[1]) ? $matches[1] : '';
-            }
-
-            if (preg_match('/step:([a-zA-Z0-9]+)/', $fieldString, $matches)) {
-                $fieldStep = isset($matches[1]) ? $matches[1] : '';
-            }
-
-            if (preg_match('/(?:placeholder|watermark) "([a-zA-Z0-9]+)"/', $fieldString, $matches)) {
-                $fieldPlaceholder = isset($matches[1]) ? $matches[1] : '';
-            }
-
-            if (preg_match('/filetypes:([a-zA-Z0-9|]+)/', $fieldString, $matches)) {
-                $fieldFileTypes = isset($matches[1]) ? $matches[1] : '';
-            }
-
-            if (preg_match_all('/(["\'])(.*?)\1/', $fieldString, $matches)) {
-                if (isset($matches[2])) {
-                    if (count($matches[2]) > 1) {
-                        $fieldMultipleValues = $matches[2];
-                    } else {
-                        if (count($matches[2]) === 1) {
-                            $fieldValue = isset($matches[2][0]) ? $matches[2][0] : '';
-                        }
-                    }
-                }
-            }
-
-            if (preg_match('/default:([a-zA-Z0-9]+)/', $fieldString, $matches)) {
-                $fieldDefault = isset($matches[1]) ? $matches[1] : '';
-            }
-
-            if (preg_match('/limit:([a-zA-Z0-9]+)/', $fieldString, $matches)) {
-                $fieldMaxFileSize = isset($matches[1]) ? $matches[1] : '1mb';
-
-                if (strpos($fieldMaxFileSize, 'mb') !== false) {
-                    $fieldFileSizeUnit = 'MB';
-                }
-
-                $fieldMaxFileSize = str_replace(['mb', 'kb'], '', $fieldMaxFileSize);
-            }
-
-            if (preg_match('/autocomplete:([a-zA-Z0-9]+)/', $fieldString, $matches)) {
-                $fieldValue = isset($matches[1]) ? $matches[1] : '';
-            }
-
-            if ($fieldElement === 'acceptance') {
-                $tncHtml = $fieldValue;
-            }
-
-            if (!$fieldLabel) {
-                $fieldLabel = $fieldElement;
-            }
-
-            $fieldType = ArrayHelper::get($this->fieldTypeMap(), $fieldElement);
-
-            $args = [
-                'uniqElKey'          => 'el_'. $superKey . time(),
-                'type'               => $fieldType,
-                'index'              => $superKey,
-                'required'           => $fieldRequired,
-                'label'              => $fieldLabel,
-                'name'               => $fieldName,
-                'placeholder'        => $fieldPlaceholder,
-                'class'              => '',
-                'value'              => $fieldValue,
-                'help_message'       => '',
-                'container_class'    => '',
-                'prefix'             => '',
-                'suffix'             => '',
-                'min'                => $fieldMin,
-                'max'                => $fieldMax,
-                'minlength'          => $fieldMinLength,
-                'maxlength'          => $fieldMaxLength,
-                'size'               => $fieldSize,
-                'step'               => $fieldStep,
-                'choices'            => $fieldMultipleValues,
-                'default'            => $fieldDefault,
-                'multiple'           => $fieldMultiple,
-                'allowed_file_types' => $fieldFileTypes,
-                'max_file_size'      => $fieldMaxFileSize,
-                'max_size_unit'      => $fieldFileSizeUnit,
-                'tnc_html'           => $tncHtml
-            ];
-
-            $fields = $this->formatFieldData($args, $fieldType);
-
-            if ($fieldMultiple) {
-                $fieldType = 'multi_select';
-            }
-
-            if ($fieldData = $this->getFluentClassicField($fieldType, $fields)) {
-                $fluentFields['fields'][$args['index']] = $fieldData;
-            }
-        }
-
-        $fluentFields['submitButton'] = $submitBtn;
-
-        return $fluentFields;
+        return $this->formatAsFluentField($fieldStringArray);
     }
 
     public function getSubmitBttn($args)
@@ -367,6 +170,7 @@ class ContactForm7Migrator extends BaseMigrator
             default :
                 break;
         }
+
         return $args;
     }
 
@@ -394,6 +198,7 @@ class ContactForm7Migrator extends BaseMigrator
             }
             $formattedOptions[] = $formattedOption;
         }
+
         return [$formattedOptions, $defaults];
     }
 
@@ -468,27 +273,28 @@ class ContactForm7Migrator extends BaseMigrator
                 'imported_ff_id' => $this->isAlreadyImported($item),
             ];
         }
+
         return $forms;
     }
 
     private function getNotifications()
     {
         return [
-            'name'      => __('Admin Notification Email', 'fluentform'),
-            'sendTo'    => [
+            'name'         => __('Admin Notification Email', 'fluentform'),
+            'sendTo'       => [
                 'type'    => 'email',
                 'email'   => '{wp.admin_email}',
                 'field'   => '',
                 'routing' => [],
             ],
-            'fromName'  => '',
-            'fromEmail' => '',
-            'replyTo'   => '',
-            'bcc'       => '',
-            'subject'   => __('New Form Submission', 'fluentform'),
-            'message'   => '<p>{all_data}</p><p>This form submitted at: {embed_post.permalink}</p>',
+            'fromName'     => '',
+            'fromEmail'    => '',
+            'replyTo'      => '',
+            'bcc'          => '',
+            'subject'      => __('New Form Submission', 'fluentform'),
+            'message'      => '<p>{all_data}</p><p>This form submitted at: {embed_post.permalink}</p>',
             'conditionals' => [],
-            'enabled'   => false
+            'enabled'      => false
         ];
     }
 
@@ -509,6 +315,222 @@ class ContactForm7Migrator extends BaseMigrator
         ];
     }
 
+    private function removeLabelsAndNewLine($formMetaDataArray)
+    {
+        $formattedArray = [];
+        foreach ($formMetaDataArray as $formMetaString) {
+            if (!empty($formMetaString)) {
+                if (strpos($formMetaString, '<label>') !== false || strpos($formMetaString, '</label>') !== false) {
+                    $formMetaString = trim(str_replace(['<label>', '</label>'], '', $formMetaString));
+                }
+                $formattedArray[] = $formMetaString;
+            }
+        }
+
+        return $formattedArray;
+    }
+
+    private function formatFieldArray($formattedArray)
+    {
+        $fieldStringArray = [];
+        foreach ($formattedArray as $formattedKey => &$formattedValue) {
+            preg_match_all('/\[[^\]]*\]/', $formattedValue, $fieldStringMatches);
+            $fieldString = isset($fieldStringMatches[0][0]) ? $fieldStringMatches[0][0] : '';
+
+            if (preg_match('/\[(.*?)\](.*?)\[.*?\]/', $formattedValue, $withoutBracketMatches)) {
+                $withoutBracketString = isset($withoutBracketMatches[2]) ? trim($withoutBracketMatches[2]) : '';
+                $fieldString = str_replace(']', ' "' . $withoutBracketString . '"]', $fieldString);
+            }
+
+            if (strpos($formattedValue, '[quiz') !== 0) {
+                if (strpos($formattedValue, '[') === false) {
+                    if (
+                        isset($formattedArray[$formattedKey + 1]) &&
+                        strpos($formattedArray[$formattedKey + 1], '[') !== false
+                    ) {
+                        $fieldStringArray[] = $formattedValue . $formattedArray[$formattedKey + 1];
+                        unset($formattedArray[$formattedKey + 1]);
+                    }
+                } else {
+                    $fieldStringArray[] = $fieldString;
+                    unset($formattedArray[$formattedKey]);
+                }
+            }
+        }
+
+        return $fieldStringArray;
+    }
+
+    private function formatAsFluentField($fieldStringArray)
+    {
+        $fluentFields = [];
+        $submitBtn = [];
+
+        foreach ($fieldStringArray as $fieldKey => &$fieldValue) {
+            $fieldLabel = '';
+            $fieldPlaceholder = '';
+            $fieldAutoComplete = '';
+            $fieldMinLength = '';
+            $fieldMaxLength = '';
+            $fieldSize = '';
+            $fieldStep = '';
+            $fieldMultipleValues = [];
+            $fieldMin = '';
+            $fieldMax = '';
+            $fieldDefault = '';
+            $fieldMultiple = false;
+            $fieldFileTypes = '';
+            $fieldMaxFileSize = '';
+            $fieldFileSizeUnit = 'KB';
+            $tncHtml = '';
+
+            $fieldString = '';
+
+            if (preg_match('/^(.*?)\[/', $fieldValue, $matches)) {
+                $fieldLabel = isset($matches[1]) ? $matches[1] : '';
+            }
+
+            if (preg_match('/\[([^]]+)\]/', $fieldValue, $matches)) {
+                $fieldString = isset($matches[1]) ? $matches[1] : '';
+            }
+
+            $words = preg_split('/\s+/', $fieldString);
+            $fieldRequired = isset($words[0]) && strpos($words[0], '*') !== false ?? true;
+            $fieldElement = isset($words[0]) ? trim($words[0], '*') : '';
+            $fieldName = isset($words[1]) ? trim($words[1]) : '';
+
+            if ($fieldElement === 'submit') {
+                preg_match_all('/(["\'])(.*?)\1/', $fieldString, $matches);
+
+                $submitBtn = $this->getSubmitBttn([
+                    'uniqElKey' => $fieldElement . '-' . time(),
+                    'label'     => isset($matches[2][0]) ? $matches[2][0] : 'Submit'
+                ]);
+
+                continue;
+            }
+
+            if ($fieldElement === 'select' && strpos($fieldString, 'multiple') !== false) {
+                $fieldMultiple = true;
+            }
+
+            if (preg_match('/min:([a-zA-Z0-9]+)/', $fieldString, $matches)) {
+                $fieldMin = isset($matches[1]) ? $matches[1] : '';
+            }
+
+            if (preg_match('/max:([a-zA-Z0-9]+)/', $fieldString, $matches)) {
+                $fieldMax = isset($matches[1]) ? $matches[1] : '';
+            }
+
+            if (preg_match('/minlength:([a-zA-Z0-9]+)/', $fieldString, $matches)) {
+                $fieldMinLength = isset($matches[1]) ? $matches[1] : '';
+            }
+
+            if (preg_match('/maxlength:([a-zA-Z0-9]+)/', $fieldString, $matches)) {
+                $fieldMaxLength = isset($matches[1]) ? $matches[1] : '';
+            }
+
+            if (preg_match('/size:([a-zA-Z0-9]+)/', $fieldString, $matches)) {
+                $fieldSize = isset($matches[1]) ? $matches[1] : '';
+            }
+
+            if (preg_match('/step:([a-zA-Z0-9]+)/', $fieldString, $matches)) {
+                $fieldStep = isset($matches[1]) ? $matches[1] : '';
+            }
+
+            if (preg_match('/(?:placeholder|watermark) "([a-zA-Z0-9]+)"/', $fieldString, $matches)) {
+                $fieldPlaceholder = isset($matches[1]) ? $matches[1] : '';
+            }
+
+            if (preg_match('/filetypes:([a-zA-Z0-9|]+)/', $fieldString, $matches)) {
+                $fieldFileTypes = isset($matches[1]) ? $matches[1] : '';
+            }
+
+            if (preg_match_all('/(["\'])(.*?)\1/', $fieldString, $matches)) {
+                if (isset($matches[2])) {
+                    if (count($matches[2]) > 1) {
+                        $fieldMultipleValues = $matches[2];
+                    } else {
+                        if (count($matches[2]) === 1) {
+                            $fieldAutoComplete = isset($matches[2][0]) ? $matches[2][0] : '';
+                        }
+                    }
+                }
+            }
+
+            if (preg_match('/default:([a-zA-Z0-9]+)/', $fieldString, $matches)) {
+                $fieldDefault = isset($matches[1]) ? $matches[1] : '';
+            }
+
+            if (preg_match('/limit:([a-zA-Z0-9]+)/', $fieldString, $matches)) {
+                $fieldMaxFileSize = isset($matches[1]) ? $matches[1] : '1mb';
+
+                if (strpos($fieldMaxFileSize, 'mb') !== false) {
+                    $fieldFileSizeUnit = 'MB';
+                }
+
+                $fieldMaxFileSize = str_replace(['mb', 'kb'], '', $fieldMaxFileSize);
+            }
+
+            if (preg_match('/autocomplete:([a-zA-Z0-9]+)/', $fieldString, $matches)) {
+                $fieldAutoComplete = isset($matches[1]) ? $matches[1] : '';
+            }
+
+            if ($fieldElement === 'acceptance') {
+                $tncHtml = $fieldAutoComplete;
+            }
+
+            if (!$fieldLabel) {
+                $fieldLabel = $fieldElement;
+            }
+
+            $fieldType = ArrayHelper::get($this->fieldTypeMap(), $fieldElement);
+
+            $args = [
+                'uniqElKey'          => 'el_' . $fieldKey . time(),
+                'type'               => $fieldType,
+                'index'              => $fieldKey,
+                'required'           => $fieldRequired,
+                'label'              => $fieldLabel,
+                'name'               => $fieldName,
+                'placeholder'        => $fieldPlaceholder,
+                'class'              => '',
+                'value'              => $fieldAutoComplete,
+                'help_message'       => '',
+                'container_class'    => '',
+                'prefix'             => '',
+                'suffix'             => '',
+                'min'                => $fieldMin,
+                'max'                => $fieldMax,
+                'minlength'          => $fieldMinLength,
+                'maxlength'          => $fieldMaxLength,
+                'size'               => $fieldSize,
+                'step'               => $fieldStep,
+                'choices'            => $fieldMultipleValues,
+                'default'            => $fieldDefault,
+                'multiple'           => $fieldMultiple,
+                'allowed_file_types' => $fieldFileTypes,
+                'max_file_size'      => $fieldMaxFileSize,
+                'max_size_unit'      => $fieldFileSizeUnit,
+                'tnc_html'           => $tncHtml
+            ];
+
+            $fields = $this->formatFieldData($args, $fieldType);
+
+            if ($fieldMultiple) {
+                $fieldType = 'multi_select';
+            }
+
+            if ($fieldData = $this->getFluentClassicField($fieldType, $fields)) {
+                $fluentFields['fields'][$args['index']] = $fieldData;
+            }
+        }
+
+        $fluentFields['submitButton'] = $submitBtn;
+
+        return $fluentFields;
+    }
+
     public function getEntries($formId)
     {
         if (class_exists('Flamingo_Inbound_Message')) {
@@ -520,7 +542,11 @@ class ContactForm7Migrator extends BaseMigrator
             foreach ($allPosts as $post) {
                 $entries[] = $post->fields;
             }
+
             return $entries;
         }
+        wp_send_json_error([
+            'message' => __("Please install and active Flamango", 'fluentform')
+        ], 422);
     }
 }
