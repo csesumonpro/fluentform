@@ -21,12 +21,17 @@ export default function (method, route, data = {}) {
             .then(response => resolve(response))
             .fail(errors => {
                 if (errors.responseJSON && errors.responseJSON.code == 'rest_cookie_invalid_nonce') {
+                    // refresh the nonce only once per failed request
+                    if (window.fluent_forms_global_var.rest.nonce_refreshed) {
+                        return;
+                    }
                     // Renew nonce from the server and retry the original request.
                     window.FluentFormsGlobal.$get({
                         action: "fluentform_renew_rest_nonce",
                     }).then(response => {
                         if (response.nonce) {
                             window.fluent_forms_global_var.rest.nonce = response.nonce;
+                            window.fluent_forms_global_var.rest.nonce_refreshed = true;
                             method = method.toLowerCase();
 
                             window.FluentFormsGlobal.$rest[method](route, data).then(response => {
