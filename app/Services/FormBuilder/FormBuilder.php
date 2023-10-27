@@ -122,23 +122,30 @@ class FormBuilder
 
         $formAtts = $this->buildAttributes($formAttributes);
         $stylerCss = false;
+        
+        
         // if (Helper::isBlockEditor()){
         //     $stylerCss = Helper::getFormMeta($form->id,'_ff_form_styler_css');
-            
+        
         // }
         $themeStyle = ArrayHelper::get($atts, 'theme_style');
+    
+        
+        if(!$themeStyle) {
+            $themeStyle = Helper::getFormMeta($form->id, '_ff_selected_style');
+        }
+        
+        if($themeStyle) {
+            $themeStyle = 'ff-default';
+        }
+        
         if ($themeStyle){
             $stylerCss = (new \FluentFormPro\classes\FormStyler())->applyStyleWithOutSaving($form->id, $themeStyle);
         }
         // Do not load ff style '.ff-default' when style set to inherit from theme
-        $wrapperClasses = trim('fluentform ff-default fluentform_wrapper_' . $form->id . ' ' . ArrayHelper::get($atts, 'css_classes'));
-        $loadThemeStyle = Helper::getFormMeta($form->id, '_ff_selected_style') === 'ffs_inherit_theme';
-
-        $loadThemeStyle = apply_filters('fluentform/load_theme_style', $themeStyle == 'ffs_inherit_theme');
-
-        if (true || $loadThemeStyle) {
-            $wrapperClasses = str_replace("ff-default", "ff-inherit-theme-style", $wrapperClasses);
-        }
+        $wrapperClasses = trim('fluentform fluentform_wrapper_' . $form->id . ' ' . ArrayHelper::get($atts, 'css_classes') .' '.$themeStyle);
+        
+        
         $wrapperClasses = apply_filters('fluentform/form_wrapper_classes', $wrapperClasses, $form);
         ob_start();
 
@@ -213,7 +220,7 @@ class FormBuilder
         );
         do_action('fluentform/after_form_render', $form);
 
-        return ob_get_clean();
+        return ob_get_clean().'<h3>'.$themeStyle.'</h3>';
     }
 
     /**
