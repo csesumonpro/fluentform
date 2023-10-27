@@ -122,6 +122,7 @@ class FormBuilder
 
         $formAtts = $this->buildAttributes($formAttributes);
         $stylerCss = false;
+
         $themeStyle = ArrayHelper::get($atts, 'theme_style');
                     
         if (defined('FLUENTFORMPRO') && class_exists('\FluentFormPro\classes\FormStyler')) {
@@ -139,6 +140,7 @@ class FormBuilder
         if ($themeStyle === 'ffs_inherit_theme') {
             $wrapperClasses = str_replace("ff-default", "ff-inherit-theme-style", $wrapperClasses);
         }
+
         $wrapperClasses = apply_filters('fluentform/form_wrapper_classes', $wrapperClasses, $form);
         ob_start();
 
@@ -213,7 +215,7 @@ class FormBuilder
         );
         do_action('fluentform/after_form_render', $form);
 
-        return ob_get_clean();
+        return ob_get_clean().'<h3>'.$themeStyle.'</h3>';
     }
 
     /**

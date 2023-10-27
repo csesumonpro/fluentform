@@ -975,7 +975,6 @@ if (function_exists('register_block_type')) {
             ],
         ]);
     });
-
 }
 
 // require the CLI
