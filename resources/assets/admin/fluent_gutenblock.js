@@ -46,6 +46,7 @@ registerBlockType("fluentfom/guten-block", {
         },
         themeStyle: {
             type: "string",
+            default: window.fluentform_block_vars.theme_style
         },
         className: {
             type: "string",
@@ -100,7 +101,7 @@ registerBlockType("fluentfom/guten-block", {
             } else {
                 setTimeout(async () => {
                     checkIfConversationalForm(formId);
-                    syncBlockAttrWithFormMeta(formId);
+                    // syncBlockAttrWithFormMeta(formId);
                 }, 300);
             }
         }

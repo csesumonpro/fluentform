@@ -29,3 +29,7 @@ require __DIR__.'/vendor/autoload.php';
 call_user_func(function($bootstrap) {
     $bootstrap(__FILE__);
 }, require(__DIR__.'/boot/app.php'));
+
+// add_filter('fluentform/load_theme_style', function($pref) {
+//     return true;
+// });

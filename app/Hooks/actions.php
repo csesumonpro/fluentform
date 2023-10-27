@@ -891,6 +891,7 @@ add_action('enqueue_block_editor_assets', function () {
         'logo'                    => fluentFormMix('img/fluent_icon.png'),
         'forms'                   => $forms,
         'style_presets'           => $formattedPresets,
+        'theme_style'             => apply_filters('fluentform/load_theme_style', false) ? 'ffs_inherit_theme' : '',
         'conversational_demo_img' => fluentformMix('img/conversational-form-demo.png'),
         'rest'                    => \FluentForm\App\Helpers\Helper::getRestInfo()
     ]);
@@ -947,26 +948,26 @@ if (function_exists('register_block_type')) {
 
             $themeStyle = sanitize_text_field(\FluentForm\Framework\Helpers\ArrayHelper::get($atts, 'themeStyle'));
 
-            if (!$themeStyle) {
-                $loadThemeStyle = apply_filters('fluentform/inherit_theme_style', false);
+            // if (!$themeStyle) {
+            //     $loadThemeStyle = apply_filters('fluentform/inherit_theme_style', false);
 
-                if ($loadThemeStyle) {
-                    $themeStyle = 'ffs_inherit_theme';
-                }
-            }
+            //     if ($loadThemeStyle) {
+            //         $themeStyle = 'ffs_inherit_theme';
+            //     }
+            // }
             
-            if (defined('FLUENTFORMPRO') && class_exists('\FluentFormPro\classes\FormStyler')) {
-                $formStyler = new \FluentFormPro\classes\FormStyler();
+            // if (defined('FLUENTFORMPRO') && class_exists('\FluentFormPro\classes\FormStyler')) {
+            //     $formStyler = new \FluentFormPro\classes\FormStyler();
 
-                if (method_exists($formStyler, 'generateStyleFromPreset')) {
-                    $formStyler->generateStyleFromPreset($formId, $themeStyle);
-                }
-            } else {
-                \FluentForm\App\Helpers\Helper::setFormMeta($formId, '_ff_selected_style', $themeStyle);
-            }
+            //     if (method_exists($formStyler, 'generateStyleFromPreset')) {
+            //         $formStyler->generateStyleFromPreset($formId, $themeStyle);
+            //     }
+            // } else {
+            //     \FluentForm\App\Helpers\Helper::setFormMeta($formId, '_ff_selected_style', $themeStyle);
+            // }
             
             $type = \FluentForm\App\Helpers\Helper::isConversionForm($formId) ? 'conversational' : '';
-            return do_shortcode('[fluentform css_classes="' . $className . ' ff_guten_block" id="' . $formId . '"  type="' . $type . '"]');
+            return do_shortcode('[fluentform theme_style="'. $themeStyle .'" css_classes="' . $className . ' ff_guten_block" id="' . $formId . '"  type="' . $type . '"]');
         },
         'attributes'      => [
             'formId'               => [
