@@ -215,7 +215,7 @@ class FormBuilder
         );
         do_action('fluentform/after_form_render', $form);
 
-        return ob_get_clean().'<h3>'.$themeStyle.'</h3>';
+        return ob_get_clean();
     }
 
     /**
