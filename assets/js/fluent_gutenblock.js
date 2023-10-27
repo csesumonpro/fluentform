@@ -4228,86 +4228,36 @@ registerBlockType("fluentfom/guten-block", {
   icon: fluentLogo,
   category: "formatting",
   keywords: [__("Contact Form"), __("Fluent Forms"), __("Forms"), __("Advanced Forms"), __("fluentforms-gutenberg-block")],
-  attributes: {
-    formId: {
-      type: "string"
-    },
-    themeStyle: {
-      type: "string",
-      "default": window.fluentform_block_vars.theme_style
-    },
-    className: {
-      type: "string"
-    },
-    isConversationalForm: {
-      type: "boolean",
-      "default": false
-    },
-    isThemeChange: {
-      type: "boolean",
-      "default": false
-    }
-  },
   edit: function edit(_ref2) {
     var attributes = _ref2.attributes,
       setAttributes = _ref2.setAttributes;
-    function syncBlockAttrWithFormMeta(_x3) {
-      return _syncBlockAttrWithFormMeta.apply(this, arguments);
-    }
-    function _syncBlockAttrWithFormMeta() {
-      _syncBlockAttrWithFormMeta = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee3(formId) {
-        var selectedStyleMeta;
-        return _regeneratorRuntime().wrap(function _callee3$(_context3) {
-          while (1) switch (_context3.prev = _context3.next) {
-            case 0:
-              if (formId) {
-                _context3.next = 2;
-                break;
-              }
-              return _context3.abrupt("return");
-            case 2:
-              _context3.next = 4;
-              return getFormMeta(formId, "_ff_selected_style");
-            case 4:
-              selectedStyleMeta = _context3.sent;
-              setAttributes({
-                themeStyle: selectedStyleMeta
-              });
-            case 6:
-            case "end":
-              return _context3.stop();
-          }
-        }, _callee3);
-      }));
-      return _syncBlockAttrWithFormMeta.apply(this, arguments);
-    }
-    function checkIfConversationalForm(_x4) {
+    function checkIfConversationalForm(_x3) {
       return _checkIfConversationalForm.apply(this, arguments);
     }
     function _checkIfConversationalForm() {
-      _checkIfConversationalForm = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4(formId) {
+      _checkIfConversationalForm = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2(formId) {
         var isConversationalForm;
-        return _regeneratorRuntime().wrap(function _callee4$(_context4) {
-          while (1) switch (_context4.prev = _context4.next) {
+        return _regeneratorRuntime().wrap(function _callee2$(_context2) {
+          while (1) switch (_context2.prev = _context2.next) {
             case 0:
               if (formId) {
-                _context4.next = 2;
+                _context2.next = 2;
                 break;
               }
-              return _context4.abrupt("return");
+              return _context2.abrupt("return");
             case 2:
-              _context4.next = 4;
+              _context2.next = 4;
               return getFormMeta(formId, "is_conversion_form");
             case 4:
-              isConversationalForm = _context4.sent;
+              isConversationalForm = _context2.sent;
               setAttributes({
                 isConversationalForm: isConversationalForm === "yes"
               });
             case 6:
             case "end":
-              return _context4.stop();
+              return _context2.stop();
           }
-        }, _callee4);
+        }, _callee2);
       }));
       return _checkIfConversationalForm.apply(this, arguments);
     }
@@ -4322,25 +4272,14 @@ registerBlockType("fluentfom/guten-block", {
           isConversationalForm: false
         });
       } else {
-        setTimeout( /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee2() {
-          return _regeneratorRuntime().wrap(function _callee2$(_context2) {
-            while (1) switch (_context2.prev = _context2.next) {
-              case 0:
-                checkIfConversationalForm(formId);
-                // syncBlockAttrWithFormMeta(formId);
-              case 1:
-              case "end":
-                return _context2.stop();
-            }
-          }, _callee2);
-        })), 300);
+        checkIfConversationalForm(formId);
       }
     }
     var config = window.fluentform_block_vars;
-    var transformedArray = Object.entries(config.style_presets).map(function (_ref4) {
-      var _ref5 = _slicedToArray(_ref4, 2),
-        value = _ref5[0],
-        label = _ref5[1];
+    var transformedArray = Object.entries(config.style_presets).map(function (_ref3) {
+      var _ref4 = _slicedToArray(_ref3, 2),
+        value = _ref4[0],
+        label = _ref4[1];
       if (value === "ffs_custom") {
         return {
           value: value,
@@ -4400,7 +4339,7 @@ registerBlockType("fluentfom/guten-block", {
             alt: "Fluent Forms Conversational Form"
           }), /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("p", {
             children: /*#__PURE__*/(0,react_jsx_runtime__WEBPACK_IMPORTED_MODULE_0__.jsx)("strong", {
-              children: __('This is a demo! The actual Conversational Form may look different in live pages.')
+              children: __("This is a demo! The actual Conversational Form may look different in live pages.")
             })
           })]
         }, "ff-conv-sub-wrapper"));

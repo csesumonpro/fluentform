@@ -926,70 +926,56 @@ add_action('enqueue_block_editor_assets', function () {
 
 
 if (function_exists('register_block_type')) {
-    register_block_type('fluentfom/guten-block', [
-        'render_callback' => function ($atts) {
-            $formId = \FluentForm\Framework\Support\Arr::get($atts, 'formId');
-            
-            if (empty($formId)) {
-                return '';
-            }
-            
-            $className = \FluentForm\Framework\Helpers\ArrayHelper::get($atts, 'className');
-            
-            if ($className) {
-                $classes = explode(' ', $className);
-                $className = '';
-                if (!empty($classes)) {
-                    foreach ($classes as $class) {
-                        $className .= sanitize_html_class($class) . ' ';
+    add_action('init', function () {
+        register_block_type('fluentfom/guten-block', [
+            'render_callback' => function ($atts) {
+                $formId = \FluentForm\Framework\Support\Arr::get($atts, 'formId');
+                
+                if (empty($formId)) {
+                    return '';
+                }
+                
+                $className = \FluentForm\Framework\Helpers\ArrayHelper::get($atts, 'className');
+                
+                if ($className) {
+                    $classes = explode(' ', $className);
+                    $className = '';
+                    if (!empty($classes)) {
+                        foreach ($classes as $class) {
+                            $className .= sanitize_html_class($class) . ' ';
+                        }
                     }
                 }
-            }
+    
+                $themeStyle = sanitize_text_field(\FluentForm\Framework\Helpers\ArrayHelper::get($atts, 'themeStyle'));
+                
+                $type = \FluentForm\App\Helpers\Helper::isConversionForm($formId) ? 'conversational' : '';
+                
+                return do_shortcode('[fluentform theme_style="'. $themeStyle .'" css_classes="' . $className . ' ff_guten_block" id="' . $formId . '"  type="' . $type . '"]');
+            },
+            'attributes'      => [
+                'formId'               => [
+                    'type' => 'string',
+                ],
+                'className'            => [
+                    'type' => 'string',
+                ],
+                'themeStyle'           => [
+                    'type'    => 'string',
+                    'default' => apply_filters('fluentform/load_theme_style', false) ? 'ffs_inherit_theme' : ''
+                ],
+                'isConversationalForm' => [
+                    'type'    => 'boolean',
+                    'default' => false,
+                ],
+                'isThemeChange'        => [
+                    'type'    => 'boolean',
+                    'default' => false,
+                ],
+            ],
+        ]);
+    });
 
-            $themeStyle = sanitize_text_field(\FluentForm\Framework\Helpers\ArrayHelper::get($atts, 'themeStyle'));
-
-            // if (!$themeStyle) {
-            //     $loadThemeStyle = apply_filters('fluentform/inherit_theme_style', false);
-
-            //     if ($loadThemeStyle) {
-            //         $themeStyle = 'ffs_inherit_theme';
-            //     }
-            // }
-            
-            // if (defined('FLUENTFORMPRO') && class_exists('\FluentFormPro\classes\FormStyler')) {
-            //     $formStyler = new \FluentFormPro\classes\FormStyler();
-
-            //     if (method_exists($formStyler, 'generateStyleFromPreset')) {
-            //         $formStyler->generateStyleFromPreset($formId, $themeStyle);
-            //     }
-            // } else {
-            //     \FluentForm\App\Helpers\Helper::setFormMeta($formId, '_ff_selected_style', $themeStyle);
-            // }
-            
-            $type = \FluentForm\App\Helpers\Helper::isConversionForm($formId) ? 'conversational' : '';
-            return do_shortcode('[fluentform theme_style="'. $themeStyle .'" css_classes="' . $className . ' ff_guten_block" id="' . $formId . '"  type="' . $type . '"]');
-        },
-        'attributes'      => [
-            'formId'               => [
-                'type' => 'string',
-            ],
-            'className'            => [
-                'type' => 'string',
-            ],
-            'themeStyle'           => [
-                'type'    => 'string',
-                'default' => '',
-            ],
-            'isConversationalForm' => [
-                'type'    => 'boolean',
-                'default' => false,
-            ],
-            'isThemeChange'        => [
-                'type'    => 'boolean',
-                'default' => false,
-            ],
-        ],
-    ]);
 }
 
 // require the CLI

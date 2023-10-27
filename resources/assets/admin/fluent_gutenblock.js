@@ -14,7 +14,7 @@ const getFormMeta = async (formId, metaKey) => {
 
     const path = `${window.fluentform_block_vars.rest.namespace}/${window.fluentform_block_vars.rest.version}/settings/${formId}?meta_key=${metaKey}`;
     const response = await apiFetch({ path });
-    
+
     return (response.length && response[0].value) || false;
 };
 
@@ -40,40 +40,8 @@ registerBlockType("fluentfom/guten-block", {
         __("Advanced Forms"),
         __("fluentforms-gutenberg-block"),
     ],
-    attributes: {
-        formId: {
-            type: "string",
-        },
-        themeStyle: {
-            type: "string",
-            default: window.fluentform_block_vars.theme_style
-        },
-        className: {
-            type: "string",
-        },
-        isConversationalForm: {
-            type: "boolean",
-            default: false,
-        },
-        isThemeChange: {
-            type: "boolean",
-            default: false,
-        },
-    },
+
     edit({ attributes, setAttributes }) {
-        async function syncBlockAttrWithFormMeta(formId) {
-            if (!formId) {
-                return;
-            }
-
-            const selectedStyleMeta = await getFormMeta(
-                formId,
-                "_ff_selected_style"
-            );
-
-            setAttributes({ themeStyle: selectedStyleMeta });
-        }
-
         async function checkIfConversationalForm(formId) {
             if (!formId) {
                 return;
@@ -99,10 +67,7 @@ registerBlockType("fluentfom/guten-block", {
                     isConversationalForm: false,
                 });
             } else {
-                setTimeout(async () => {
-                    checkIfConversationalForm(formId);
-                    // syncBlockAttrWithFormMeta(formId);
-                }, 300);
+                checkIfConversationalForm(formId);
             }
         }
 
@@ -172,7 +137,9 @@ registerBlockType("fluentfom/guten-block", {
                         />
                         <p>
                             <strong>
-                                {__('This is a demo! The actual Conversational Form may look different in live pages.')}
+                                {__(
+                                    "This is a demo! The actual Conversational Form may look different in live pages."
+                                )}
                             </strong>
                         </p>
                     </div>

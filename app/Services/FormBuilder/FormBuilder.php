@@ -122,27 +122,27 @@ class FormBuilder
 
         $formAtts = $this->buildAttributes($formAttributes);
         $stylerCss = false;
-        // if (Helper::isBlockEditor()){
-        //     $stylerCss = Helper::getFormMeta($form->id,'_ff_form_styler_css');
-            
-        // }
         $themeStyle = ArrayHelper::get($atts, 'theme_style');
-        if ($themeStyle){
-            $stylerCss = (new \FluentFormPro\classes\FormStyler())->applyStyleWithOutSaving($form->id, $themeStyle);
+                    
+        if (defined('FLUENTFORMPRO') && class_exists('\FluentFormPro\classes\FormStyler')) {
+            $formStyler = new \FluentFormPro\classes\FormStyler();
+
+            if (method_exists($formStyler, 'applyStyleWithOutSaving')) {
+                if ($themeStyle) {                    
+                    $stylerCss = (new \FluentFormPro\classes\FormStyler())->applyStyleWithOutSaving($form->id, $themeStyle);
+                }
+            }
         }
-        // Do not load ff style '.ff-default' when style set to inherit from theme
+
         $wrapperClasses = trim('fluentform ff-default fluentform_wrapper_' . $form->id . ' ' . ArrayHelper::get($atts, 'css_classes'));
-        $loadThemeStyle = Helper::getFormMeta($form->id, '_ff_selected_style') === 'ffs_inherit_theme';
 
-        $loadThemeStyle = apply_filters('fluentform/load_theme_style', $themeStyle == 'ffs_inherit_theme');
-
-        if (true || $loadThemeStyle) {
+        if ($themeStyle === 'ffs_inherit_theme') {
             $wrapperClasses = str_replace("ff-default", "ff-inherit-theme-style", $wrapperClasses);
         }
         $wrapperClasses = apply_filters('fluentform/form_wrapper_classes', $wrapperClasses, $form);
         ob_start();
 
-        if($stylerCss){
+        if ($stylerCss){
             echo " <style id=\"" . 'fluentform_styler_css_' . $form->id . "\" type=\"text/css\">" . fluentformSanitizeCSS($stylerCss) . "</style>";
         }
 
