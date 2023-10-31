@@ -367,7 +367,7 @@ class TranslationString
             'Description' => __('Description', 'fluentform'),
             'This will show at the top of your page after form title' => __('This will show at the top of your page after form title', 'fluentform'),
             'Security Code' => __('Security Code', 'fluentform'),
-            'A Salt to secure your share url so nobody can guess by form ID.' => __('A Salt to secure your share url so nobody can guess by form ID.', 'fluentform'),
+            'Add a Security Code to make your shareable URL extra secure.' => __('Add a Security Code to make your shareable URL extra secure.', 'fluentform'),
             'Share your form by unique URL or copy and paste the shortcode to embed in your page and post' => __('Share your form by unique URL or copy and paste the shortcode to embed in your page and post', 'fluentform'),
             'Share Your Form' => __('Share Your Form', 'fluentform'),
             'Share Via Direct URL' => __('Share Via Direct URL', 'fluentform'),

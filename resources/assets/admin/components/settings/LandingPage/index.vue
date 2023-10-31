@@ -189,7 +189,7 @@
                                                 <el-tooltip class="item" placement="bottom-start" popper-class="ff_tooltip_wrap">
                                                     <div slot="content">
                                                         <p>
-                                                            {{ $t('A Salt to secure your share url so nobody can guess by form ID.') }}
+                                                            {{ $t('Add a Security Code to make your shareable URL extra secure.') }}
                                                         </p>
                                                     </div>
                                                     <i class="ff-icon ff-icon-info-filled text-primary"></i>
