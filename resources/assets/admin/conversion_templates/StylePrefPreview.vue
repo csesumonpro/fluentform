@@ -5,7 +5,7 @@
         </div>
         <div v-else :style="{ filter:  brightness }" class="fcc_block_media_attachment" :class="'fc_i_layout_' + pref.layout">
             <picture class="fc_image_holder">
-                <img :style="{ 'object-position': imagePositionCSS }" :src="pref.media" />
+                <img :style="{ 'object-position': imagePositionCSS, 'object-fit': mediaFit }" :src="pref.media" />
             </picture>
         </div>
     </div>
@@ -32,6 +32,9 @@ export default {
                 return this.pref.media_x_position+'%'+' '+ this.pref.media_y_position + '%';
             }
             return false;
+        },
+        mediaFit() {
+            return this.pref.media_fit ?? 'cover';
         }
     }
 }

@@ -17,6 +17,18 @@
                 <el-label slot="label" :label="$t('Media Brightness')" :helpText="$t('Brightness of your selected media')"></el-label>
                 <el-slider :min="-100" input-size="mini" :max="100" v-model="pref.brightness" show-input></el-slider>
             </el-form-item>
+            <el-form-item class="ff-form-item">
+              <el-label slot="label" :label="$t('Media Fit')" :helpText="$t('Select Media fit')"></el-label>
+              <el-select :min="-100" input-size="mini" :max="100" v-model="pref.media_fit">
+                <el-option
+                    v-for="fit in fitMediaOptions"
+                    :key="fit.value"
+                    :label="fit.label"
+                    :value="fit.value"
+                >
+                </el-option>
+              </el-select>
+            </el-form-item>
             <template v-if="pref.layout == 'media_right_full' || pref.layout == 'media_left_full'">
                 <el-form-item class="ff-form-item">
                     <el-label slot="label" :label="$t('Media Horizontal Position')" :helpText="$t('Horizontal (X) Position of the media')"></el-label>
@@ -76,7 +88,37 @@ export default {
                     label: 'Left Aligned Full',
                     icon: 'dashicons dashicons-align-pull-left'
                 }
-            }
+            },
+            fitMediaOptions: [
+                {
+                    label: 'Fill',
+                    value: 'fill'
+                },
+                {
+                    label: 'Contain',
+                    value: 'contain'
+                },
+                {
+                    label: 'Cover',
+                    value: 'cover',
+                },
+                {
+                    label: 'Scale-down',
+                    value: 'scale-down',
+                },
+                {
+                    label: 'None',
+                    value: 'none',
+                },
+                {
+                    label: 'Initial',
+                    value: 'initial',
+                },
+                {
+                    label: 'Inherit',
+                    value: 'inherit',
+                }
+            ]
         }
     }
 }

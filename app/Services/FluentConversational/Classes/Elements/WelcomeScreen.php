@@ -69,6 +69,7 @@ class WelcomeScreen extends BaseFieldManager
                 'layout'           => 'default',
                 'media'            => '',
                 'brightness'       => 0,
+                'media_fit'        => 'cover',
                 'alt_text'         => '',
                 'media_x_position' => 50,
                 'media_y_position' => 50,

@@ -350,6 +350,28 @@ $app->addFilter(
     }
 );
 
+$app->addFilter('fluentform/editor_components', function($components, $formId) {
+    $form = \FluentForm\App\Models\Form::where('id', $formId)->first();
+    $formFields = json_decode($form->form_fields, true);
+    $fields = $formFields['fields'];
+    $formattedFields = [];
+
+    if (is_array($fields) && ! empty($fields)) {
+        foreach ($fields as $field) {
+            if (
+                \FluentForm\Framework\Helpers\ArrayHelper::exists($field, 'style_pref') && !\FluentForm\Framework\Helpers\ArrayHelper::exists($field['style_pref'], 'media_fit')
+            ) {
+                $field['style_pref']['media_fit'] = 'cover';
+            }
+            $formattedFields[] = $field;
+        }
+    }
+
+    $formFields['fields'] = $formattedFields;
+    json_encode($formFields);
+
+    return $components;
+}, 999, 2);
 
 /*
  * Remove this after WP Fusion Update their plugin
