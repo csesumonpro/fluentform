@@ -10,7 +10,7 @@ class Customizer
 {
     public function get($formId, $metaKeys = [])
     {
-        $defaultMetaKeys = ['_custom_form_css', '_custom_form_js'];
+        $defaultMetaKeys = ['_custom_form_css', '_custom_form_js', '_ff_form_styler_css', '_ff_selected_style'];
         
         $metaKeys = array_merge($defaultMetaKeys, $metaKeys);
 

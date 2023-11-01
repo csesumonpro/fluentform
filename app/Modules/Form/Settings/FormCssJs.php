@@ -53,6 +53,16 @@ class FormCssJs
 
             if (!$loadCss) {
                 $loadCss = apply_filters('fluentform/build_style_from_theme', '', $formId, $style);
+
+                // todo: remove this from next version. it's only here to support if the user updates the free version first.
+                if (!$loadCss) {
+                    $selectedStyle = ArrayHelper::get($metas, '_ff_selected_style');
+                    $selectedStyleCSS = ArrayHelper::get($metas, '_ff_form_styler_css');
+
+                    if ($selectedStyle == $style && $selectedStyleCSS) {
+                        $loadCss = $selectedStyleCSS;
+                    }
+                }
             }
 
             if ($loadCss) {
