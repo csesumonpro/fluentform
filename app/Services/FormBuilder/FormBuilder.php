@@ -144,6 +144,8 @@ class FormBuilder
 
         if ($themeStyle === 'ffs_inherit_theme') {
             $wrapperClasses = str_replace("ff-default", "ff-inherit-theme-style", $wrapperClasses);
+        } else if ($themeStyle) {
+            $wrapperClasses .= ' ' . $themeStyle . '_wrap';
         }
 
         $wrapperClasses = apply_filters('fluentform/form_wrapper_classes', $wrapperClasses, $form);
