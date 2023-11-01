@@ -556,7 +556,7 @@ class TranslationString
             'Creating Feed. Please wait...' => __('Creating Feed. Please wait...', 'fluentform'),
             'Create new PDF Feed' => __('Create new PDF Feed', 'fluentform'),
             'Please Select a Template' => __('Please Select a Template', 'fluentform'),
-            'PDF Contents' => __('PDF Contents', 'fluentform'),
+            'PDF Content' => __('PDF Content', 'fluentform'),
             'Save Feed Settings' => __('Save Feed Settings', 'fluentform'),
             'Appearance' => __('Appearance', 'fluentform'),
             'Select a Field or Type Custom value' => __('Select a Field or Type Custom value', 'fluentform'),

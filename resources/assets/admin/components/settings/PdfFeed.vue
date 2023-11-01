@@ -1,7 +1,7 @@
 <template>
     <div v-loading="loading" class="ff_feed_editor ff_full_width_feed">
         <el-tabs type="border-card">
-            <el-tab-pane :label="$t('PDF Contents')">
+            <el-tab-pane :label="$t('PDF Content')">
                 <el-form v-if="feed.settings" label-position="top">
                     <field-mapper
                         :field="{ component: 'value_text', label: 'Feed Title', placeholder: 'Feed Title' }"
