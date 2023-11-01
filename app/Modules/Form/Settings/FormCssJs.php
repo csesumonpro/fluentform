@@ -3,6 +3,7 @@
 namespace FluentForm\App\Modules\Form\Settings;
 
 use FluentForm\App\Helpers\Helper;
+use FluentForm\Framework\Helpers\ArrayHelper;
 
 class FormCssJs
 {
@@ -18,11 +19,11 @@ class FormCssJs
         $this->request = wpFluentForm('request');
     }
 
-    public function addCssJs($formId)
+    public function addCssJs($formId, $styles = [])
     {
-        $metas = (new \FluentForm\App\Services\Settings\Customizer())->get($formId);
+        $metas = (new \FluentForm\App\Services\Settings\Customizer())->get($formId, $styles);
         do_action('fluentform/adding_custom_styler_css_js', $formId, $metas);
-        $stylerCss = $selectedStyle = $customCss = '';
+        $customCss = '';
 
         foreach ($metas as $metaKey => $metaValue) {
             if ($metaValue) {
@@ -32,27 +33,36 @@ class FormCssJs
                         $css = str_replace('{form_id}', $formId, $css);
                         $customCss = str_replace('FF_ID', $formId, $css);
                         break;
-                    case 'styler':
-                        $stylerCss = $metaValue;
-                        break;
                     case 'js':
                         $this->addJs($formId, $metaValue);
-                        break;
-                    case 'selected_style':
-                        $selectedStyle = $metaValue;
                         break;
                 }
             }
         }
-        // Add styler css if a preset is selected
-        if ($selectedStyle) {
-            do_action('fluentform/init_custom_stylesheet', $selectedStyle, $formId);
-            if (defined('FLUENTFORMPRO')) {
-                $this->addCss($formId, $stylerCss, 'fluentform_styler_css_' . $formId);
+
+        foreach ($styles as $style) {
+            if (!$style) {
+                continue;
+            }
+
+            if ('ffs_inherit_theme' === $style) {
+                continue;
+            }
+
+            $loadCss = ArrayHelper::get($metas, $style);
+
+            if (!$loadCss) {
+                $loadCss = apply_filters('fluentform/build_style_from_theme', '', $formId, $style);
+            }
+
+            if ($loadCss) {
+                $this->addCss($formId, $loadCss, 'fluentform_styler_css_' . $formId . '_' . $style);
+                
+                do_action('fluent_form/loaded_styler_' . $formId . '_' . $style);
             }
         }
 
-        if($customCss) {
+        if ($customCss) {
             $this->addCss($formId, $customCss, 'fluentform_custom_css_' . $formId);
         }
     }
@@ -91,17 +101,20 @@ class FormCssJs
     public function addCss($formId, $css, $cssId = 'fluentform_custom_css')
     {
         if ($css) {
-
             $action = false;
 
-            if(!did_action('wp_head')) {
+            if (!did_action('wp_head')) {
                 $action = 'wp_head';
-            } else if(!did_action('wp_footer')) {
+            } elseif (!did_action('wp_footer')) {
                 $action = 'wp_footer';
             }
 
-            if($action) {
-                add_action($action, function () use ($css, $formId, $cssId) {
+            if (Helper::isBlockEditor()) {
+                $action = false;
+            }
+
+            if ($action) {
+                add_action($action, function () use ($css, $cssId) {
                     ?>
                     <style id="<?php echo esc_attr($cssId); ?>" type="text/css">
                         <?php echo fluentformSanitizeCSS($css); ?>

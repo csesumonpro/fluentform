@@ -75,6 +75,20 @@ class FormBuilder
             $formClass .= ' ' . $extraFormClass;
         }
 
+        $themeStyle = ArrayHelper::get($atts, 'theme');
+
+        if (!$themeStyle) {
+            $selectedStyle = Helper::getFormMeta($form->id, '_ff_selected_style');
+
+            if ($selectedStyle) {
+                $themeStyle = $selectedStyle;
+
+                $atts['theme'] = $selectedStyle;
+            }
+        }
+
+        $form->theme = $themeStyle;
+
         $formBody = $this->buildFormBody($form);
 
         if (strpos($formBody, '{dynamic.')) {
@@ -99,6 +113,10 @@ class FormBuilder
             $formClass .= ' fluentform_has_payment';
         }
 
+        if ($themeStyle) {
+            $formClass .= ' ' . $themeStyle;
+        }
+
         $data = [
             'data-form_id'       => $form->id,
             'id'                 => 'fluentform_' . $form->id,
@@ -121,19 +139,6 @@ class FormBuilder
         $formAttributes = apply_filters('fluentform/html_attributes', $data, $form);
 
         $formAtts = $this->buildAttributes($formAttributes);
-        $stylerCss = false;
-
-        $themeStyle = ArrayHelper::get($atts, 'theme_style');
-                    
-        if (defined('FLUENTFORMPRO') && class_exists('\FluentFormPro\classes\FormStyler')) {
-            $formStyler = new \FluentFormPro\classes\FormStyler();
-
-            if (method_exists($formStyler, 'applyStyleWithOutSaving')) {
-                if ($themeStyle) {                    
-                    $stylerCss = (new \FluentFormPro\classes\FormStyler())->applyStyleWithOutSaving($form->id, $themeStyle);
-                }
-            }
-        }
 
         $wrapperClasses = trim('fluentform ff-default fluentform_wrapper_' . $form->id . ' ' . ArrayHelper::get($atts, 'css_classes'));
 
@@ -143,10 +148,6 @@ class FormBuilder
 
         $wrapperClasses = apply_filters('fluentform/form_wrapper_classes', $wrapperClasses, $form);
         ob_start();
-
-        if ($stylerCss){
-            echo " <style id=\"" . 'fluentform_styler_css_' . $form->id . "\" type=\"text/css\">" . fluentformSanitizeCSS($stylerCss) . "</style>";
-        }
 
         echo "<div class='" . esc_attr($wrapperClasses) . "'>";
 
@@ -160,7 +161,7 @@ class FormBuilder
             'Use fluentform/before_form_render instead of fluentform_before_form_render.'
         );
 
-        do_action('fluentform/before_form_render', $form);
+        do_action('fluentform/before_form_render', $form, $atts);
        
         echo '<form ' . $formAtts . '>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $formAtts is escaped before being passed in.
     

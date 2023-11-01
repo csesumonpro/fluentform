@@ -286,6 +286,7 @@ class Helper
         }
 
         $ids = [];
+        $attributes = [];
 
         foreach ($matches as $shortcode) {
             if (count($shortcode) >= 2 && $tag === $shortcode[2]) {
@@ -301,8 +302,21 @@ class Helper
                     }
 
                     $ids[$result[$selector]] = $result[$selector];
+
+                    $theme = ArrayHelper::get($result, 'theme');
+
+                    if ($theme) {
+                        $attributes[] = [
+                            'formId' => $result[$selector],
+                            'theme'  => $theme
+                        ];
+                    }
                 }
             }
+        }
+
+        if ($attributes) {
+            $ids['attributes'] = $attributes;
         }
 
         return $ids;
@@ -311,6 +325,7 @@ class Helper
     public static function getFormsIdsFromBlocks($content)
     {
         $ids = [];
+        $attributes = [];
 
         if (!function_exists('parse_blocks')) {
             return $ids;
@@ -324,13 +339,29 @@ class Helper
 
         $parsedBlocks = parse_blocks($content);
         foreach ($parsedBlocks as $block) {
-            if (!ArrayHelper::exists($block, 'blockName') || ArrayHelper::exists($block, 'attrs.formId')) {
+            if (!ArrayHelper::exists($block, 'blockName') || !ArrayHelper::get($block, 'attrs.formId')) {
                 continue;
             }
+
             $hasBlock = strpos($block['blockName'], 'fluentfom/guten-block') === 0;
             if ($hasBlock) {
-                $ids[] = (int) $block['attrs']['formId'];
+                $formId = (int) $block['attrs']['formId'];
+                
+                $ids[] = $formId;
+
+                $theme = ArrayHelper::get($block, 'attrs.themeStyle');
+
+                if ($theme) {
+                    $attributes[] = [
+                        'formId' => $formId,
+                        'theme'  => $theme
+                    ];
+                }
             }
+        }
+
+        if ($attributes) {
+            $ids['attributes'] = $attributes;
         }
 
         return $ids;

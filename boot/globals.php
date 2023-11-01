@@ -405,7 +405,7 @@ function fluentform_sanitize_html($html)
 
 function fluentform_kses_js($content)
 {
-    return preg_replace('/<script.*?>[\s\S]*<\/script>/is', '', $content);
+    return $content ? preg_replace('/<script.*?>[\s\S]*<\/script>/is', '', $content) : '';
 }
 
 /**
