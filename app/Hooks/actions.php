@@ -684,25 +684,16 @@ $app->addAction('fluentform/before_form_render', function ($form, $atts) {
     $styles = $theme ? [$theme] : [];
 
     do_action(
-        'fluentform/load_form_assets', 
-        $form->id, 
+        'fluentform/load_form_assets',
+        $form->id,
         $styles
     );
 }, 10, 2);
 
 add_action('fluentform/load_form_assets', function ($formId, $styles = []) {
-    $notLoadedStyles = [];
-
-    foreach ($styles as $style) {
-        if (!did_action('fluent_form/loaded_styler_' . $formId . '_' . $style)) {
-            $notLoadedStyles[] = $style;
-        }
-    }
-
-    // check if alreaded loaded
-    if ($notLoadedStyles) {
-        (new \FluentForm\App\Modules\Form\Settings\FormCssJs())->addCssJs($formId, $notLoadedStyles);
-    }
+    
+    (new \FluentForm\App\Modules\Form\Settings\FormCssJs())->addCssJs($formId, $styles);
+    
 }, 10, 2);
 
 $app->addAction('fluentform/submission_inserted', function ($insertId, $formData, $form) use ($app) {
@@ -766,8 +757,8 @@ add_action('wp', function () {
     if ($fluentFormIds && is_array($fluentFormIds)) {
         foreach ($fluentFormIds as $formId) {
             do_action(
-                'fluentform/load_form_assets', 
-                $formId, 
+                'fluentform/load_form_assets',
+                $formId,
                 array_unique(ArrayHelper::get($attributes, $formId . '.themes', []))
             );
         }

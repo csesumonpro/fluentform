@@ -21,10 +21,10 @@ class FormCssJs
 
     public function addCssJs($formId, $styles = [])
     {
+    
         $metas = (new \FluentForm\App\Services\Settings\Customizer())->get($formId, $styles);
         do_action('fluentform/adding_custom_styler_css_js', $formId, $metas);
         $customCss = '';
-
         foreach ($metas as $metaKey => $metaValue) {
             if ($metaValue) {
                 switch ($metaKey) {
@@ -47,6 +47,9 @@ class FormCssJs
 
             if ('ffs_inherit_theme' === $style) {
                 continue;
+            }
+            if (did_action('fluent_form/loaded_styler_' . $formId . '_' . $style)) {
+               continue;
             }
 
             $loadCss = ArrayHelper::get($metas, $style);
@@ -144,7 +147,12 @@ class FormCssJs
 
     public function addJs($formId, $customJS)
     {
+        
         if (trim($customJS)) {
+            if (did_action('fluent_form/loaded_custom_js_' . $formId )) {
+                return;
+            }
+            do_action('fluent_form/loaded_custom_js_' . $formId );
             add_action('wp_footer', function () use ($formId, $customJS) {
                 ?>
                 <script type="text/javascript">
@@ -162,6 +170,7 @@ class FormCssJs
                         });
                 </script>
                 <?php
+                
             }, 100);
         }
     }
