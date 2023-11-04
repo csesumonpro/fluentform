@@ -87,15 +87,14 @@ class WelcomeScreen extends BaseFieldManager
             'align',
             'btn_text',
             'button_ui',
+            'button_style',
+            'button_size',
         ];
     }
 
     public function getAdvancedEditorElements()
     {
-        return [
-            'button_style',
-            'button_size',
-        ];
+        return [];
     }
 
     public function pushFormInputType($types)
