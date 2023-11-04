@@ -855,7 +855,7 @@ class TranslationString
             'Add multiple IP address separated by comma to restrict submission.' => __('Add multiple IP address separated by comma to restrict submission.', 'fluentform'),
             'IP Address Restricted Error Message' => __('IP Address Error Message', 'fluentform'),
             'Set error message when IP address is invalid.' => __('Set error message when IP address is invalid.', 'fluentform'),
-            'Please setup your geolocation IP token from global settings which is a PRO feature.' => __('Please setup your geolocation IP token from global settings which is a PRO feature.', 'fluentform'),
+            'Please setup your geolocation IP token from global settings.' => __('Please setup your geolocation IP token from global settings.', 'fluentform'),
             'Select Country' => __('Select Country', 'fluentform'),
             'Select country to set restriction.' => __('Select country to set restriction.', 'fluentform'),
             'Country Restricted Error Message' => __('Country Error Message', 'fluentform'),

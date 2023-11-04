@@ -168,16 +168,6 @@ class EmailNotification
         }
         $result = false;
         foreach ($sendAddresses as $address) {
-
-            do_action('fluentform/log_data', [
-                'parent_source_id' => $form->id,
-                'source_type'      => 'submission_item',
-                'source_id'        => $entryId,
-                'component'        => 'EmailNotification',
-                'status'           => 'info',
-                'title'            => 'Email sending initiated',
-                'description'      => 'Email Notification broadcasted to ' . $address . ".<br />Subject: {$subject}",
-            ]);
             $address =  apply_filters_deprecated(
                 'fluentform_email_to',
                 [
@@ -191,6 +181,17 @@ class EmailNotification
                 'Use fluentform/email_to instead of fluentform_email_to.'
             );
             $emailTo = apply_filters('fluentform/email_to', $address, $notification, $submittedData, $form);
+
+            do_action('fluentform/log_data', [
+                'parent_source_id' => $form->id,
+                'source_type'      => 'submission_item',
+                'source_id'        => $entryId,
+                'component'        => 'EmailNotification',
+                'status'           => 'info',
+                'title'            => 'Email sending initiated',
+                'description'      => 'Email Notification broadcasted to ' . $address . ".<br />Subject: {$subject}",
+            ]);
+
             $result = $this->broadCast([
                 'email'       => $emailTo,
                 'subject'     => $subject,

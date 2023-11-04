@@ -3,6 +3,7 @@
 namespace FluentForm\App\Services\Settings;
 
 use FluentForm\App\Models\Form;
+use FluentForm\App\Helpers\Helper;
 use FluentForm\App\Models\FormMeta;
 use FluentForm\Framework\Support\Arr;
 use FluentForm\App\Services\FluentConversational\Classes\Form as FluentConversational;
@@ -18,7 +19,7 @@ class SettingsService
         $result = FormMeta::where(['meta_key' => $metaKey, 'form_id' => $formId])->get();
 
         foreach ($result as $item) {
-            $value = json_decode($item->value, true);
+            $value = Helper::isJson($item->value) ? json_decode($item->value, true) : $item->value;
 
             if ('notifications' == $metaKey) {
                 if (!$value) {

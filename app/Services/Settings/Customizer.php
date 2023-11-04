@@ -8,32 +8,23 @@ use FluentForm\Framework\Support\Arr;
 
 class Customizer
 {
-    public function get($formId)
+    public function get($formId, $metaKeys = ['_custom_form_css', '_custom_form_js'])
     {
-        $customizer = FormMeta::where('form_id', $formId)
-            ->whereIn('meta_key', ['_custom_form_css', '_custom_form_js', '_ff_form_styler_css', '_ff_selected_style'])
+        return FormMeta::where('form_id', $formId)
+            ->whereIn('meta_key', $metaKeys)
             ->get()
             ->keyBy(function ($item) {
                 if ($item->meta_key === '_custom_form_css') {
                     return 'css';
                 } elseif ($item->meta_key === '_custom_form_js') {
                     return 'js';
-                } elseif ($item->meta_key === '_ff_form_styler_css') {
-                    return 'styler';
-                } elseif ($item->meta_key === '_ff_selected_style') {
-                    return 'selected_style';
+                } else {
+                    return $item->meta_key;
                 }
             })
             ->transform(function ($item) {
                 return $item->value;
             })->toArray();
-        
-        return [
-            'css'            => Arr::get($customizer, 'css'),
-            'js'             => Arr::get($customizer, 'js'),
-            'styler'         => Arr::get($customizer, 'styler'),
-            'selected_style' => Arr::get($customizer, 'selected_style'),
-        ];
     }
 
     public function store($attributes = [])

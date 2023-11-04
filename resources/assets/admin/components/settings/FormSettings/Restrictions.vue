@@ -255,7 +255,7 @@
 
             <transition name="slide-down">
                 <el-form-item v-if="form.restrictForm.enabled" class="conditional-items">
-                    <div>
+                    <div v-if="hasFluentformPro">
                         <el-checkbox v-model="form.restrictForm.fields.ip.status">
                             {{ $t('IP Based Restriction') }}
                         </el-checkbox>
@@ -305,12 +305,12 @@
                                 </el-form-item>
                             </div>
                             <div v-else>
-                                <p class="ff_tips_warning">{{ $t('Please setup your geolocation IP token from global settings which is a PRO feature.') }}</p>
+                                <p class="ff_tips_warning">{{ $t('Please setup your geolocation IP token from global settings.') }}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div>
+                    <div v-if="hasFluentformPro">
                         <el-checkbox v-model="form.restrictForm.fields.country.status">
                             {{ $t('Country Based Restriction') }}
                         </el-checkbox>
@@ -366,7 +366,7 @@
                                 </el-form-item>
                             </div>
                             <div v-else>
-                                <p class="ff_tips_warning">{{ $t('Please setup your geolocation IP token from global settings which is a PRO feature.') }}</p>
+                                <p class="ff_tips_warning">{{ $t('Please setup your geolocation IP token from global settings.') }}</p>
                             </div>
                         </div>
                     </div>
@@ -415,157 +415,7 @@
                     </div>
                 </el-form-item>
             </transition>
-
-<!--            <transition name="slide-down">-->
-<!--                <div v-if="form.restrictForm.fields.ip.status && form.restrictForm.enabled" class="conditional-items mb-6">-->
-<!--                    <div v-if="isIpInfoActive">-->
-<!--                        <el-form-item class="ff-form-item">-->
-<!--                            <template slot="label">-->
-<!--                                {{ $t('Add IP Address') }}-->
-
-<!--                                <el-tooltip class="item" placement="bottom-start" popper-class="ff_tooltip_wrap">-->
-<!--                                    <div slot="content">-->
-<!--                                        <p>-->
-<!--                                            {{ $t('Add multiple IP address separated by comma to restrict submission.') }}-->
-<!--                                        </p>-->
-<!--                                    </div>-->
-
-<!--                                    <i class="ff-icon ff-icon-info-filled text-primary"></i>-->
-<!--                                </el-tooltip>-->
-<!--                            </template>-->
-
-<!--                            <el-input v-model="form.restrictForm.fields.ip.values"></el-input>-->
-<!--                        </el-form-item>-->
-
-<!--                        <el-form-item class="ff-form-item">-->
-<!--                            <template slot="label">-->
-<!--                                {{ $t('IP Address Restriction Error Message') }}-->
-
-<!--                                <el-tooltip class="item" placement="bottom-start" popper-class="ff_tooltip_wrap">-->
-<!--                                    <div slot="content">-->
-<!--                                        <p>-->
-<!--                                            {{ $t('Set error message when IP address is invalid.') }}-->
-<!--                                        </p>-->
-<!--                                    </div>-->
-
-<!--                                    <i class="ff-icon ff-icon-info-filled text-primary"></i>-->
-<!--                                </el-tooltip>-->
-<!--                            </template>-->
-
-<!--                            <el-input type="textarea" v-model="form.restrictForm.fields.ip.message"></el-input>-->
-<!--                        </el-form-item>-->
-
-<!--                        <el-form-item class="ff-form-item">-->
-<!--                            <el-radio-group class="mb-3" v-model="form.restrictForm.fields.ip.validation_type">-->
-<!--                                <el-radio label="fail_on_condition_met">{{ $t('Fail the submission if match')}}</el-radio>-->
-<!--                                <el-radio label="success_on_condition_met">{{ $t('Allow the submission if match') }}</el-radio>-->
-<!--                            </el-radio-group>-->
-<!--                        </el-form-item>-->
-<!--                    </div>-->
-<!--                    <div v-else>-->
-<!--                        <p class="ff_tips_warning">{{ $t('Please setup your geolocation IP token from global settings which is a PRO feature.') }}</p>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--            </transition>-->
-
-<!--            <transition name="slide-down">-->
-<!--                <div v-if="form.restrictForm.fields.country.status && form.restrictForm.enabled" class="conditional-items mb-6">-->
-<!--                    <div v-if="isIpInfoActive">-->
-<!--                        <el-form-item class="ff-form-item">-->
-<!--                            <template slot="label">-->
-<!--                                {{ $t('Select Country') }}-->
-
-<!--                                <el-tooltip class="item" placement="bottom-start" popper-class="ff_tooltip_wrap">-->
-<!--                                    <div slot="content">-->
-<!--                                        <p>-->
-<!--                                            {{ $t('Select country to set restriction.') }}-->
-<!--                                        </p>-->
-<!--                                    </div>-->
-
-<!--                                    <i class="ff-icon ff-icon-info-filled text-primary"></i>-->
-<!--                                </el-tooltip>-->
-<!--                            </template>-->
-<!--                            <el-select filterable v-model="form.restrictForm.fields.country.values" multiple class="w-100">-->
-<!--                                <el-option-->
-<!--                                    v-for="(value, key) in getCountries"-->
-<!--                                    :key="key"-->
-<!--                                    :label="value"-->
-<!--                                    :value="key">-->
-<!--                                </el-option>-->
-<!--                            </el-select>-->
-<!--                        </el-form-item>-->
-
-<!--                        <el-form-item class="ff-form-item">-->
-<!--                            <template slot="label">-->
-<!--                                {{ $t('Country Restriction Error Message') }}-->
-
-<!--                                <el-tooltip class="item" placement="bottom-start" popper-class="ff_tooltip_wrap">-->
-<!--                                    <div slot="content">-->
-<!--                                        <p>-->
-<!--                                            {{ $t('Set error message when selected country is restricted.') }}-->
-<!--                                        </p>-->
-<!--                                    </div>-->
-
-<!--                                    <i class="ff-icon ff-icon-info-filled text-primary"></i>-->
-<!--                                </el-tooltip>-->
-<!--                            </template>-->
-
-<!--                            <el-input type="textarea" v-model="form.restrictForm.fields.country.message"></el-input>-->
-<!--                        </el-form-item>-->
-
-<!--                        <el-form-item class="ff-form-item">-->
-<!--                            <el-radio-group class="mb-3" v-model="form.restrictForm.fields.country.validation_type">-->
-<!--                                <el-radio label="fail_on_condition_met">{{ $t('Fail the submission if match')}}</el-radio>-->
-<!--                                <el-radio label="success_on_condition_met">{{ $t('Allow the submission if match') }}</el-radio>-->
-<!--                            </el-radio-group>-->
-<!--                        </el-form-item>-->
-<!--                    </div>-->
-<!--                    <div v-else>-->
-<!--                        <p class="ff_tips_warning">{{ $t('Please setup your geolocation IP token from global settings which is a PRO feature.') }}</p>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--            </transition>-->
-
-<!--            <transition name="slide-down">-->
-<!--                <div v-if="form.restrictForm.fields.keywords.status && form.restrictForm.enabled" class="conditional-items">-->
-<!--                    <el-form-item class="ff-form-item">-->
-<!--                        <template slot="label">-->
-<!--                            {{ $t('Add Keywords') }}-->
-
-<!--                            <el-tooltip class="item" placement="bottom-start" popper-class="ff_tooltip_wrap">-->
-<!--                                <div slot="content">-->
-<!--                                    <p>-->
-<!--                                        {{ $t('Add multiple keywords separated by comma to restrict submission.') }}-->
-<!--                                    </p>-->
-<!--                                </div>-->
-
-<!--                                <i class="ff-icon ff-icon-info-filled text-primary"></i>-->
-<!--                            </el-tooltip>-->
-<!--                        </template>-->
-
-<!--                        <el-input v-model="form.restrictForm.fields.keywords.values"></el-input>-->
-<!--                    </el-form-item>-->
-
-<!--                    <el-form-item class="ff-form-item">-->
-<!--                        <template slot="label">-->
-<!--                            {{ $t('Keywords Restriction Error Message') }}-->
-
-<!--                            <el-tooltip class="item" placement="bottom-start" popper-class="ff_tooltip_wrap">-->
-<!--                                <div slot="content">-->
-<!--                                    <p>-->
-<!--                                        {{ $t('Set error message when keywords are invalid.') }}-->
-<!--                                    </p>-->
-<!--                                </div>-->
-
-<!--                                <i class="ff-icon ff-icon-info-filled text-primary"></i>-->
-<!--                            </el-tooltip>-->
-<!--                        </template>-->
-
-<!--                        <el-input type="textarea" v-model="form.restrictForm.fields.keywords.message"></el-input>-->
-<!--                    </el-form-item>-->
-<!--                </div>-->
-<!--            </transition>-->
-        </div><!-- .el-form-item -->
+        </div>
     </el-form>
 </template>
 
@@ -662,7 +512,11 @@
             },
             isIpInfoActive() {
                 return !!window.FluentFormApp.getIpInfo?.length;
+            },
+            hasFluentformPro() {
+                return !!window.FluentFormApp.hasPro;
             }
+
         }
     }
 </script>

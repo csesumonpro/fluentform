@@ -64,7 +64,8 @@ class SubmitButton extends BaseComponent
             $btnSize,
             $data['attributes']['class'],
         ];
-        $loadDefaultFluentStyle = Helper::getFormMeta($form->id, '_ff_selected_style') != 'ffs_inherit_theme';
+        
+        $loadDefaultFluentStyle = $form->theme != 'ffs_inherit_theme';
         if(!$loadDefaultFluentStyle){
             $btnStyle = 'no_style';
         }
@@ -115,7 +116,8 @@ class SubmitButton extends BaseComponent
                 $styles .= 'form.fluent_form_' . $form->id . ' .wpf_has_custom_css.ff-btn-submit:hover { ' . $hoverStates . ' } ';
             }
         } elseif ('no_style' != $btnStyle) {
-            $styles .= 'form.fluent_form_' . $form->id . ' .ff-btn-submit { background-color: ' . esc_attr(ArrayHelper::get($data, 'settings.background_color')) . '; color: ' . esc_attr(ArrayHelper::get($data, 'settings.color')) . '; }';
+
+            $styles .= 'form.fluent_form_' . $form->id . ' .ff-btn-submit:not(.ff_btn_no_style) { background-color: ' . esc_attr(ArrayHelper::get($data, 'settings.background_color')) . '; color: ' . esc_attr(ArrayHelper::get($data, 'settings.color')) . '; }';
         }
 
         $atts = $this->buildAttributes($data['attributes']);
@@ -135,7 +137,7 @@ class SubmitButton extends BaseComponent
         }
 
         if ($styles) {
-            if (did_action('wp_footer')) {
+            if (did_action('wp_footer') || Helper::isBlockEditor()) {
                 $html .= '<style>' . $styles . '</style>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $styles is escaped before being passed in.
             } else {
                 add_action('wp_footer', function () use ($styles) {

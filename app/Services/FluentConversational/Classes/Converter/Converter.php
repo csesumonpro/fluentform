@@ -51,7 +51,7 @@ class Converter
             }
 
             $question = [
-                'id'              => ArrayHelper::get($field, 'uniqElKey'),
+                'id'              => ArrayHelper::get($field, 'attributes.name'),
                 'name'            => ArrayHelper::get($field, 'attributes.name'),
                 'title'           => ArrayHelper::get($field, 'settings.label'),
                 'type'            => ArrayHelper::get($allowedFields, $field['element']),

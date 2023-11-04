@@ -77,7 +77,7 @@ use FluentForm\Framework\Helpers\ArrayHelper;
                                    href="<?php echo esc_url(Helper::makeMenuUrl('fluent_forms_settings', [
                                        'hash' => 'settings'
                                    ])); ?>">
-                                    <?php echo __('Default Messages', 'fluentform'); ?>
+                                   <?php echo __('Validation Messages', 'fluentform'); ?>
                                 </a>
                             </li>
                             <li>

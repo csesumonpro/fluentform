@@ -87,7 +87,7 @@
         <card id="email-summaries">
             <card-head>
                 <h5 class="title">{{ $t('Email Summaries') }}</h5>
-                <p class="text" style="max-width: 650px;">
+                <p class="text">
                     {{$t('Would you like to receive a weekly report showing how your forms are performing? Enable Email Summaries option and you will get a report every week to the provided email address')}}
                 </p>
             </card-head>
@@ -189,7 +189,7 @@
         <card id="integration-failure-notification">
             <card-head>
                 <h5 class="title">{{ $t('Integration Failure Email Notification') }}</h5>
-                <p class="text" style="max-width: 700px;">
+                <p class="text">
                     {{$t('Enable Integration Failure Notification and you will get an email when any of your integration fails to run.')}}
                 </p>
             </card-head>
@@ -252,8 +252,8 @@
         <!-- Default Messages -->
         <card id="default-messages">
             <card-head>
-                <h5 class="title"> {{$t('Default Messages') }}</h5>
-                <p class="text" style="max-width: 650px;">
+                <h5 class="title">{{$t('Validation Messages') }}</h5>
+                <p class="text">
                     {{
                         $t("These messages will be used as default messages of all form. These messages will be ignored when field error message set as custom.")
                     }}

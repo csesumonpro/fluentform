@@ -2,15 +2,14 @@
   .ff_guten_block{
     pointer-events: none;
   }
-  padding: 20px;
+
   .fluentform-logo img{
     margin: 0px auto;
+    max-width: 48px;
+    display: block;
   }
   .fluentform-logo {
     margin-bottom: 30px;
-    img {
-      max-width: 48px;
-    }
   }
   .conv-demo{
     text-align: center;
@@ -22,8 +21,8 @@
     }
   }
 
- .components-base-control__label {
-   padding-right: 15px;
+  .components-base-control__label {
+    padding-right: 15px;
   }
   .ff-btn-submit{
     pointer-events:none;

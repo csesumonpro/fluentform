@@ -4,7 +4,7 @@ Tags: contact form, quiz, wp forms, forms, form builder, contact form builder, f
 Requires at least: 4.5
 Tested up to: 6.3.2
 Requires PHP: 7.1
-Stable tag: 5.0.12
+Stable tag: 5.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -440,6 +440,22 @@ The entire source code is <a href="https://github.com/fluentform/fluentform">ava
 
 == Changelog ==
 
+= 5.1.1 (Date: November 4, 2023) =
+- Improves custom CSS & JS loading
+
+= 5.1.0 (Date: November 1, 2023) =
+- Adds Global Search
+- Adds Global Default Validation Messages
+- Adds support for Fluent Booking in Conversational Form
+- Adds theme style inherit option.
+- Adds Form submission restriction based on Keyword
+- Adds a refresh button on form entries
+- Improves WPForms and Gravity Forms migration support for conditional logic mapping
+- Fixes URL cut-off on the Entries page
+- Fixes pagination in Forms and Entries pages
+- Fixes attachment preview in email notification
+- Fixes multiple numeric calculations in conversational forms
+- Removes total views from exported forms
 
 = 5.0.12 (Date: October 19, 2023) =
  - Fixes theme selection bug

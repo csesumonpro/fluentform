@@ -489,6 +489,7 @@ class Component
                 'css_classes'        => '',
                 'permission'         => '',
                 'type'               => 'classic',
+                'theme'        => '',
                 'permission_message' => __('Sorry, You do not have permission to view this form', 'fluentform')
             ];
             /* This filter is deprecated, will be removed soon */
