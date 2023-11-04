@@ -424,6 +424,44 @@ $app->addAction('fluentform/loading_editor_assets', function ($form) {
         $item['attributes']['name'] = 'cf-turnstile-response';
         return $item;
     }, 10, 2);
+
+    add_filter('fluentform/editor_init_element_address', function ($item) {
+        foreach ($item['fields'] as &$addressField) {
+            if (
+                !isset($addressField['settings']['label_placement']) &&
+                !isset($addressField['settings']['label_placement_options'])
+            ) {
+                $addressField['settings']['label_placement'] = '';
+                $addressField['settings']['label_placement_options'] = [
+                    [
+                        'value' => '',
+                        'label' => __('Default', 'fluentform'),
+                    ],
+                    [
+                        'value' => 'top',
+                        'label' => __('Top', 'fluentform'),
+                    ],
+                    [
+                        'value' => 'right',
+                        'label' => __('Right', 'fluentform'),
+                    ],
+                    [
+                        'value' => 'bottom',
+                        'label' => __('Bottom', 'fluentform'),
+                    ],
+                    [
+                        'value' => 'left',
+                        'label' => __('Left', 'fluentform'),
+                    ],
+                    [
+                        'value' => 'hide_label',
+                        'label' => __('Hide Label', 'fluentform'),
+                    ],
+                ];
+            }
+        }
+        return $item;
+    });
 }, 10);
 
 $app->addAction('fluentform/addons_page_render_fluentform_pdf', function () use ($app) {
