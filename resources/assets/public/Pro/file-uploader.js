@@ -9,7 +9,76 @@ export default function ($, $form, form, fluentFormVars, formSelector) {
             return;
         }
 
-        $form.find('input[type="file"]').each(function (key, el) {
+        $form.find('input[type="file"][data-crop="yes"]').each(function (key, el) {
+            var modal = $("#imageModal");
+            var span = $(".close");
+            var $image = $('#image');
+            var cropper;
+            var croppedData;
+            var croppedBlob;
+            var uploadedList;
+
+            span.click(function () {
+                modal.hide();
+            });
+
+            $(el).change(function (e) {
+                uploadedList = $('<div/>', {
+                    class: 'ff-uploaded-list',
+                    style: 'font-size:12px; margin-top: 15px;'
+                });
+                element.closest('div').append(uploadedList);
+                var reader = new FileReader();
+                reader.onload = function (event) {
+                    modal.show();
+                    $image.attr('src', event.target.result);
+                    if (cropper) {
+                        cropper.destroy();
+                        cropper = null;
+                    }
+                    cropper = $image.cropper({
+                        viewMode: 3
+                    }).data('cropper');
+                };
+                reader.readAsDataURL(e.target.files[0]);
+            });
+
+            $('#crop').click(function (e) {
+                e.preventDefault();
+                croppedData = $image.cropper('getCroppedCanvas');
+                $image.attr('src', croppedData.toDataURL('image/jpeg'));
+                croppedData.toBlob(function (blob) {
+                    croppedBlob = blob;
+                }, 'image/jpeg');
+                cropper.destroy();
+                cropper = null;
+            });
+
+            $('#upload').click(function (e) {
+                e.preventDefault();
+
+                if (croppedBlob) {
+                    var formData = new FormData($form[0]);
+                    formData.append('action', 'fluentform_file_upload');
+                    formData.append('formId', form.id);
+                    formData.set('image-upload', croppedBlob, 'filename.jpg');
+                    $.ajax({
+                        url: fluentFormVars.ajaxUrl,
+                        type: 'POST',
+                        dataType: 'json',
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function (data) {
+                            // Handle the response after the image is successfully uploaded.
+                            console.log(data);
+                        }
+                    });
+                }
+            });
+        });
+
+        $form.find('input[type="file"][data-crop="no"]').each(function (key, el) {
             var element = $(this),
                 uploadedList;
 

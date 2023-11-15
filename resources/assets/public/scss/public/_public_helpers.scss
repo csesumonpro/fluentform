@@ -795,3 +795,33 @@ table.ff_flexible_table {
     }
   }
 }
+
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  overflow: hidden;
+  background-color: rgba(0,0,0,0.7);
+}
+
+.modal-content {
+  margin: auto;
+  display: block;
+}
+
+#image {
+  max-width: 100%;
+}
+
+.close {
+  color: white;
+  position: absolute;
+  top: 15px;
+  right: 35px;
+  font-size: 30px;
+  font-weight: bold;
+  cursor: pointer;
+}
