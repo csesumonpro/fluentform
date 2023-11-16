@@ -387,6 +387,10 @@ class SubmissionHandlerService
      */
     private function handleValidation()
     {
+
+        $formValidatorParser = new FormValidationParser($this->form, $this->formData);
+        $formValidatorParser->getRequiredFields();
+
         /* Now validate the data using the previous validations. */
         $this->validationService->setForm($this->form);
         $this->validationService->setFormData($this->formData);
