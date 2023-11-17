@@ -893,4 +893,21 @@ class Helper
             }
         }
     }
+
+    public static function getWhiteListedFields($formId)
+    {
+        $whiteListedFields = [
+            '__fluent_form_embded_post_id',
+            '_fluentform_' . $formId . '_fluentformnonce',
+            '_wp_http_referer',
+            'g-recaptcha-response',
+            'h-captcha-response',
+            'cf-turnstile-response',
+            '__stripe_payment_method_id',
+            '__ff_all_applied_coupons',
+            '__entry_intermediate_hash',
+        ];
+
+        return apply_filters('fluentform/white_listed_fields', $whiteListedFields, $formId);
+    }
 }

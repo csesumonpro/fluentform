@@ -58,9 +58,15 @@ class SubmissionHandlerService
         if (!$this->form) {
             throw new ValidationException('', 422, null, ['errors' => 'Sorry, No corresponding form found']);
         }
+        
         // Parse the form and get the flat inputs with validations.
-        $this->fields = FormFieldsParser::getInputs($this->form, ['rules', 'raw']);
-        $this->formData = fluentFormSanitizer($formDataRaw, null, $this->fields);
+        $this->fields = FormFieldsParser::getEssentialInputs($this->form, $formDataRaw, ['rules', 'raw']);
+        
+        $formData = fluentFormSanitizer($formDataRaw, null, $this->fields);
+
+        $acceptedFieldKeys = array_merge($this->fields, array_flip(Helper::getWhiteListedFields($formId)));
+        
+        $this->formData = array_intersect_key($formData, $acceptedFieldKeys);
     }
     
     
@@ -387,10 +393,6 @@ class SubmissionHandlerService
      */
     private function handleValidation()
     {
-
-        $formValidatorParser = new FormValidationParser($this->form, $this->formData);
-        $formValidatorParser->getRequiredFields();
-
         /* Now validate the data using the previous validations. */
         $this->validationService->setForm($this->form);
         $this->validationService->setFormData($this->formData);

@@ -2,6 +2,7 @@
 
 namespace FluentForm\App\Services\Parser;
 
+use FluentForm\App\Services\ConditionAssesor;
 use FluentForm\Framework\Helpers\ArrayHelper as Arr;
 
 class Extractor
@@ -90,6 +91,53 @@ class Extractor
             if ($field['element'] === 'container') {
                 foreach ($field['columns'] as $item) {
                     $this->looper($item['fields']);
+                }
+            }
+
+            // Now the field is supposed to be a flat field.
+            // We can extract the desired keys as we want.
+            else {
+                if (in_array($field['element'], $this->inputTypes)) {
+                    $this->extractField($field);
+                }
+            }
+        }
+    }
+
+    /**
+     * The extractor initializer for getting the extracted data.
+     *
+     * @return array
+     */
+    public function extractEssentials($formData)
+    {
+        $this->looperEssential($formData, $this->fields);
+
+        return $this->result;
+    }
+    
+    /**
+     * The recursive looper method to loop each
+     * of the fields and extract it's data.
+     *
+     * @param array $fields
+     */
+    protected function looperEssential($formData, $fields = [])
+    {
+        foreach ($fields as $field) {
+            $field['conditionals'] = Arr::get($field, 'settings.conditional_logics', []);
+
+            $matched = ConditionAssesor::evaluate($field, $formData);
+
+            if (!$matched) {
+                continue;
+            }
+
+            // If the field is a Container (collection of other fields)
+            // then we will recursively call this function to resolve.
+            if ($field['element'] === 'container') {             
+                foreach ($field['columns'] as $item) {
+                    $this->looperEssential($formData, $item['fields']);
                 }
             }
 
