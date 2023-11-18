@@ -2,6 +2,7 @@
 
 namespace FluentForm\App\Services\Parser;
 
+use FluentForm\App\Helpers\Helper;
 use FluentForm\App\Services\ConditionAssesor;
 use FluentForm\Framework\Helpers\ArrayHelper as Arr;
 
@@ -331,10 +332,28 @@ class Extractor
                 'settings.validation_rules'
             );
 
+            $this->handleMaxLengthValidation();
+
             $this->result[$this->attribute]['conditionals'] = Arr::get(
                 $this->field,
                 'settings.conditional_logics'
             );
+        }
+
+        return $this;
+    }
+
+    protected function handleMaxLengthValidation()
+    {
+        $maxLength = Arr::get($this->field, 'attributes.maxlength');
+        $fieldHasMaxValidation = Arr::get($this->field, 'settings.validation_rules.max');
+        $shouldSetMaxValidation = $maxLength && !$fieldHasMaxValidation;
+
+        if ($shouldSetMaxValidation) {
+            $this->result[$this->attribute]['rules']['max'] = [
+                'value'   => $maxLength,
+                "message" => Helper::getGlobalDefaultMessage('max'),
+            ];
         }
 
         return $this;
