@@ -280,7 +280,7 @@ $app->addFilter('fluentform/disabled_analytics', function ($status) {
     return $status;
 });
 
-// permision based filters
+// permission based filters
 $app->addFilter('fluentform/permission_callback', function ($status, $permission) {
     return (new \FluentForm\App\Modules\Acl\RoleManager())->currentUserFormFormCapability();
 }, 10, 2);
@@ -288,6 +288,18 @@ $app->addFilter('fluentform/permission_callback', function ($status, $permission
 $app->addFilter('fluentform/validate_input_item_input_email', ['\FluentForm\App\Helpers\Helper', 'isUniqueValidation'], 10, 5);
 
 $app->addFilter('fluentform/validate_input_item_input_text', ['\FluentForm\App\Helpers\Helper', 'isUniqueValidation'], 10, 5);
+
+$app->addFilter('fluentform/validate_input_item_input_text', ['\FluentForm\App\Helpers\Helper', 'isUniqueValidation'], 10, 5);
+
+$selectAbleInputs = [
+    'input_radio',
+    'select',
+    'select_country',
+    'input_checkbox',
+];
+foreach ($selectAbleInputs as $input) {
+    $app->addFilter('fluentform/validate_input_item_' . $input, ['\FluentForm\App\Helpers\Helper', 'validateSelectables'], 10, 5);
+}
 
 $app->addFilter('fluentform/will_return_html', function ($result, $integration, $key) {
     $dictionary = [
