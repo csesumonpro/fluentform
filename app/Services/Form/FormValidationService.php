@@ -10,6 +10,7 @@ use FluentForm\App\Modules\Form\FormFieldsParser;
 use FluentForm\App\Modules\HCaptcha\HCaptcha;
 use FluentForm\App\Modules\ReCaptcha\ReCaptcha;
 use FluentForm\App\Modules\Turnstile\Turnstile;
+use FluentForm\App\Services\FormBuilder\Components\SelectCountry;
 use FluentForm\Framework\Foundation\App;
 use FluentForm\Framework\Helpers\ArrayHelper as Arr;
 use FluentForm\Framework\Validator\ValidationException;
@@ -128,9 +129,9 @@ class FormValidationService
             $field['data_key'] = $fieldKey;
             $inputName = Arr::get($field, 'raw.attributes.name');
             $field['name'] = $inputName;
-    
+            $error = $this->validateInpute($field, $formData, $this->form);
             $error = apply_filters_deprecated('fluentform_validate_input_item_' . $field['element'], [
-                    '',
+                    $error,
                     $field,
                     $formData,
                     $fields,
@@ -201,6 +202,76 @@ class FormValidationService
         }
         
         return true;
+    }
+
+    protected function validateInpute($field, $formData, $form)
+    {
+        $error = '';
+        $fieldName = Arr::get($field, 'name');
+        if ($inputValue = Arr::get($formData, $fieldName)) {
+            $fieldType = Arr::get($field, 'raw.element');
+            $rawField = apply_filters('fluentform/rendering_field_data_' . $fieldType, Arr::get($field, 'raw'), $form);
+            $options = [];
+            if ("net_promoter_score" === $fieldType) {
+                $options = Arr::get($rawField, 'options', []);
+            } elseif ('ratings' == $fieldType) {
+                $options = array_keys(Arr::get($rawField, 'options', []));
+            } elseif ('gdpr_agreement' == $fieldType || 'terms_and_condition' == $fieldType) {
+                $options = ['on'];
+            } elseif (in_array($fieldType, ['input_radio', 'select', 'input_checkbox'])) {
+                if (Arr::isTrue($rawField, 'attributes.multiple')) {
+                    $fieldType = 'multi_select';
+                }
+                $options = array_column(
+                    Arr::get($rawField, 'settings.advanced_options', []),
+                    'value'
+                );
+            }
+
+            $acceptedOptions = true;
+            switch ($fieldType) {
+                case 'input_radio':
+                case 'select':
+                case 'net_promoter_score':
+                case 'ratings':
+                case 'gdpr_agreement':
+                case 'terms_and_condition':
+                    $acceptedOptions = in_array($inputValue, $options);
+                    break;
+                case 'input_checkbox':
+                case 'multi_select':
+                    $acceptedOptions = array_diff($inputValue, $options);
+                    $acceptedOptions = empty($acceptedOptions);
+                    break;
+                case 'select_country':
+                    $data = (new SelectCountry())->loadCountries($field);
+                    $validCountries = Arr::get($data, 'raw.settings.country_list.visible_list');
+                    $acceptedOptions = in_array($inputValue, $validCountries);
+                    break;
+                case 'tabular_grid':
+                    $rows = array_keys(Arr::get($rawField, 'settings.grid_rows', []));
+                    $submitdRows = array_keys(Arr::get($formData, $fieldName, []));
+                    $rowDiff = array_diff($submitdRows, $rows);
+                    $acceptedOptions = empty($rowDiff);
+                    if ($acceptedOptions) {
+                        $columns = array_keys(Arr::get($rawField, 'settings.grid_columns', []));
+                        $submitdCols = Arr::flatten(Arr::get($formData, $fieldName, []));
+                        $colDiff = array_diff($submitdCols, $columns);
+                        $acceptedOptions = empty($colDiff);
+                    }
+                    break;
+                case 'input_date':
+                    // validate data-time
+                    break;
+                default:
+                    break;
+            }
+            if (!$acceptedOptions) {
+                $message = __('Invalid value', 'fluentformpro');
+                $error = apply_filters('fluentform/validation_message_' . $fieldType . '_invalid_value', $message, $field);
+            }
+        }
+        return $error;
     }
     
     /**

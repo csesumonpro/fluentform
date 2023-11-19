@@ -291,15 +291,6 @@ $app->addFilter('fluentform/validate_input_item_input_text', ['\FluentForm\App\H
 
 $app->addFilter('fluentform/validate_input_item_input_text', ['\FluentForm\App\Helpers\Helper', 'isUniqueValidation'], 10, 5);
 
-$selectAbleInputs = [
-    'input_radio',
-    'select',
-    'select_country',
-    'input_checkbox',
-];
-foreach ($selectAbleInputs as $input) {
-    $app->addFilter('fluentform/validate_input_item_' . $input, ['\FluentForm\App\Helpers\Helper', 'validateSelectables'], 10, 5);
-}
 
 $app->addFilter('fluentform/will_return_html', function ($result, $integration, $key) {
     $dictionary = [

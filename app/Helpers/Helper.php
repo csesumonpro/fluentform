@@ -434,38 +434,7 @@ class Helper
         return $validation;
     }
     
-    public static function validateSelectables($error, $field, $formData, $fields, $form)
-    {
-        $fieldName = ArrayHelper::get($field, 'name');
-        if ($inputValue = sanitize_text_field(ArrayHelper::get($formData, $fieldName))) {
-            $fieldType = ArrayHelper::get($field, 'raw.element');
-            
-            $options = array_column(
-                ArrayHelper::get($field, 'raw.settings.advanced_options', []),
-                'value'
-            );
-            if (in_array($fieldType, ['input_radio', 'select'])) {
-                $acceptedOptions = in_array($inputValue, $options);
-            } else {
-                if ($fieldType == 'input_checkbox') {
-                    $acceptedOptions = array_diff($inputValue, $options);
-                    $acceptedOptions = empty($acceptedOptions) ? true : false;
-                } else {
-                    if ($fieldType == 'select_country') {
-                        $data = (new SelectCountry())->loadCountries($field);
-                        $validCountries = ArrayHelper::get($data, 'raw.settings.country_list.visible_list');
-                        $acceptedOptions = in_array($inputValue, $validCountries);
-                    }
-                }
-            }
-            if (!$acceptedOptions) {
-                $message = __('This option(s) is invalid', 'fluentformpro');
-                $error = apply_filters('fluentform/validation_message_' . $fieldType . '_invalid_value', $message, $field);
-            }
-        }
-        
-        return $error;
-    }
+
     
     public static function hasPartialEntries($formId)
     {
