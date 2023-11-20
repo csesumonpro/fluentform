@@ -228,6 +228,10 @@ class FormValidationService
                 );
             }
 
+            if ($options) {
+                $options = array_map('trim', $options);
+            }
+
             $acceptedOptions = true;
             switch ($fieldType) {
                 case 'input_radio':
