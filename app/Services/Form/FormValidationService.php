@@ -261,7 +261,15 @@ class FormValidationService
                     }
                     break;
                 case 'input_date':
-                    // validate data-time
+                    $format = Arr::get($rawField, 'settings.date_format');
+                    $format = str_replace(['AM', 'PM', 'K'], 'A', $format);
+                    $dateObject = \DateTime::createFromFormat($format, $inputValue);
+                    if (!$dateObject) {
+                        $acceptedOptions = false;
+                        break;
+                    } elseif ($dateObject->format($format) == $inputValue) {
+                        $acceptedOptions = false;
+                    }
                     break;
                 default:
                     break;
