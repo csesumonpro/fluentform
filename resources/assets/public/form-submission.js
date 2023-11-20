@@ -747,8 +747,13 @@ jQuery(document).ready(function () {
                     div = $('<div/>', {class: 'error text-danger'});
                     div.attr('role', 'alert');
                     el.closest('.ff-el-group').addClass('ff-el-is-error');
-                    el.closest('.ff-el-input--content').find('div.error').remove();
-                    el.closest('.ff-el-input--content').append(div.text(message));
+                    if (el.closest('.ff-el-input--content').length) {
+                        el.closest('.ff-el-input--content').find('div.error').remove();
+                        el.closest('.ff-el-input--content').append(div.text(message));
+                    } else {
+                        el.find('div.error').remove();
+                        el.append(div.text(message));
+                    }
                 };
 
                 var initInlineErrorItems = function () {

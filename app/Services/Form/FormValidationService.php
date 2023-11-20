@@ -204,13 +204,25 @@ class FormValidationService
         return true;
     }
 
-    protected function validateInput($field, $formData, $form)
+    protected function validateInput($field, $formData, $form, $fieldName = '', $inputValue = [])
     {
         $error = '';
-        $fieldName = Arr::get($field, 'name');
-        if ($inputValue = Arr::get($formData, $fieldName)) {
-            $fieldType = Arr::get($field, 'raw.element');
-            $rawField = apply_filters('fluentform/rendering_field_data_' . $fieldType, Arr::get($field, 'raw'), $form);
+        if (!$fieldName) {
+            $fieldName = Arr::get($field, 'name');
+        }
+        if (!$fieldName) {
+            return $error;
+        }
+        if (!$inputValue) {
+            $inputValue = Arr::get($formData, $fieldName);
+        }
+        if ($inputValue) {
+            $rawField = Arr::get($field, 'raw');
+            if (!$rawField) {
+                $rawField = $field;
+            }
+            $fieldType = Arr::get($rawField, 'element');
+            $rawField = apply_filters('fluentform/rendering_field_data_' . $fieldType, $rawField, $form);
             $options = [];
             if ("net_promoter_score" === $fieldType) {
                 $options = Arr::get($rawField, 'options', []);
@@ -232,7 +244,7 @@ class FormValidationService
                 $options = array_map('trim', $options);
             }
 
-            $acceptedOptions = true;
+            $isValid = true;
             switch ($fieldType) {
                 case 'input_radio':
                 case 'select':
@@ -240,28 +252,49 @@ class FormValidationService
                 case 'ratings':
                 case 'gdpr_agreement':
                 case 'terms_and_condition':
-                    $acceptedOptions = in_array($inputValue, $options);
-                    break;
                 case 'input_checkbox':
                 case 'multi_select':
-                    $acceptedOptions = array_diff($inputValue, $options);
-                    $acceptedOptions = empty($acceptedOptions);
+                    if (is_array($inputValue)) {
+                        $isValid = array_diff($inputValue, $options);
+                        $isValid = empty($isValid);
+                    } else {
+                        $isValid = in_array($inputValue, $options);
+                    }
+                    break;
+                case 'input_number':
+                    if (is_array($inputValue)) {
+                        $hasNonNumricValue = in_array(false, array_map('is_numeric', $inputValue));
+                        if ($hasNonNumricValue) {
+                            $isValid = false;
+                        }
+                    } else {
+                        $isValid = is_numeric($inputValue);
+                    }
                     break;
                 case 'select_country':
                     $data = (new SelectCountry())->loadCountries($field);
                     $validCountries = Arr::get($data, 'raw.settings.country_list.visible_list');
-                    $acceptedOptions = in_array($inputValue, $validCountries);
+                    $isValid = in_array($inputValue, $validCountries);
+                    break;
+                case 'repeater_field':
+                    foreach (Arr::get($rawField, 'fields', []) as $index => $repeaterField) {
+                        $repeaterFiedValue = array_filter(array_column($inputValue, $index));
+                        if ($repeaterFiedValue && $error = $this->validateInput($repeaterField, $formData, $form, $fieldName, $repeaterFiedValue)) {
+                            $isValid = false;
+                            break;
+                        }
+                    }
                     break;
                 case 'tabular_grid':
                     $rows = array_keys(Arr::get($rawField, 'settings.grid_rows', []));
                     $submitdRows = array_keys(Arr::get($formData, $fieldName, []));
                     $rowDiff = array_diff($submitdRows, $rows);
-                    $acceptedOptions = empty($rowDiff);
-                    if ($acceptedOptions) {
+                    $isValid = empty($rowDiff);
+                    if ($isValid) {
                         $columns = array_keys(Arr::get($rawField, 'settings.grid_columns', []));
                         $submitdCols = Arr::flatten(Arr::get($formData, $fieldName, []));
                         $colDiff = array_diff($submitdCols, $columns);
-                        $acceptedOptions = empty($colDiff);
+                        $isValid = empty($colDiff);
                     }
                     break;
                 case 'input_date':
@@ -269,15 +302,15 @@ class FormValidationService
                     $format = str_replace(['AM', 'PM', 'K'], 'A', $format);
                     $dateObject = \DateTime::createFromFormat($format, $inputValue);
                     if (!$dateObject) {
-                        $acceptedOptions = false;
+                        $isValid = false;
                     } elseif ($dateObject->format($format) == $inputValue) {
-                        $acceptedOptions = false;
+                        $isValid = false;
                     }
                     break;
                 default:
                     break;
             }
-            if (!$acceptedOptions) {
+            if (!$isValid) {
                 $error = __('The given data was invalid', 'fluentform');
             }
         }
