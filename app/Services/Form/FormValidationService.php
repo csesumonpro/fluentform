@@ -129,7 +129,7 @@ class FormValidationService
             $field['data_key'] = $fieldKey;
             $inputName = Arr::get($field, 'raw.attributes.name');
             $field['name'] = $inputName;
-            $error = $this->validateInpute($field, $formData, $this->form);
+            $error = $this->validateInput($field, $formData, $this->form);
             $error = apply_filters_deprecated('fluentform_validate_input_item_' . $field['element'], [
                     $error,
                     $field,
@@ -204,7 +204,7 @@ class FormValidationService
         return true;
     }
 
-    protected function validateInpute($field, $formData, $form)
+    protected function validateInput($field, $formData, $form)
     {
         $error = '';
         $fieldName = Arr::get($field, 'name');
@@ -266,7 +266,6 @@ class FormValidationService
                     $dateObject = \DateTime::createFromFormat($format, $inputValue);
                     if (!$dateObject) {
                         $acceptedOptions = false;
-                        break;
                     } elseif ($dateObject->format($format) == $inputValue) {
                         $acceptedOptions = false;
                     }
@@ -275,8 +274,7 @@ class FormValidationService
                     break;
             }
             if (!$acceptedOptions) {
-                $message = __('Invalid value', 'fluentformpro');
-                $error = apply_filters('fluentform/validation_message_' . $fieldType . '_invalid_value', $message, $field);
+                $error = __('The given data was invalid', 'fluentform');
             }
         }
         return $error;
