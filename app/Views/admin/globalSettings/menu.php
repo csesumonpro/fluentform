@@ -33,6 +33,7 @@ use FluentForm\Framework\Helpers\ArrayHelper;
             <div class="ff_settings_sidebar ff_layout_section_sidebar">
                 <ul class="ff_settings_list ff_list_button">
                     <li class="ff_list_button_item has_sub_menu ">
+
                         <a
                             class="ff_list_button_link"
                             href="#">
@@ -165,6 +166,22 @@ use FluentForm\Framework\Helpers\ArrayHelper;
                             <?php echo __('Managers'); ?>
                         </a>
                     </li>
+    
+                    <?php if ( ArrayHelper::get($components, 'admin_approval')) :?>
+
+                        <li class="<?php echo esc_attr(Helper::getHtmlElementClass('admin_approval', $currentComponent)); ?> ff_list_button_item">
+                            <a
+                                    class="ff_list_button_link"
+                                    data-hash="admin_approval"
+                                    data-settings_key="ff_admin_approval"
+                                    data-component="general-integration-settings"
+                                    href="<?php echo esc_url(Helper::makeMenuUrl('fluent_forms_settings', [
+                                        'hash' => 'admin_approval'
+                                    ])); ?>">
+                                <?php echo __('Admin approval', 'fluentform'); ?>
+                            </a>
+                        </li>
+                    <?php endif; ?>
                     
                     <li class="<?php echo esc_attr(Helper::getHtmlElementClass('double_optin_settings', $currentComponent)); ?> ff_list_button_item">
                         <a
@@ -176,31 +193,53 @@ use FluentForm\Framework\Helpers\ArrayHelper;
                             <?php echo __('Double Opt-in', 'fluentform'); ?>
                         </a>
                     </li>
+    
+                    <?php if ( ArrayHelper::get($components, 'admin_approval')) :?>
+                    
+                    <li class="<?php echo esc_attr(Helper::getHtmlElementClass('admin_approval', $currentComponent)); ?> ff_list_button_item">
+                        <a
+                            class="ff_list_button_link"
+                            data-hash="admin_approval"
+                            data-settings_key="ff_admin_approval"
+                            data-component="general-integration-settings"
+                            href="<?php echo esc_url(Helper::makeMenuUrl('fluent_forms_settings', [
+                                'hash' => 'admin_approval'
+                            ])); ?>">
+                            <?php echo __('Admin approval', 'fluentform'); ?>
+                        </a>
+                    </li>
+                    <?php endif; ?>
                     
                     <li class="ff_list_button_item has_sub_menu">
                         <a class="ff_list_button_link" href="#">
                             <?php echo __('Configure Integrations', 'fluentform'); ?>
                         </a>
                         <ul class="ff_list_submenu">
-                            <?php foreach ($components as $componentName => $component): ?>
-                                <?php if (ArrayHelper::get($component, 'hash') != 're_captcha'
-                                    && ArrayHelper::get($component, 'hash') != 'h_captcha'
-                                    && ArrayHelper::get($component, 'hash') != 'turnstile'
-                                    && ArrayHelper::get($component, 'query.component') != 'payment_settings'
-                                    && ArrayHelper::get($component, 'query.component') != 'license_page'
-                                ) : ?>
+                            <?php
+                            $hashNotAllowed = ['re_captcha', 'h_captcha', 'turnstile'];
+                            $componentNotAllowed = ['payment_settings', 'license_page'];
 
-                                    <li class="<?php echo esc_attr(Helper::getHtmlElementClass($component['hash'],
-                                        $currentComponent)); ?> ff_item_<?php echo esc_attr($componentName); ?>">
-                                        <a data-settings_key="<?php echo esc_attr(ArrayHelper::get($component,
-                                            'settings_key')); ?>"
-                                           data-component="<?php echo esc_attr(ArrayHelper::get($component, 'component',
-                                               '')); ?>"
-                                           data-hash="<?php echo esc_attr(ArrayHelper::get($component, 'hash', '')); ?>"
-                                           href="<?php echo esc_url(Helper::makeMenuUrl('fluent_forms_settings',
-                                               $component)); ?>"
+                            foreach ($components as $componentName => $component): ?>
+                                <?php if (
+                                    !in_array(ArrayHelper::get($component, 'hash'), $hashNotAllowed) &&
+                                    !in_array(ArrayHelper::get($component, 'query.component'), $componentNotAllowed)
+                                ):
+                                    $hash = ArrayHelper::get($component, 'hash', '');
+                                    $elementClass = esc_attr(Helper::getHtmlElementClass($hash, $currentComponent));
+                                    $settingsKey = esc_attr(ArrayHelper::get($component, 'settings_key', ''));
+                                    $componentName = esc_attr($componentName);
+                                    $componentLink = esc_url(Helper::makeMenuUrl('fluent_forms_settings', $component));
+                                    $componentTitle = esc_html($component['title']);
+                                    ?>
+
+                                    <li class="<?php echo $elementClass; ?> ff_item_<?php echo $componentName; ?>">
+                                        <a
+                                                data-settings_key="<?php echo $settingsKey; ?>"
+                                                data-component="<?php echo esc_attr(ArrayHelper::get($component, 'component', '')); ?>"
+                                                data-hash="<?php echo $hash; ?>"
+                                                href="<?php echo $componentLink; ?>"
                                         >
-                                            <?php echo esc_attr($component['title']); ?>
+                                            <?php echo $componentTitle; ?>
                                         </a>
                                     </li>
                                 <?php endif ?>

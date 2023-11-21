@@ -134,6 +134,7 @@ import EditGeneralIntegration from './components/settings/GeneralIntegration/Int
 import PdfFeeds from './components/settings/PdfFeeds.vue';
 import PaymentSettings from './components/settings/PaymentSettings.vue';
 import QuizSettings from './components/settings/QuizSettings.vue';
+import AdminApproval from './components/settings/AdminApproval/index.vue';
 
 const routes = [
     {

@@ -149,9 +149,9 @@ class SubmissionHandlerService
     public function processSubmissionData($insertId, $formData, $form)
     {
         $form = isset($this->form) ? $this->form : $form;
+        $formData = isset($this->formData) ? $this->formData : $formData;
         do_action_deprecated(
-            'fluentform_before_form_actions_processing',
-            [
+            'fluentform_before_form_actions_processing', [
                 $insertId,
                 $this->formData,
                 $form
@@ -161,7 +161,7 @@ class SubmissionHandlerService
             'Use fluentform/before_form_actions_processing instead of fluentform_before_form_actions_processing.'
         );
     
-        do_action('fluentform/before_form_actions_processing', $insertId, $this->formData, $form);
+        do_action('fluentform/before_form_actions_processing', $insertId, $formData, $form);
         
         if ($insertId) {
             ob_start();
@@ -174,21 +174,14 @@ class SubmissionHandlerService
         $returnData = $this->getReturnData($insertId, $form, $formData);
         $error = '';
         try {
-
             do_action('fluentform_submission_inserted', $insertId, $formData, $form);
-
-            do_action(
-                'fluentform/submission_inserted',
-                $insertId,
-                $formData,
-                $form
-            );
+    
+            do_action('fluentform/submission_inserted', $insertId, $formData, $form);
 
             Helper::setSubmissionMeta($insertId, 'is_form_action_fired', 'yes');
 
             do_action_deprecated(
-                'fluentform_submission_inserted_' . $form->type . '_form',
-                [
+                'fluentform_submission_inserted_' . $form->type . '_form', [
                     $insertId,
                     $formData,
                     $form
@@ -212,8 +205,7 @@ class SubmissionHandlerService
         }
 
         do_action_deprecated(
-            'fluentform_before_submission_confirmation',
-            [
+            'fluentform_before_submission_confirmation', [
                 $insertId,
                 $formData,
                 $form
