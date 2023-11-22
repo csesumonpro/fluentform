@@ -93,6 +93,7 @@
                                 clearable
                                 v-model="entry_type"
                                 :placeholder="$t('All Types')"
+                                filterable
                                 @change="filterEntryType()"
                         >
                             <el-option
@@ -199,7 +200,7 @@
                         </div><!-- .ff_advanced_filter_wrap -->
                     </btn-group-item>
 	                <btn-group-item as="div">
-		                <el-button @click="getData">
+		                <el-button @click="getData" v-loading="loading">
 			                <i class="ff-icon el-icon-refresh"></i>
 		                </el-button>
 	                </btn-group-item>
@@ -788,6 +789,7 @@
 	            if (this.advancedFilter) {
 		            this.advancedFilter = false;
 	            }
+
                 this.loading = true;
 
                 const url = FluentFormsGlobal.$rest.route('getSubmissions');
