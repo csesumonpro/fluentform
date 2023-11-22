@@ -216,7 +216,7 @@ use FluentForm\Framework\Helpers\ArrayHelper;
                         </a>
                         <ul class="ff_list_submenu">
                             <?php
-                            $hashNotAllowed = ['re_captcha', 'h_captcha', 'turnstile'];
+                            $hashNotAllowed = ['re_captcha', 'h_captcha', 'turnstile', 'admin_approval'];
                             $componentNotAllowed = ['payment_settings', 'license_page'];
 
                             foreach ($components as $componentName => $component): ?>
