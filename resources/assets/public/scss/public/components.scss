@@ -876,3 +876,8 @@
     }
   }
 }
+
+// gmaps address autocomplete container z-index increased for elementor popup
+.pac-container {
+  z-index: 10000;
+}
