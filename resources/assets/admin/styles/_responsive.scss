@@ -229,9 +229,12 @@
     flex-shrink: 0;
     left: -240px;
     transition: 0.3s;
+    z-index: 999;
     &.active{
-      position: relative;
       left: 0;
+      .ff_layout_section_sidebar {
+        box-shadow: 2px 1px 10px 0px rgba(30, 31, 33, 0.1);
+      }
       .ff_sidebar_toggle{
         right: -18px;
         .ff-icon{
@@ -239,9 +242,6 @@
             content: "\e919";
           }
         }
-      }
-      + .ff_layout_section_container{
-        padding-left: 26px;
       }
     }
   }
@@ -267,11 +267,11 @@
   }
 
   .form_internal_menu {
-    position: relative;
-    display: block !important;
-    background: white;
-    overflow: hidden;
-    top: 0 !important;
+    // position: relative;
+    // display: block !important;
+    // background: white;
+    // overflow: hidden;
+    // top: 0 !important;
     margin: 0 -10px;
     width: auto;
     ul.ff_setting_menu {
