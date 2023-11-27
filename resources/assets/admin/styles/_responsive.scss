@@ -146,7 +146,7 @@
     }
   }
   .settings_app {
-    min-width: 500px;
+    //min-width: 500px;
   }
   .el-tabs__content {
     padding: 20px 10px !important;
@@ -223,6 +223,31 @@
     padding-right: 0;
     padding-left: 0;
   }
+
+  .ff_settings_sidebar_wrap{
+    position: absolute;
+    flex-shrink: 0;
+    left: -240px;
+    transition: 0.3s;
+    &.active{
+      position: relative;
+      left: 0;
+      .ff_sidebar_toggle{
+        right: -18px;
+        .ff-icon{
+          &::before{
+            content: "\e919";
+          }
+        }
+      }
+      + .ff_layout_section_container{
+        padding-left: 26px;
+      }
+    }
+  }
+  .ff_sidebar_toggle{
+   display: flex; 
+  }
 }
 
 @media (max-width: 425px) {
@@ -271,7 +296,7 @@
   }
 
   .ff_settings_wrapper {
-    min-width: 600px;
+    //min-width: 600px;
   }
   .ff_form_wrap .ff_form_wrap_area {
     overflow: scroll;
@@ -294,6 +319,15 @@
   }
   .option-fields-section--content {
     padding: 15px 5px;
+  }
+  .ff-add-confirmation-wrap{
+    .el-radio.is-bordered {
+      margin-right: 10px;
+      margin-bottom: 10px;
+    }
+    .el-radio.is-bordered + .el-radio.is-bordered {
+      margin-left: 0;
+    }
   }
 }
 
