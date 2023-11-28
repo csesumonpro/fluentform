@@ -19,7 +19,7 @@
                 <el-col :md="8">
                     <div class="mb-2">
                         <el-select v-model="items[key].field" style="width: 100%" @change="items[key].value = ''">
-                            <el-option 
+                            <el-option
                                 v-for="(field, key) in fields" :key="key"
                                 :label="field.admin_label" :value="key"
                             ></el-option>
@@ -61,7 +61,7 @@
                         </template>
                         <template v-else>
                             <el-select v-if="fields[logic.field] && Object.keys(fields[logic.field].options).length"
-                                    v-model="items[key].value" style="width: 100%">
+                                    v-model="items[key].value" clearable filterable allow-create style="width: 100%">
                                 <el-option v-for="(label, value) in fields[logic.field].options" :key="value"
                                         :label="label" :value="value"
                                 ></el-option>
