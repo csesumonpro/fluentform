@@ -13,7 +13,7 @@ class Fields
         $form = Form::find($formId);
 
         $fields = FormFieldsParser::getShortCodeInputs($form, [
-            'admin_label', 'attributes', 'options',
+            'admin_label', 'attributes', 'options', 'settings'
         ]);
 
         $fields = array_filter($fields, function ($field) {
@@ -68,6 +68,10 @@ class Fields
                 $fields[$index]['options'] = getFluentFormCountryList();
             } elseif ('gdpr-agreement' == $element || 'terms_and_condition' == $element) {
                 $fields[$index]['options'] = ['on' => 'Checked'];
+            } elseif ('quiz_score' == $element) {
+                if ('personality' != Arr::get($field , 'settings.result_type') && $field['options']) {
+                    unset($fields[$index]['options']);
+                }
             }
         }
 

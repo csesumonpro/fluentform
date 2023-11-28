@@ -33,7 +33,7 @@
                             <el-option-group :label="$t('General Operators')">
                                 <el-option value="=" :label="$t('equal')"></el-option>
                                 <el-option value="!=" :label="$t('not equal')"></el-option>
-                                <template v-if="fields[logic.field] && !Object.keys(fields[logic.field].options).length">
+                                <template v-if="fields[logic.field] && fields[logic.field].options && !Object.keys(fields[logic.field].options).length">
                                     <el-option value=">" :label="$t('greater than')"></el-option>
                                     <el-option value="<" :label="$t('less than')"></el-option>
                                     <el-option value=">=" :label="$t('greater than or equal')"></el-option>
@@ -60,7 +60,7 @@
                             <el-input type="number" step="1" :placeholder="('Enter length in number')" v-model="items[key].value" />
                         </template>
                         <template v-else>
-                            <el-select v-if="fields[logic.field] && Object.keys(fields[logic.field].options).length"
+                            <el-select v-if="fields[logic.field] && fields[logic.field].options && Object.keys(fields[logic.field].options).length"
                                     v-model="items[key].value" style="width: 100%">
                                 <el-option v-for="(label, value) in fields[logic.field].options" :key="value"
                                         :label="label" :value="value"
