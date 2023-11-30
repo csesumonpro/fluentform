@@ -43,23 +43,6 @@ class SlackNotificationActions
         }
         $response = Slack::handle($feed, $formData, $form, $entry);
         if ('success' === $response['status']) {
-            do_action_deprecated(
-                'ff_log_data',
-                [
-                    [
-                        'parent_source_id' => $form->id,
-                        'source_type'      => 'submission_item',
-                        'source_id'        => $entry->id,
-                        'component'        => 'slack',
-                        'status'           => 'success',
-                        'title'            => $feed['meta_key'],
-                        'description'      => 'Slack feed has been successfully initialed and pushed data',
-                    ]
-                ],
-                FLUENTFORM_FRAMEWORK_UPGRADE,
-                'fluentform/log_data',
-                'Use fluentform/log_data instead of ff_log_data.'
-            );
             do_action('fluentform/log_data', [
                 'parent_source_id' => $form->id,
                 'source_type'      => 'submission_item',
@@ -70,24 +53,7 @@ class SlackNotificationActions
                 'description'      => 'Slack feed has been successfully initialed and pushed data',
             ]);
         } else {
-            do_action_deprecated(
-                'ff_log_data',
-                [
-                    [
-                        'parent_source_id' => $form->id,
-                        'source_type'      => 'submission_item',
-                        'source_id'        => $entry->id,
-                        'component'        => 'slack',
-                        'status'           => 'failed',
-                        'title'            => $feed['meta_key'],
-                        'description'      => $response['message'],
-                    ]
-                ],
-                FLUENTFORM_FRAMEWORK_UPGRADE,
-                'fluentform/log_data',
-                'Use fluentform/log_data instead of ff_log_data.'
-            );
-            do_action('ff_log_data', [
+            do_action('fluentform/log_data', [
                 'parent_source_id' => $form->id,
                 'source_type'      => 'submission_item',
                 'source_id'        => $entry->id,

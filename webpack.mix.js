@@ -30,7 +30,7 @@ mix.webpackConfig({
 
 mix
     .js('resources/assets/admin/fluent_forms_global.js', `assets/js/fluent_forms_global.js`)
-    .js('resources/assets/admin/settings/settings.js', `assets/js/fluentform-global-settings.js`)
+    .js('resources/assets/admin/settings/global_settings.js', `assets/js/fluentform-global-settings.js`)
     .js('resources/assets/admin/transfer/transfer.js', `assets/js/fluentform-transfer.js`)
     .js('resources/assets/admin/form_settings_app.js', `assets/js/form_settings_app.js`)
     .js('resources/assets/admin/editor_app.js', `assets/js/fluent-forms-editor.js`)
@@ -44,6 +44,7 @@ mix
     .js('resources/assets/admin/copier.js', `assets/js/copier.js`)
     .js('resources/assets/admin/admin_notices.js', `assets/js/admin_notices.js`)
     .js('resources/assets/admin/modules.js', `assets/js/modules.js`)
+    .js('resources/assets/admin/documentation.js', `assets/js/docs.js`)
     .js('resources/assets/admin/AllEntries/all-entries.js', `assets/js/all_entries.js`)
     .js('resources/assets/admin/conversion_templates/conversational_design.js', `assets/js/conversational_design.js`)
     .vue({
@@ -138,9 +139,11 @@ mix.then(() => {
     });
 });
 
+mix.js('resources/assets/admin/fluent_gutenblock.js','assets/js/fluent_gutenblock.js').react()
 
 mix
     .copyDirectory('resources/assets/libs', 'assets/libs')
     .copyDirectory('resources/img', 'assets/img')
-    .copyDirectory('guten_block/public', 'assets/js')
+    // .copyDirectory('guten_block/public', 'assets/js')
     .copy('index.php', 'assets/index.php');
+

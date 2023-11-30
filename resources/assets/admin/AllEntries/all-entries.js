@@ -51,6 +51,7 @@ Vue.use(Skeleton);
 Vue.use(SkeletonItem);
 
 import App from './App.vue';
+import globalSearch from '../global_search';
 locale.use(lang);
 
 Vue.mixin({
@@ -67,6 +68,7 @@ Vue.mixin({
 new Vue({
     el: "#ff_all_entries",
     components: {
+        globalSearch,
         'ff-all-entries': App
     }
 });

@@ -35,10 +35,16 @@ abstract class IntegrationManagerController extends IntegrationManagerHelper
         $this->optionKey = $optionKey;
         $this->settingsKey = $settingsKey;
         $this->priority = $priority;
-        
-        parent::__construct(
-            $this->settingsKey, $app->request->get('form_id', false), true
-        );
+
+        if(isset($_REQUEST['form_id'])) {
+            parent::__construct(
+                $this->settingsKey, $_REQUEST['form_id'], true
+            );
+        } else {
+            parent::__construct(
+                $this->settingsKey, false, true
+            );
+        }
     }
     
     public function registerAdminHooks()

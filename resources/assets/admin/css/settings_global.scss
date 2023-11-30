@@ -64,6 +64,14 @@
   padding-left: 20px;
   padding-right: 20px;
   display: flex;
+  position: relative;
+  .ff_menu_toggle{
+    padding-top: 4px;
+  }
+  &_inner{
+    display: flex;
+    width: 100%;
+  }
   .ff_setting_menu {
     display: inline-block;
     list-style: none;
@@ -126,7 +134,8 @@
 
 // screen entries
 .ff_screen_entries,
-.ff_screen_msformentries {
+.ff_screen_msformentries,
+.ff_screen_inventory_list {
   .ff_form_application_container {
     padding: 24px;
   }
@@ -205,7 +214,7 @@
     transition: all .3s;
     max-height: 100vh;
   }
-  &-enter, 
+  &-enter,
   &-leave-to {
     max-height: 0;
   }
@@ -217,7 +226,7 @@
   transition: opacity 0.25s ease-out;
 }
 
-.fade-enter, 
+.fade-enter,
 .fade-leave-to{
   opacity: 0;
 }
@@ -231,7 +240,7 @@
   transition: all .25s cubic-bezier(0.25, 0.46, 0.45, 0.94); //ease-out-quad
 }
 
-.flip-enter, 
+.flip-enter,
 .flip-leave-to {
   transform: scaleY(0) translateZ(0);
   opacity: 0;
@@ -250,10 +259,13 @@
       }
     }
   }
-  &-date-editor 
+  &-date-editor
   .el-range-separator {
     width: 22px;
   }
+}
+.ff_form_group .el-date-editor--datetimerange {
+  width: 100%;
 }
 
 
@@ -694,7 +706,7 @@ table.ff_routing_table tr {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    .ff-control-title, 
+    .ff-control-title,
     .ff-type-value {
       display: inline-block;
       color: $base-color;
@@ -950,17 +962,25 @@ body.ff_full_screen {
 
 // form name
 .ff_form_name {
-  padding-right: 20px;
-  padding-top: 16px;
-  padding-bottom: 18px;
+  padding-right: 10px;
   border-right: 1px solid $border-color;
-  text-overflow: ellipsis;
-  max-width: 160px;
-  white-space: nowrap;
-  overflow: hidden;
   font-size: 15px;
   color: $form-name-color;
   font-weight: 500;
+  position: relative;
+  padding-left: 10px;
+  display: flex;
+  align-items: center;
+  .el-icon-edit{
+    position: absolute;
+    left: 10px;
+  }
+  &_inner{
+    text-overflow: ellipsis;
+    max-width: 160px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
 }
 
 // editor setting
@@ -968,17 +988,19 @@ body.ff_full_screen {
 .ff_screen_settings,
 .ff_screen_entries,
 .ff_screen_msformentries,
+.ff_screen_inventory_list,
 .ff_screen_conversational_design {
   .ff_menu {
-    padding-left: 20px;
-    padding-right: 20px;
+    display: flex;
+    margin-top: 0;
+    padding-left: 10px;
+    padding-right: 10px;
   }
   .ff_menu_back{
-    display: flex;
+    display: none;
     align-items: center;
     border-right: 1px solid $border-color;
-    padding-right: 16px;
-    margin-right: 16px;
+    padding-right: 10px;
     .el-icon{
       font-weight: 700;
     }
@@ -986,6 +1008,9 @@ body.ff_full_screen {
       padding: 0;
       color: $menu-back-link-color;
     }
+  }
+  .ff-navigation-right{
+    display: flex;
   }
 }
 
@@ -997,6 +1022,23 @@ body.ff_full_screen {
     padding-top: 9px;
     padding-bottom: 9px;
     font-size: 14px;
+  }
+}
+
+.form_internal_menu_inner{
+  padding: 10px 10px 6px 10px;
+}
+
+.ff_screen_editor{
+  .ff_form_name{
+    padding-left: 30px;
+  }
+  .form_internal_menu_inner{
+    flex-direction: column;
+    .ff_menu{
+      margin-left: auto;
+      padding-bottom: 5px;
+    }
   }
 }
 
@@ -1193,4 +1235,22 @@ span + .ff_payment_badge{
   max-width: 300px;
 }
 
+.ff_inventory_list{
+  .list_container{
+    border-radius: 8px;
+    box-shadow: 0px 1px 3px rgba(30, 31, 33, 0.08);
+    padding: 20px 24px;
+    background-color: #ffffff;
+  }
+  .el-table__footer-wrapper tbody td.el-table__cell {
+    background-color: #e8f2ff;
+  }
+}
+
+.ff_2_col_items * label {
+  display: inline-block;
+  margin: 0;
+  width: 50%;
+  margin-bottom: 10px;
+}
 @import "../styles/responsive";

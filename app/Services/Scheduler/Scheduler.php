@@ -93,8 +93,7 @@ class Scheduler
         foreach ($submissionCounts as $submissionCount) {
             $submissionCount->permalink = admin_url('admin.php?page=fluent_forms&route=entries&form_id='.$submissionCount->form_id);
         }
-
-        if(!$submissionCounts) {
+        if(!$submissionCounts || $submissionCounts->isEmpty()) {
             return; // Nothing found
         }
 

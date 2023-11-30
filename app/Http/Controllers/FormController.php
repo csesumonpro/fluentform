@@ -166,4 +166,9 @@ class FormController extends Controller
     {
         return $this->sendSuccess($formService->findShortCodePage($formId));
     }
+
+    public function ping()
+    {
+        return ['message' => 'pong'];
+    }
 }

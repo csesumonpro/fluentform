@@ -2,7 +2,7 @@
 
 namespace FluentForm\App\Modules\Form;
 
-use FluentForm\App\Databases\Migrations\FormSubmissionDetails;
+use FluentForm\App\Databases\Migrations\SubmissionDetails;
 use FluentForm\App\Helpers\Helper;
 use FluentForm\App\Modules\Activator;
 use FluentForm\App\Modules\Entries\Entries;
@@ -176,7 +176,7 @@ class FormHandler
             $entries->recordEntryDetails($insertId, $form->id, $formData);
             $isError = ob_get_clean();
             if ($isError) {
-                FormSubmissionDetails::migrate();
+                SubmissionDetails::migrate();
             }
         }
 
@@ -184,19 +184,13 @@ class FormHandler
 
         $error = '';
         try {
-            do_action_deprecated(
-                'fluentform_submission_inserted',
-                [
-                    $insertId,
-                    $formData,
-                    $form
-                ],
-                FLUENTFORM_FRAMEWORK_UPGRADE,
-                'fluentform/submission_inserted',
-                'Use fluentform/submission_inserted instead of fluentform_submission_inserted.'
-            );
 
-            $this->app->doAction(
+            /*
+             * We will keep this old hook for backward compatability.
+             */
+            do_action('fluentform_submission_inserted', $insertId, $formData, $form);
+
+            do_action(
                 'fluentform/submission_inserted',
                 $insertId,
                 $formData,
@@ -217,12 +211,13 @@ class FormHandler
                 'Use fluentform/submission_inserted_' . $form->type . '_form' . ' instead of fluentform_submission_inserted_' . $form->type . '_form'
             );
 
-            $this->app->doAction(
+            do_action(
                 'fluentform/submission_inserted_' . $form->type . '_form',
                 $insertId,
                 $formData,
                 $form
             );
+
         } catch (\Exception $e) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
                 $error = $e->getMessage();
@@ -605,16 +600,8 @@ class FormHandler
     {
         $formId = $this->form->id;
         $nonceVerify = false;
-        $nonceVerify = apply_filters_deprecated(
-            'fluentform_nonce_verify',
-            [
-                $nonceVerify,
-                $formId
-            ],
-            FLUENTFORM_FRAMEWORK_UPGRADE,
-            'fluentform/nonce_verify',
-            'Use fluentform/nonce_verify instead of fluentform_nonce_verify.'
-        );
+        /* This filter is deprecated and will be removed soon. */
+        $nonceVerify = $this->app->applyFilters('fluentform_nonce_verify', $nonceVerify, $formId);
 
         $shouldVerifyNonce = $this->app->applyFilters('fluentform/nonce_verify', $nonceVerify, $formId);
 
@@ -822,16 +809,10 @@ class FormHandler
         // 1. limitNumberOfEntries
         // 2. scheduleForm
         // 3. requireLogin
-        $isAllowed = apply_filters_deprecated(
-            'fluentform_is_form_renderable',
-            [
-                $isAllowed,
-                $this->form
-            ],
-            FLUENTFORM_FRAMEWORK_UPGRADE,
-            'fluentform/is_form_renderable',
-            'Use fluentform/is_form_renderable instead of fluentform_is_form_renderable.'
-        );
+        
+        /* This filter is deprecated and will be removed soon */
+        $isAllowed = apply_filters('fluentform_is_form_renderable', $isAllowed, $this->form);
+    
         $isAllowed = apply_filters('fluentform/is_form_renderable', $isAllowed, $this->form);
 
         if (!$isAllowed['status']) {

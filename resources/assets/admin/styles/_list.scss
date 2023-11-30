@@ -165,6 +165,10 @@
                     white-space: nowrap;
                     overflow: hidden;
                     text-overflow: ellipsis;
+                    &.lead-url {
+                        white-space: unset;
+                        word-break: break-all;
+                    }
                 }
             }
         }

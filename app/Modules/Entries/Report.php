@@ -268,7 +268,7 @@ class Report
                 'fluentform_submissions.response',
             ])
             ->where('fluentform_submissions.form_id', $formId)
-            ->where(wpFluent()->raw($wpdb->prefix . 'fluentform_submissions.id NOT IN (SELECT submission_id from ' . $wpdb->prefix . 'fluentform_entry_details)'))
+            ->whereRaw(wpFluent()->raw($wpdb->prefix . 'fluentform_submissions.id NOT IN (SELECT submission_id from ' . $wpdb->prefix . 'fluentform_entry_details)'))
             ->get();
 
         if (!$unmigratedData) {

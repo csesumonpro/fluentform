@@ -83,8 +83,6 @@ export default {
             this.saving = true;
 
             let data = {
-                action: 'ff_store_conversational_form_settings',
-                form_id: this.form_id,
                 design_settings: this.design_settings,
                 meta_settings: this.meta_settings,
                 generated_css: this.generated_css
@@ -92,38 +90,32 @@ export default {
 
             this.setBaseUrl();
 
-            FluentFormsGlobal.$post(data)
+            FluentFormsGlobal.$rest.post(FluentFormsGlobal.$rest.route('storeFormSettingsConversationalDesign', this.form_id), data)
                 .then(response => {
-                    this.$success(response.data.message);
+                    this.$success(response.message);
                 })
-                .fail(error => {
-                    console.log(error);
+                .catch(error => {
+                    this.$fail(error.message);
                 })
-                .always(() => {
+                .finally(() => {
                     this.saving = false;
                 });
         },
         fetchSettings() {
             this.loading = true;
-
-            let data = {
-                action: 'ff_get_conversational_form_settings',
-                form_id: this.form_id
-            };
-
-            FluentFormsGlobal.$get(data)
+            FluentFormsGlobal.$rest.get(FluentFormsGlobal.$rest.route('getFormSettingsConversationalDesign', this.form_id))
                 .then(response => {
-                    const designSettings = response.data.design_settings;
+                    const designSettings = response.design_settings;
                     designSettings.background_brightness = parseInt(designSettings.background_brightness);
                     this.design_settings = designSettings;
-                    this.meta_settings = response.data.meta_settings;
-                    this.has_pro = !!response.data.has_pro;
+                    this.meta_settings = response.meta_settings;
+                    this.has_pro = !!response.has_pro;
                     this.setBaseUrl();
                 })
-                .fail(error => {
+                .catch(error => {
                     console.log(error);
                 })
-                .always(() => {
+                .finally(() => {
                     this.loading = false;
                 });
         },

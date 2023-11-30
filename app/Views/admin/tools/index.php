@@ -44,7 +44,6 @@ use FluentForm\App\Helpers\Helper;
                         <?php echo __('Import Forms', 'fluentform'); ?>
                     </a>
                 </li>
-                <?php if ( ( new FluentForm\App\Services\Migrator\Bootstrap())->hasOtherForms()): ?>
                 <li class="ff_list_button_item">
                     <a class="ff_list_button_link" data-hash="migrator"
                        href="<?php echo esc_url(Helper::makeMenuUrl('fluent_forms_transfer', ['hash' => 'migrator'])); ?>"
@@ -52,7 +51,6 @@ use FluentForm\App\Helpers\Helper;
                         <?php echo __('Migrator', 'fluentform'); ?>
                     </a>
                 </li>
-                <?php endif; ?>
 
                 <li class="ff_list_button_item">
                     <a class="ff_list_button_link" data-hash="activitylogs"
@@ -85,6 +83,7 @@ use FluentForm\App\Helpers\Helper;
             ?>
             <div class="ff_transfer" id="ff_transfer_app">
                 <component :is="component" :app="App"></component>
+                <global-search></global-search>
             </div>
             <?php
                 do_action_deprecated(

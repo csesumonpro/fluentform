@@ -30,7 +30,7 @@ class ValidationData
 
         $data = static::extractDataFromPath($explicitPath, $masterData);
 
-        if (! mb_strpos($attribute, '*') !== false || substr($attribute, -1) === '*') {
+        if (! fluentform_mb_strpos($attribute, '*') !== false || substr($attribute, -1) === '*') {
             return $data;
         }
 

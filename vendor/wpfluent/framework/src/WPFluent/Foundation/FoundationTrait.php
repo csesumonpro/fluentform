@@ -227,22 +227,22 @@ trait FoundationTrait
 
     public function url($path = '')
     {
-        _deprecated_function(
-            __METHOD__,
-            FLUENTFORM_FRAMEWORK_UPGRADE,
-            'fluentformMix to get asset URL'
-        );
+//        _deprecated_function(
+//            __METHOD__,
+//            FLUENTFORM_FRAMEWORK_UPGRADE,
+//            'fluentformMix to get asset URL'
+//        );
 
         return $this->baseUrl.ltrim($path, '/');
     }
 
     public function publicUrl($path = '')
     {
-        _deprecated_function(
-            __METHOD__,
-            FLUENTFORM_FRAMEWORK_UPGRADE,
-            'fluentformMix to get asset URL'
-        );
+//        _deprecated_function(
+//            __METHOD__,
+//            FLUENTFORM_FRAMEWORK_UPGRADE,
+//            'fluentformMix to get asset URL'
+//        );
 
         return fluentFormMix($path);
     }

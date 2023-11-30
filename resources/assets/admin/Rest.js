@@ -33,3 +33,7 @@ jQuery(($) => {
         });
     })();
 });
+
+setInterval(() => {
+    FluentFormsGlobal.$rest.get('forms/ping');
+}, 60000);

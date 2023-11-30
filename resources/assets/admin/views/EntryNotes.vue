@@ -14,7 +14,7 @@
         </card-head>
         <card-body>
             <div class="entry_info_body">
-                <el-skeleton :loading="loading" animated :rows="6">
+                <el-skeleton :loading="loading" animated :rows="4">
                     <div class="wpf_entry_details">
                         <div v-if="add_note_box" class="wpf_add_note_box">
                             <el-input
@@ -28,8 +28,8 @@
                             </el-button>
                         </div>
                         <template v-if="notes && notes.length">
-                            <div 
-                                v-for="activity in showingNotes" 
+                            <div
+                                v-for="activity in showingNotes"
                                 :key="activity.id"
                                 class="wpf_each_entry"
                             >
@@ -39,10 +39,10 @@
                                 <div class="wpf_entry_value" v-html="activity.value"></div>
                             </div>
 
-                            <el-button 
+                            <el-button
                                 class="mt-3 el-button--text-light"
-                                v-if="notes.length > 5" 
-                                type="text" 
+                                v-if="notes.length > 5"
+                                type="text"
                                 @click="initial_limit =  !initial_limit"
                             >
                                 <span v-if="initial_limit">{{ $t('Show More') }} <i class="el-icon-arrow-down"></i></span>
@@ -110,7 +110,7 @@
         methods: {
             fetchNotes() {
                 this.loading = true;
-                
+
                 const url = FluentFormsGlobal.$rest.route('getSubmissionNotes', this.entry_id);
 
                 FluentFormsGlobal.$rest.get(url, {
@@ -147,7 +147,7 @@
                         };
                     })
                     .catch(error => {
-                        
+
                     })
                     .finally(() =>{
                         this.isAddingNote = false;
@@ -158,5 +158,5 @@
             this.fetchNotes();
         }
     }
-</script> 
+</script>
 

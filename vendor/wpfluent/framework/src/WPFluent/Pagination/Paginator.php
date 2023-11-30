@@ -139,6 +139,7 @@ class Paginator extends AbstractPaginator implements ArrayableInterface, ArrayAc
      *
      * @return array
      */
+    #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
         return $this->toArray();

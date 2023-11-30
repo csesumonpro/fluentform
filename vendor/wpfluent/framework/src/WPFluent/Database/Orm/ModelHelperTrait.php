@@ -36,7 +36,7 @@ trait ModelHelperTrait
 
         return $traits;
     }
-
+    #[\ReturnTypeWillChange]
     public function getTimezone()
     {
         // if site timezone string exists, return it
@@ -84,7 +84,7 @@ trait ModelHelperTrait
         
         return 'Y-m-d H:i:s';
     }
-
+    #[\ReturnTypeWillChange]
     public static function createFromFormat($format, $datetime, $timezone = null)
     {
         $instance = new static;

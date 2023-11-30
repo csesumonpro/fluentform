@@ -489,19 +489,11 @@ class Component
                 'css_classes'        => '',
                 'permission'         => '',
                 'type'               => 'classic',
+                'theme'        => '',
                 'permission_message' => __('Sorry, You do not have permission to view this form', 'fluentform')
             ];
-    
-            $data = apply_filters_deprecated(
-                'fluentform_shortcode_defaults',
-                [
-                    $data,
-                    $atts
-                ],
-                FLUENTFORM_FRAMEWORK_UPGRADE,
-                'fluentform/shortcode_defaults',
-                'Use fluentform/shortcode_defaults instead of fluentform_shortcode_defaults.'
-            );
+            /* This filter is deprecated, will be removed soon */
+            $data = apply_filters('fluentform_shortcode_defaults', $data, $atts );
 
             $shortcodeDefaults = apply_filters('fluentform/shortcode_defaults', $data, $atts);
 
@@ -509,162 +501,8 @@ class Component
 
             return $this->renderForm($atts);
         });
-
-        $this->app->addShortCode('fluentform_info', function ($atts) {
-            $data = [
-                [
-                    'id'                 => null, // This is the form id
-                    'info'               => 'submission_count', // submission_count | created_at | updated_at | payment_total
-                    'status'             => 'all', // get submission cound of a particular entry status favourites | unread | read
-                    'with_trashed'       => 'no', // yes | no
-                    'substract_from'     => 0, // [fluentform_info id="2" info="submission_count" substract_from="20"]
-                    'hide_on_zero'       => 'no',
-                    'payment_status'     => 'all', // it can be all / specific payment status
-                    'currency_formatted' => 'yes',
-                    'date_format'        => '',
-                ]
-            ];
-    
-            $data = apply_filters_deprecated(
-                'fluentform_info_shortcode_defaults',
-                [
-                    $data,
-                    $atts
-                ],
-                FLUENTFORM_FRAMEWORK_UPGRADE,
-                'fluentform/info_shortcode_defaults',
-                'Use fluentform/info_shortcode_defaults instead of fluentform_info_shortcode_defaults.'
-            );
-
-
-            $shortcodeDefaults = apply_filters('fluentform/info_shortcode_defaults', $data, $atts);
-
-            $atts = shortcode_atts($shortcodeDefaults, $atts);
-            $formId = $atts['id'];
-            $form = wpFluent()->table('fluentform_forms')->find($formId);
-
-            if (!$form) {
-                return '';
-            }
-
-            if ('submission_count' == $atts['info']) {
-                $countQuery = wpFluent()->table('fluentform_submissions')
-                    ->where('form_id', $formId);
-
-                if ('trashed' != $atts['status'] && 'no' == $atts['with_trashed']) {
-                    $countQuery = $countQuery->where('status', '!=', 'trashed');
-                }
-
-                if ('all' == $atts['status']) {
-                    // ...
-                } elseif ('favourites' == $atts['status']) {
-                    $countQuery = $countQuery->where('is_favourite', '=', 1);
-                } else {
-                    $countQuery = $countQuery->where('status', '=', sanitize_key($atts['status']));
-                }
-                if ($atts['payment_status'] && defined('FLUENTFORMPRO') && 'all' != $atts['payment_status']) {
-                    $countQuery = $countQuery->where('payment_status', '=', sanitize_key($atts['payment_status']));
-                }
-
-                $total = $countQuery->count();
-
-                if ($atts['substract_from']) {
-                    $total = intval($atts['substract_from']) - $total;
-                }
-
-                if ('yes' == $atts['hide_on_zero'] && !$total || $total < 0) {
-                    return '';
-                }
-
-                return $total;
-            } elseif ('created_at' == $atts['info']) {
-                if ($atts['date_format']) {
-                    $dateFormat = $atts['date_format'];
-                } else {
-                    $dateFormat = get_option('date_format') . ' ' . get_option('time_format');
-                }
-                return date($dateFormat, strtotime($form->created_at));
-            } elseif ('updated_at' == $atts['info']) {
-                if ($atts['date_format']) {
-                    $dateFormat = $atts['date_format'];
-                } else {
-                    $dateFormat = get_option('date_format') . ' ' . get_option('time_format');
-                }
-                return date($dateFormat, strtotime($form->updated_at));
-            } elseif ('payment_total' == $atts['info']) {
-                if (!defined('FLUENTFORMPRO')) {
-                    return '';
-                }
-
-                global $wpdb;
-                $countQuery = wpFluent()
-                    ->table('fluentform_submissions')
-                    ->select(wpFluent()->raw('SUM(payment_total) as payment_total'))
-                    ->where('form_id', $formId);
-
-                if ('trashed' != $atts['status'] && 'no' == $atts['with_trashed']) {
-                    $countQuery = $countQuery->where('status', '!=', 'trashed');
-                }
-
-                if ('all' == $atts['status']) {
-                    // ...
-                } elseif ('favourites' == $atts['status']) {
-                    $countQuery = $countQuery->where('is_favourite', '=', 1);
-                } else {
-                    $countQuery = $countQuery->where('status', '=', sanitize_key($atts['status']));
-                }
-
-                if ('all' == $atts['payment_status']) {
-                    // ...
-                } elseif ($atts['payment_status']) {
-                    $countQuery = $countQuery->where('payment_status', '=', sanitize_key($atts['payment_status']));
-                }
-
-                $row = $countQuery->first();
-
-                $total = 0;
-                if ($row) {
-                    $total = $row->payment_total;
-                }
-
-                if ($atts['substract_from']) {
-                    $total = intval($atts['substract_from'] * 100) - $total;
-                }
-
-                if ('yes' == $atts['hide_on_zero'] && !$total) {
-                    return '';
-                }
-
-                if ('yes' == $atts['currency_formatted']) {
-                    $currency = \FluentFormPro\Payments\PaymentHelper::getFormCurrency($formId);
-                    return \FluentFormPro\Payments\PaymentHelper::formatMoney($total, $currency);
-                }
-
-                if (!$total) {
-                    return 0;
-                }
-
-                return $total / 100;
-            }
-
-            return '';
-        });
-
-        $this->app->addShortCode('ff_get', function ($atts) {
-            $atts = shortcode_atts([
-                'param' => '',
-            ], $atts);
-            
-            $value = $this->app->request->get($atts['param']);
-
-            if ($atts['param'] && $value) {
-                if (is_array($value)) {
-                    return implode(', ', $value);
-                }
-                return esc_html($value);
-            }
-            return '';
-        });
+        
+        $this->registerHelperShortCodes();
     }
 
     public function renderForm($atts)
@@ -712,7 +550,7 @@ class Component
             $feedText = apply_filters('fluentform/shortcode_feed_text', $feedText, $form);
             return $feedText;
         }
-
+        
         $formSettings = wpFluent()
             ->table('fluentform_form_meta')
             ->where('form_id', $form_id)
@@ -742,23 +580,13 @@ class Component
         );
 
         $form = $this->app->applyFilters('fluentform/rendering_form', $form);
-
         $isRenderable = [
             'status'  => true,
             'message' => '',
         ];
-    
-        $isRenderable = apply_filters_deprecated(
-            'fluentform_is_form_renderable',
-            [
-                $isRenderable,
-                $form
-            ],
-            FLUENTFORM_FRAMEWORK_UPGRADE,
-            'fluentform/is_form_renderable',
-            'Use fluentform/is_form_renderable instead of fluentform_is_form_renderable.'
-        );
-
+        /* This filter is deprecated and will be removed soon */
+        $isRenderable = apply_filters('fluentform_is_form_renderable', $isRenderable, $form);
+        
         $isRenderable = $this->app->applyFilters('fluentform/is_form_renderable', $isRenderable, $form);
 
         if (is_array($isRenderable) && !$isRenderable['status']) {
@@ -828,7 +656,7 @@ class Component
             'forms'                 => [],
             'step_text'             => $stepText,
             'is_rtl'                => is_rtl(),
-            'date_i18n'             => $this->getDatei18n(),
+            'date_i18n'             => self::getDatei18n(),
             'pro_version'           => (defined('FLUENTFORMPRO_VERSION')) ? FLUENTFORMPRO_VERSION : false,
             'fluentform_version'    => FLUENTFORM_VERSION,
             'force_init'            => false,
@@ -846,9 +674,7 @@ class Component
             'input_mask_vars' => [
                 'clearIfNotMatch' => false,
             ],
-            'rest'                     => Helper::getRestInfo()
-
-        ];
+       ];
     
         $data = apply_filters_deprecated(
             'fluentform_global_form_vars',
@@ -935,7 +761,7 @@ class Component
 
         if (!$this->app->applyFilters('fluentform/disabled_analytics', $disableAnalytics)) {
             if (!Acl::hasAnyFormPermission($form->id)) {
-                (new \FluentForm\App\Http\Controllers\AnalyticsController())->store($form->id);
+                (new \FluentForm\App\Services\Analytics\AnalyticsService())->store($form->id);
             }
         }
 
@@ -1067,7 +893,7 @@ class Component
     }
 
     /**
-     * Register filter to check whether the form is renderable
+     * Register filter to check whether the form is renderable or active
      *
      * @return mixed
      */
@@ -1085,6 +911,10 @@ class Component
                     }
                 }
             }
+           if($form->status == 'unpublished'){
+               $isRenderable['status'] = false;
+               $isRenderable['message'] = apply_filters('fluentform/unpublished_form_submission_message',__('Invalid Form!'));
+           }
 
             return $isRenderable;
         }, 10, 2);
@@ -1099,9 +929,11 @@ class Component
      */
     private function limitNumberOfEntries($restrictions, $form, &$isRenderable)
     {
+
         if (!$restrictions['enabled'] || !isset($restrictions['period']) || !isset($restrictions['numberOfEntries'])) {
             return true;
         }
+
 
         $col = 'created_at';
         $period = $restrictions['period'];
@@ -1119,17 +951,17 @@ class Component
             $year = "YEAR(`{$col}`) = YEAR(NOW())";
             $month = "MONTH(`{$col}`) = MONTH(NOW())";
             $day = "DAY(`{$col}`) = DAY(NOW())";
-            $query->where(wpFluent()->raw("{$year} AND {$month} AND {$day}"));
+            $query->whereRaw(wpFluent()->raw("{$year} AND {$month} AND {$day}"));
         } elseif ('week' == $period) {
-            $query->where(
+            $query->whereRaw(
                 wpFluent()->raw("YEARWEEK(`{$col}`, 1) = YEARWEEK(CURDATE(), 1)")
             );
         } elseif ('month' == $period) {
             $year = "YEAR(`{$col}`) = YEAR(NOW())";
             $month = "MONTH(`{$col}`) = MONTH(NOW())";
-            $query->where(wpFluent()->raw("{$year} AND {$month}"));
+            $query->whereRaw(wpFluent()->raw("{$year} AND {$month}"));
         } elseif ('year' == $period) {
-            $query->where(wpFluent()->raw("YEAR(`{$col}`) = YEAR(NOW())"));
+            $query->whereRaw(wpFluent()->raw("YEAR(`{$col}`) = YEAR(NOW())"));
         } elseif ('per_user_ip' == $period) {
             $ip = $this->app->request->getIp();
             $query->where('ip', $ip);
@@ -1355,6 +1187,7 @@ class Component
                 __('PM', 'fluentform'),
             ],
             'yearAriaLabel' => __('Year', 'fluentform'),
+            'firstDayOfWeek' => (int) get_option('start_of_week'),
         ];
 
         return apply_filters('fluentform/date_i18n', $i18n);
@@ -1391,5 +1224,154 @@ class Component
             return $value;
         }
         return Helper::getNumericValue($value, $formatter);
+    }
+
+
+    public function registerHelperShortCodes()
+    {
+        $this->app->addShortCode('fluentform_info', function ($atts) {
+            $data = [
+                'id'                 => null, // This is the form id
+                'info'               => 'submission_count', // submission_count | created_at | updated_at | payment_total
+                'status'             => 'all', // get submission cound of a particular entry status favourites | unread | read
+                'with_trashed'       => 'no', // yes | no
+                'substract_from'     => 0, // [fluentform_info id="2" info="submission_count" substract_from="20"]
+                'hide_on_zero'       => 'no',
+                'payment_status'     => 'all', // it can be all / specific payment status
+                'currency_formatted' => 'yes',
+                'date_format'        => '',
+            ];
+            /* This filter is deprecated, will be removed soon */
+            $data = apply_filters('fluentform_info_shortcode_defaults', $data, $atts );
+            
+            $shortcodeDefaults = apply_filters('fluentform/info_shortcode_defaults', $data, $atts);
+
+            $atts = shortcode_atts($shortcodeDefaults, $atts);
+            $formId = $atts['id'];
+            $form = wpFluent()->table('fluentform_forms')->find($formId);
+
+            if (!$form) {
+                return '';
+            }
+
+            if ('submission_count' == $atts['info']) {
+                $countQuery = wpFluent()->table('fluentform_submissions')
+                    ->where('form_id', $formId);
+
+                if ('trashed' != $atts['status'] && 'no' == $atts['with_trashed']) {
+                    $countQuery = $countQuery->where('status', '!=', 'trashed');
+                }
+
+                if ('all' == $atts['status']) {
+                    // ...
+                } elseif ('favourites' == $atts['status']) {
+                    $countQuery = $countQuery->where('is_favourite', '=', 1);
+                } else {
+                    $countQuery = $countQuery->where('status', '=', sanitize_key($atts['status']));
+                }
+                if ($atts['payment_status'] && defined('FLUENTFORMPRO') && 'all' != $atts['payment_status']) {
+                    $countQuery = $countQuery->where('payment_status', '=', sanitize_key($atts['payment_status']));
+                }
+
+                $total = $countQuery->count();
+
+                if ($atts['substract_from']) {
+                    $total = intval($atts['substract_from']) - $total;
+                }
+
+                if ('yes' == $atts['hide_on_zero'] && !$total || $total < 0) {
+                    return '';
+                }
+
+                return $total;
+            } elseif ('created_at' == $atts['info']) {
+                if ($atts['date_format']) {
+                    $dateFormat = $atts['date_format'];
+                } else {
+                    $dateFormat = get_option('date_format') . ' ' . get_option('time_format');
+                }
+                return date($dateFormat, strtotime($form->created_at));
+            } elseif ('updated_at' == $atts['info']) {
+                if ($atts['date_format']) {
+                    $dateFormat = $atts['date_format'];
+                } else {
+                    $dateFormat = get_option('date_format') . ' ' . get_option('time_format');
+                }
+                return date($dateFormat, strtotime($form->updated_at));
+            } elseif ('payment_total' == $atts['info']) {
+                if (!defined('FLUENTFORMPRO')) {
+                    return '';
+                }
+
+                global $wpdb;
+                $countQuery = wpFluent()
+                    ->table('fluentform_submissions')
+                    ->select(wpFluent()->raw('SUM(payment_total) as payment_total'))
+                    ->where('form_id', $formId);
+
+                if ('trashed' != $atts['status'] && 'no' == $atts['with_trashed']) {
+                    $countQuery = $countQuery->where('status', '!=', 'trashed');
+                }
+
+                if ('all' == $atts['status']) {
+                    // ...
+                } elseif ('favourites' == $atts['status']) {
+                    $countQuery = $countQuery->where('is_favourite', '=', 1);
+                } else {
+                    $countQuery = $countQuery->where('status', '=', sanitize_key($atts['status']));
+                }
+
+                if ('all' == $atts['payment_status']) {
+                    // ...
+                } elseif ($atts['payment_status']) {
+                    $countQuery = $countQuery->where('payment_status', '=', sanitize_key($atts['payment_status']));
+                }
+
+                $row = $countQuery->first();
+
+                $total = 0;
+                if ($row) {
+                    $total = $row->payment_total;
+                }
+
+                if ($atts['substract_from']) {
+                    $total = intval($atts['substract_from'] * 100) - $total;
+                }
+
+                if ('yes' == $atts['hide_on_zero'] && !$total) {
+                    return '';
+                }
+
+                if ('yes' == $atts['currency_formatted']) {
+                    $currency = \FluentFormPro\Payments\PaymentHelper::getFormCurrency($formId);
+                    return \FluentFormPro\Payments\PaymentHelper::formatMoney($total, $currency);
+                }
+
+                if (!$total) {
+                    return 0;
+                }
+
+                return $total / 100;
+            }
+
+            return '';
+        });
+
+        $this->app->addShortCode('ff_get', function ($atts) {
+            $atts = shortcode_atts([
+                'param' => '',
+            ], $atts);
+            
+            $value = $this->app->request->get($atts['param']);
+
+            if ($atts['param'] && $value) {
+                if (is_array($value)) {
+                    return implode(', ', $value);
+                }
+                return esc_html($value);
+            }
+            return '';
+        });
+
     }
 }

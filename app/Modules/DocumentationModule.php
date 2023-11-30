@@ -6,6 +6,7 @@ class DocumentationModule
 {
     public function render()
     {
+        wp_enqueue_script('fluentform-docs');
         wpFluentForm('view')->render('admin.docs.index', [
             'public_url' => fluentformMix(),
             'icon_path_url' => fluentformMix(''),

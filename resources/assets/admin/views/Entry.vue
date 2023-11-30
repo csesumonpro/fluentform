@@ -2,17 +2,19 @@
     <div class="fluentform-wrapper">
         <section-head class="ff_section_head_between items-center" size="sm">
             <section-head-content>
-                    <h3>{{$t('Entry Details')}} #{{entry.serial_number}}</h3>
+                <h3>
+                    <router-link :to="{ name: 'form-entries' }">{{$t('Entries')}}</router-link> <span role="presentation" class="el-breadcrumb__separator">/</span> {{$t('Details')}} #{{entry.serial_number}}
+                </h3>
             </section-head-content>
             <section-head-content>
                 <btn-group>
                     <btn-group-item>
-                        <el-button size="medium" @click="changeEntry('-')" :disabled="!prevId">
+                        <el-button size="medium" :loading="entry_changing_prev" @click="changeEntry('-')" :disabled="!prevId">
                             <i class="ff-icon ff-icon-arrow-left"/> <span>{{$t('Previous')}}</span>
                         </el-button>
                     </btn-group-item>
                     <btn-group-item>
-                        <el-button size="medium" @click="changeEntry('+')" :disabled="!nextId">
+                        <el-button size="medium" :loading="entry_changing_next" @click="changeEntry('+')" :disabled="!nextId">
                             <span>{{$t('Next')}} </span> <i class="ff-icon ff-icon-arrow-right"/>
                         </el-button>
                     </btn-group-item>
@@ -31,7 +33,7 @@
         <el-skeleton :loading="loading" animated :rows="10" :class="loading ? 'ff_card' : ''">
             <el-row :gutter="20" style="min-height: 400px;">
                 <el-col :lg="16">
-                    <div class="ff_entry_detail_wrap">
+                    <div v-loading="entry_changing_next || entry_changing_prev" class="ff_entry_detail_wrap">
                         <card class="entry_info_box entry_input_data">
                             <card-head>
                                 <card-head-group class="justify-between">
@@ -40,14 +42,14 @@
                                         {{$t('Form Entry Data')}}
                                     </div>
                                     <div class="entry_info_box_actions">
-                                        <span 
+                                        <span
                                             @click="changeFavorite()"
-                                            :title="$t('Remove from Favorites')" 
+                                            :title="$t('Remove from Favorites')"
                                             v-if="entry.is_favourite != '0' || entry.is_favourite == '1'"
                                             class="el-icon-star-on star_big action_button text-warning"></span>
-                                        <span 
+                                        <span
                                             @click="changeFavorite()"
-                                            :title="$t('Mark as Favorite')" 
+                                            :title="$t('Mark as Favorite')"
                                             v-else
                                             class="el-icon-star-off star_big action_button text-warning"></span>
 
@@ -56,48 +58,50 @@
                                 </card-head-group>
                             </card-head>
                             <card-body>
-                                <div v-if="entry.serial_number">
-                                    <div v-show="!view_as_json" class="wpf_entry_details">
-                                        <div 
-                                            v-for="(label, label_index) in labels"
-                                            :key="label_index"
-                                            v-show="show_empty == 'yes' || entry.user_inputs[label_index]"
-                                            class="wpf_each_entry"
-                                        >
+                                <el-skeleton :loading="resources_loading" animated :rows="6">
+                                    <div v-if="entry.serial_number">
+                                        <div v-show="!view_as_json" class="wpf_entry_details">
+                                            <div
+                                                v-for="(label, label_index) in labels"
+                                                :key="label_index"
+                                                v-show="show_empty == 'yes' || entry.user_inputs[label_index]"
+                                                class="wpf_each_entry"
+                                            >
 
-                                            <div class="wpf_entry_label">
-                                                {{label}}
-                                            </div>
-
-                                            <template v-if="formFields[label_index]['element'] == 'input_email'">
-                                                <div v-show="entry.user_inputs[label_index]" class="wpf_entry_value">
-                                                    <a :href="'mailto:'+entry.user_inputs[label_index]">{{
-                                                        entry.user_inputs[label_index] }}</a>
+                                                <div class="wpf_entry_label">
+                                                    {{label}}
                                                 </div>
-                                            </template>
-                                            <template v-else-if="formFields[label_index]['element'] == 'input_file'">
-                                                <entry-file-list :itemKey="label_index" :dataItems="original_data"></entry-file-list>
-                                            </template>
-                                            <template
-                                                v-else-if="['input_image', 'signature'].indexOf(formFields[label_index]['element']) != -1">
-                                                <entry-image-list :itemKey="label_index" :dataItems="original_data"></entry-image-list>
-                                            </template>
-                                            <template
-                                                v-else-if="['input_checkbox', 'select'].indexOf(formFields[label_index]['element']) != -1">
-                                                <div class="wpf_entry_value" v-html="maybeExtractCommaArrayInfo(entry.user_inputs[label_index], formFields[label_index]['raw'])"></div>
-                                            </template>
-                                            <template v-else>
-                                                <div class="wpf_entry_value" v-html="entry.user_inputs[label_index]"></div>
-                                            </template>
+
+                                                <template v-if="formFields[label_index]['element'] == 'input_email'">
+                                                    <div v-show="entry.user_inputs[label_index]" class="wpf_entry_value">
+                                                        <a :href="'mailto:'+entry.user_inputs[label_index]">{{
+                                                            entry.user_inputs[label_index] }}</a>
+                                                    </div>
+                                                </template>
+                                                <template v-else-if="formFields[label_index]['element'] == 'input_file'">
+                                                    <entry-file-list :itemKey="label_index" :dataItems="original_data"></entry-file-list>
+                                                </template>
+                                                <template
+                                                    v-else-if="['input_image', 'signature'].indexOf(formFields[label_index]['element']) != -1">
+                                                    <entry-image-list :itemKey="label_index" :dataItems="original_data"></entry-image-list>
+                                                </template>
+                                                <template
+                                                    v-else-if="['input_checkbox', 'select'].indexOf(formFields[label_index]['element']) != -1">
+                                                    <div class="wpf_entry_value" v-html="maybeExtractCommaArrayInfo(entry.user_inputs[label_index], formFields[label_index]['raw'])"></div>
+                                                </template>
+                                                <template v-else>
+                                                    <div class="wpf_entry_value" v-html="entry.user_inputs[label_index]"></div>
+                                                </template>
+                                            </div>
+                                        </div>
+                                        <div v-show="view_as_json">
+                                            <textarea class="show_code" readonly :value="prettifyJson(entry)"></textarea>
                                         </div>
                                     </div>
-                                    <div v-show="view_as_json">
-                                        <textarea class="show_code" readonly :value="prettifyJson(entry)"></textarea>
-                                    </div>
-                                </div>
+                                </el-skeleton>
                             </card-body>
                         </card>
-            
+
                         <card v-for="(card, cardKey) in extraCards" class="entry_info_box" :key="cardKey">
                             <card-head>
                                 <h6>{{card.title}}</h6>
@@ -108,12 +112,12 @@
                                 </div>
                             </card-body>
                         </card>
-            
-            
-                        <payment-summary 
-                            @reload_payments="getEntry()" 
-                            v-if="order_data" 
-                            :submission="entry" 
+
+
+                        <payment-summary
+                            @reload_payments="getEntry()"
+                            v-if="order_data"
+                            :submission="entry"
                             :order_data="order_data"
                         />
 
@@ -153,7 +157,7 @@
                                 </li>
                                 <li>
                                     <div class="lead-title">{{$t('Source URL')}}:</div>
-                                    <a class="lead-text truncate" target="_blank" :href="entry.source_url">
+                                    <a class="lead-text lead-url" target="_blank" :href="entry.source_url">
                                         {{ entry.source_url }}
                                     </a>
                                 </li>
@@ -190,7 +194,7 @@
                             <div class="entry-footer" v-if="hasPermission('fluentform_manage_entries')">
                                 <btn-group>
                                     <btn-group-item>
-                                        <el-button @click="editTable = true" size="small" type="primary" icon="el-icon-edit"> 
+                                        <el-button @click="editTable = true" size="small" type="primary" icon="el-icon-edit">
                                             {{$t('Edit')}}
                                         </el-button>
                                     </btn-group-item>
@@ -200,9 +204,9 @@
                                                 {{$t('Change status to')}} <i class="el-icon-arrow-down el-icon--right"></i>
                                             </el-button>
                                             <el-dropdown-menu slot="dropdown">
-                                                <el-dropdown-item 
-                                                    v-for="(statusName, statusKey) in entry_statuses" 
-                                                    :command="statusKey" 
+                                                <el-dropdown-item
+                                                    v-for="(statusName, statusKey) in entry_statuses"
+                                                    :command="statusKey"
                                                     :key="statusKey"
                                                 >
                                                     {{statusName}}
@@ -238,13 +242,13 @@
             <template slot="title">
                 <h4>{{$t('Edit Entry Data')}}</h4>
             </template>
-            <edit-entry 
-                @reloadData="getEntry()" 
-                :form_id="form_id" 
-                :entry_id="entry_id" 
+            <edit-entry
+                @reloadData="getEntry()"
+                :form_id="form_id"
+                :entry_id="entry_id"
                 @close="editTable = false"
-                v-if="editTable" 
-                :labels="labels" 
+                v-if="editTable"
+                :labels="labels"
                 :submission="entry"
                 :fields="formFields"
             ></edit-entry>
@@ -322,7 +326,10 @@
                 show_empty: 'no',
                 widgets: {},
                 labels: {},
-                extraCards :{}
+                extraCards :{},
+                entry_changing_next : false,
+                entry_changing_prev : false,
+                resources_loading : false,
             }
         },
         computed: {
@@ -337,7 +344,6 @@
         methods: {
             getEntry() {
                 const url = FluentFormsGlobal.$rest.route('findSubmission', this.entry_id);
-
                 FluentFormsGlobal.$rest.get(url)
                     .then(submission => {
                         this.entry = submission;
@@ -364,7 +370,9 @@
                         this.$fail(error.message);
                     })
                     .finally(() => {
+                        this.entry_changing_next = this.entry_changing_prev = false;
                         this.loading = false;
+
                     });
             },
             changeFavorite() {
@@ -397,8 +405,14 @@
                 let entryId = (operator === '+' && this.nextId) || (operator === '-' && this.prevId);
 
                 if (entryId) {
+                    if (operator === '+'){
+                        this.entry_changing_next = true;
+                    }else{
+                        this.entry_changing_prev = true;
+                    }
                     this.entry_id = entryId;
                     this.getEntry();
+
                 }
             },
             explodeFileUrls(value, chunkSize = 4) {
@@ -467,6 +481,7 @@
                 return JSON.stringify(data, null, 8);
             },
             getEntryResources() {
+                this.resources_loading = true;
                 let data = {
                     form_id: this.form_id,
                     entry_id: this.entry_id,
@@ -478,7 +493,7 @@
                     widgets: true,
                     orderData: true,
                 };
-                
+
                 const url = FluentFormsGlobal.$rest.route('getSubmissionsResources');
 
                 FluentFormsGlobal.$rest.get(url, data)
@@ -491,9 +506,13 @@
 
                         this.nextId = response.next && response.next.id;
                         this.prevId = response.previous && response.previous.id;
+
                     })
                     .catch((error) => {
                         this.$fail(error.message);
+                    })
+                    .finally(() => {
+                        this.resources_loading = false;
                     });
             },
         },

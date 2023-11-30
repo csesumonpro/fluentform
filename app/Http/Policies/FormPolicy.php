@@ -33,4 +33,9 @@ class FormPolicy extends Policy
     {
         return Acl::hasPermission('fluentform_settings_manager');
     }
+
+    public function ping()
+    {
+        return Acl::hasAnyFormPermission();
+    }
 }

@@ -35,7 +35,7 @@
                                     <el-skeleton-item variant="text" style="width: 60%; margin-top: 10px;" />
                                 </template>
                                 <template>
-                                    <card class="ff_card_form_action ff_card_shadow_lg hover-zoom" @click="createForm('blank_form')" :img="blankFormImg" imgClass="mb-3">
+                                    <card class="ff_card_form_action ff_card_shadow_lg hover-zoom" v-loading="creatingForm && creatingFormType === 'blank_form'" @click="createForm('blank_form')" :img="blankFormImg" imgClass="mb-3">
                                         <card-body>
                                             <h6 class="mb-2 ff_card_title">{{$t('New Blank Form')}}</h6>
                                             <p class="ff_card_text">{{$t('Create a New Blank form from scratch.')}}</p>
@@ -69,7 +69,7 @@
                                     <el-skeleton-item variant="text" style="width: 60%; margin-top: 10px;" />
                                 </template>
                                 <template>
-                                    <card class="ff_card_form_action ff_card_shadow_lg hover-zoom" @click="createForm('conversational')" :img="conversationalFormImg" imgClass="mb-3">
+                                    <card class="ff_card_form_action ff_card_shadow_lg hover-zoom" v-loading="creatingForm && creatingFormType === 'conversational'" @click="createForm('conversational')" :img="conversationalFormImg" imgClass="mb-3">
                                         <card-body>
                                             <h6 class="mb-2 ff_card_title">{{$t('Create Conversational Form')}}</h6>
                                             <p class="ff_card_text">{{$t('Turn your content, surveys into conversations.')}}</p>
@@ -161,6 +161,7 @@
                 postTypeSelectionDialogVisibility: false,
                 showFormsImport : false,
                 formsImported : false,
+                creatingFormType : '',
                 loading: false
             }
         },
@@ -194,6 +195,10 @@
                 this.$emit('update:visibility', false);
             },
             createForm(formType, form) {
+	            if (this.creatingForm) {
+		            return;
+	            }
+	            this.creatingFormType = formType;
                 let selectedFormType = 'form';
                 if (form) {
                     if (form.is_pro && !window.FluentFormApp.hasPro) {

@@ -23,7 +23,7 @@
             do_action('fluentform/before_all_entries_render');
         ?>
         <div class="ff_all_forms" id="ff_all_forms_app">
-            <div id="ff_all_entries"><ff-all-entries></ff-all-entries></div>
+            <div id="ff_all_entries"><ff-all-entries></ff-all-entries><global-search></global-search></div>
         </div>
         <?php
             do_action_deprecated(

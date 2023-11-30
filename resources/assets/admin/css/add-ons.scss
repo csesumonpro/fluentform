@@ -164,11 +164,34 @@
     margin-bottom: 22px;
 }
 .font_downloader_wrapper{
-    width: 600px;
+    width: 650px;
     margin-left: auto;
     margin-right: auto;
+    .el-button.is-loading{
+        overflow: hidden;
+        border: 0;
+        pointer-events: inherit;
+        span{
+            position: relative;
+            z-index: 1;
+        }
+        &::before{
+            background-color: rgba(255, 255, 255, 0.80);
+        }
+        .ff_download_fonts_bar{
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            width: 0;
+            content: "";
+            background-color: $--color-primary;
+        }
+    }
 }
-.ff_pdf_system_status_list{
+.ff_pdf_system_status_list,
+.ff_pdf_system_status {
     li{
         margin-bottom: 10px;
         font-size: 15px;
@@ -184,6 +207,18 @@
     .ff_card_footer{
         border-top-color: $--color-primary-light-7;
     }
+}
+
+.ff_download_logs{
+    background-color: $--color-info;
+    border-radius: 10px;
+    max-height: 200px;
+    overflow: scroll;
+    text-align: left;
+    color: $--color-white;
+    line-height: 28px;
+    padding: 10px 20px;
+
 }
 
 @import "../styles/responsive";

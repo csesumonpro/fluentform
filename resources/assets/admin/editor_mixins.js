@@ -64,7 +64,7 @@ export default {
          * @param item
          */
         uniqElKey(item) {
-            item.uniqElKey = 'el_' + Date.now() + Math.random();
+            item.uniqElKey = 'el_' + Date.now() + Math.floor(Math.random() * 100);
         },
 
         /**

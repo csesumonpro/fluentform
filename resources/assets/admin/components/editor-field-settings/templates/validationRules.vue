@@ -2,7 +2,7 @@
 <el-form :labelPosition="labelPosition" :labelWidth="labelWidth" class="el-form-nested">
 
     <template v-for="(repoItem, key) in editorRepo">
-        <div v-if="key in validation_rules" :key="key">
+        <div v-if="key in validation_rules" :key="key" :class="validation_rules[key].value ? 'ff_validation_rule_warp' : ''">
             <component :is="guessElTemplate(repoItem)"
                    v-model="validation_rules[key].value"
                    :editItem="editItem"
@@ -15,13 +15,23 @@
                 :listItem="tabularGridRequiredRow" />
 
             <transition name="slide-fade">
-                <div v-if="validation_rules[key].value">
-                    <el-form-item>
-                        <elLabel slot="label" :label="$t('Error Message')"
-                                :helpText="`${$t('This message will be shown if validation fails for')} ${repoItem.label}`">
-                        </elLabel>
-                        <el-input v-model="validation_rules[key].message" type="text"></el-input>
-                    </el-form-item>
+                <div v-if="validation_rules[key].value" class="ff_validation_rule_error_choice">
+                    <ff_input-radio
+                        :listItem="{
+                            label:'Error Message',
+                            options:[{label:'Global', value:true},{label:'Custom', value:false}],
+                            help_text:`${$t('This message will be shown if validation fails for')} ${repoItem.label}`
+					    }"
+                        v-model="validation_rules[key].global"
+                    />
+                    <transition name="slide-fade">
+                        <div style="max-height: 60px;">
+                            <el-form-item>
+                                <el-input v-if="!validation_rules[key].global" v-model="validation_rules[key].message" type="text"></el-input>
+	                            <el-input v-else disabled readonly v-model="validation_rules[key].global_message" type="text"></el-input>
+                            </el-form-item>
+                        </div>
+                    </transition>
                 </div>
             </transition>
         </div>

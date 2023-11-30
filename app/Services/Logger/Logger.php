@@ -14,27 +14,40 @@ class Logger
 {
     public function get($attributes = [])
     {
-        $status = Arr::get($attributes, 'status');
-        $formId = Arr::get($attributes, 'form_id');
-        $component = Arr::get($attributes, 'component');
+        $statuses = Arr::get($attributes, 'status');
+        $formIds = Arr::get($attributes, 'form_id');
+        $components = Arr::get($attributes, 'component');
         $sortBy = Arr::get($attributes, 'sort_by', 'DESC');
         $type = Arr::get($attributes, 'type', 'log');
-
-        [$table, $model, $columns, $join, $componentColumn] = $this->getBases($type);
-
+        $dateRange = Arr::get($attributes, 'date_range', []);
+        $startDate = Arr::get($dateRange, 0);
+        $endDate = Arr::get($dateRange, 1);
+        [$table, $model, $columns, $join, $componentColumn, $dateColumn] = $this->getBases($type);
+    
         $logsQuery = $model->select($columns)
             ->leftJoin('fluentform_forms', 'fluentform_forms.id', '=', $join)
             ->orderBy($table . '.id', $sortBy)
-            ->when($formId, function ($q) use ($formId) {
-                return $q->where('fluentform_forms.id', intval($formId));
+            ->when($formIds, function ($q) use ($formIds) {
+                return $q->whereIn('fluentform_forms.id', array_map('intval', $formIds));
             })
-            ->when($status, function ($q) use ($status, $table) {
-                return $q->where($table . '.status', sanitize_text_field($status));
+            ->when($statuses, function ($q) use ($statuses, $table) {
+                return $q->whereIn($table . '.status', array_map('sanitize_text_field', $statuses));
             })
-            ->when($component, function ($q) use ($component, $componentColumn) {
-                return $q->where($componentColumn, sanitize_text_field($component));
+            ->when($components, function ($q) use ($components, $componentColumn) {
+                return $q->whereIn($componentColumn, array_map('sanitize_text_field', $components));
+            })
+            ->when($startDate && $endDate, function ($q) use ($startDate, $endDate, $dateColumn) {
+                // Concatenate time if not time included on start/end date string
+                if ($startDate != date("Y-m-d H:i:s", strtotime($startDate))) {
+                    $startDate .= ' 00:00:01';
+                }
+                if ($endDate != date("Y-m-d H:i:s", strtotime($endDate))) {
+                    $endDate .= ' 23:59:59';
+                }
+                return $q->where($dateColumn, '>=', $startDate)
+                    ->where($dateColumn, '<=', $endDate);
             });
-
+    
         $logs = $logsQuery->paginate();
 
         $logItems = $logs->items();
@@ -81,6 +94,7 @@ class Logger
             ];
             $join = 'fluentform_logs.parent_source_id';
             $componentColumn = 'fluentform_logs.component';
+            $dateColumn = 'fluentform_logs.created_at';
         } else {
             $table = 'ff_scheduled_actions';
             $model = Scheduler::query();
@@ -91,14 +105,15 @@ class Logger
                 'ff_scheduled_actions.origin_id as submission_id',
                 'ff_scheduled_actions.status',
                 'ff_scheduled_actions.note',
-                'ff_scheduled_actions.created_at',
+                'ff_scheduled_actions.updated_at',
                 'fluentform_forms.title as form_title',
             ];
             $join = 'ff_scheduled_actions.form_id';
             $componentColumn = 'ff_scheduled_actions.action';
+            $dateColumn = 'ff_scheduled_actions.updated_at';
         }
 
-        return [$table, $model, $columns, $join, $componentColumn];
+        return [$table, $model, $columns, $join, $componentColumn, $dateColumn];
     }
 
     public function getFilters($attributes = [])

@@ -31,7 +31,15 @@ class BaseComponent
             }
             $elementName = $data['attributes']['name'];
             $elementName = str_replace(['[', ']', ' '], '_', $elementName);
-            return 'ff_' . esc_attr($form->id) . '_' . $formInstance . '_' . esc_attr($elementName) . '';
+
+            $suffix = esc_attr($form->id);
+            if($formInstance > 1) {
+                $suffix = $suffix.'_'.$formInstance;
+            }
+
+            $suffix .= '_'.$elementName;
+
+            return 'ff_' . esc_attr($suffix);
         }
     }
 
@@ -178,7 +186,7 @@ class BaseComponent
         $requiredClass = $this->getRequiredClass(ArrayHelper::get($data, 'settings.validation_rules', []));
         $classes = trim('ff-el-input--label ' . $requiredClass . $this->getAsteriskPlacement($form));
 
-        return "<div class='" . esc_attr($classes) . "'><label aria-label='" . esc_attr($label) . "' for='" . esc_attr($id) . "'>" . fluentform_sanitize_html($label) . '</label>' . $helpMessage . '</div>';
+        return "<div class='" . esc_attr($classes) . "'><label aria-label='" . esc_attr($this->removeShortcode($label)) . "' for='" . esc_attr($id) . "'>" . fluentform_sanitize_html($label) . '</label>' . $helpMessage . '</div>';
     }
 
     /**
@@ -234,15 +242,21 @@ class BaseComponent
         }
 
         $labelMarkup = '';
-
-        if (! empty($data['settings']['label'])) {
+    
+        if (!empty($data['settings']['label'])) {
             $label = ArrayHelper::get($data, 'settings.label');
-
+            $ariaLabel = $label;
+            
+            $hasShortCodeIndex = strpos($label, '{dynamic.');
+            if ($hasShortCodeIndex !== false) {
+                $ariaLabel = trim(substr($label, 0, $hasShortCodeIndex));
+            }
+    
             $labelMarkup = sprintf(
-                '<div class="%s"><label %s aria-label="%s">%s</label> %s</div>',
+                '<div class="%1$s"><label %2$s aria-label="%3$s">%4$s</label>%5$s</div>',
                 esc_attr($labelClass),
                 $forStr,
-                esc_attr($label),
+                esc_attr($this->removeShortcode($label)),
                 fluentform_sanitize_html($label),
                 fluentform_sanitize_html($labelHelpText)
             );
@@ -305,5 +319,24 @@ class BaseComponent
     protected function printContent($hook, $html, $data, $form)
     {
         echo apply_filters($hook, $html, $data, $form); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $html is escaped before being passed in.
+    }
+
+    /**
+     * A helper method for remove shortcode from aria label
+     *
+     * @param string $label
+     *
+     * @return string $label
+     */
+    protected function removeShortcode($label)
+    {
+        // Find all occurrences of text enclosed in curly braces.
+        preg_match_all('/{(.*?)}/', $label, $matches);
+    
+        // If there are matches, remove them from the label.
+        if ($matches[0]) {
+            $label = trim(str_replace($matches[0], '', $label));
+        }
+        return $label;
     }
 }

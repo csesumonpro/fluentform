@@ -3,8 +3,6 @@
 namespace FluentForm\App\Hooks\Handlers;
 
 
-
-use FluentForm\App\Databases\Migrations\ScheduledActions;
 use FluentForm\App\Services\FormBuilder\ShortCodeParser;
 use FluentForm\Framework\Foundation\Application;
 use FluentForm\Framework\Helpers\ArrayHelper;
@@ -97,6 +95,8 @@ class GlobalNotificationHandler
         
         $entry = false;
         $asyncFeeds = [];
+
+        $scheduler = $this->app['fluentFormAsyncRequest'];
         
         foreach ($enabledFeeds as $feed) {
             // We will decide if this feed will run on async or sync
@@ -109,7 +109,7 @@ class GlobalNotificationHandler
                 $entry = $this->globalNotificationService->getEntry($insertId, $form);
             }
             // skip emails which will be sent on payment form submit otherwise email is sent after payment success
-            if (! ! $form->has_payment && ('notifications' == $feed['meta_key'])) {
+            if (!! $form->has_payment && ('notifications' == $feed['meta_key'])) {
                 if (('payment_form_submit' == ArrayHelper::get($feed, 'settings.feed_trigger_event'))) {
                     continue;
                 }
@@ -134,7 +134,7 @@ class GlobalNotificationHandler
             
             if (apply_filters('fluentform/notifying_async_' . $integrationKey, $isAsync, $form->id)) {
                 // It's async
-                $asyncFeeds[] = [
+                $asyncFeed = [
                     'action'     => $newAction,
                     'form_id'    => $form->id,
                     'origin_id'  => $insertId,
@@ -145,6 +145,12 @@ class GlobalNotificationHandler
                     'created_at' => current_time('mysql'),
                     'updated_at' => current_time('mysql'),
                 ];
+
+                $asyncFeeds[] = $asyncFeed;
+
+                $queueId = $scheduler->queue($asyncFeed);
+
+                as_enqueue_async_action('fluentform/schedule_feed', ['queueId' => $queueId], 'fluentform');
             } else {
                 do_action_deprecated(
                     $oldAction,
@@ -177,12 +183,5 @@ class GlobalNotificationHandler
             do_action('fluentform/global_notify_completed', $insertId, $form);
             return;
         }
-        
-        // Now we will push this async feeds
-        $handler = $this->app['fluentFormAsyncRequest'];
-        $handler->queueFeeds($asyncFeeds);
-        
-        $handler->dispatchAjax(['origin_id' => $insertId]);
     }
-    
 }

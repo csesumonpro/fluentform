@@ -2,7 +2,7 @@
     <div class="ff_entries_wrapper">
         <section-head class="ff_section_head_between mb-0">
             <section-head-content>
-                <h1 class="ff_section_title">{{$t('Form Entries')}}</h1>
+                <h1 class="ff_section_title">{{$t('Entries from All Forms')}}</h1>
             </section-head-content>
             <section-head-content>
                 <btn-group as="div">
@@ -52,7 +52,7 @@
         <div v-if="chart_status == 'yes'" ref="entry_chart" class="entry_chart mt-4 mb-4">
             <entry-chart :form_id="selectedFormId" :date_range="filter_date_range" :entry_status="entry_status" ></entry-chart>
         </div>
-        
+
         <div class="ff_entries_details">
             <div class="ff_section_head sm">
                 <el-row :gutter="24">
@@ -65,9 +65,9 @@
                                 <div class="ff_entries_select">
                                     <el-select
                                         class="ff_filter_form_select ff-input-s1 w-100"
-                                        @change="fetchEntries()" 
-                                        clearable 
-                                        filterable 
+                                        @change="fetchEntries()"
+                                        clearable
+                                        filterable
                                         v-model="selectedFormId"
                                         :placeholder="$t('Select Form')"
                                     >
@@ -94,7 +94,7 @@
                     <el-col :span="7">
                         <div class="ff_entries_search_wrap">
                             <el-input
-                                @keyup.enter.native="fetchEntries()" 
+                                @keyup.enter.native="fetchEntries()"
                                 clearable
                                 v-model="search"
                                 :placeholder="$t('Search Forms')"
@@ -110,14 +110,16 @@
                 <div class="ff_table">
                     <el-skeleton :loading="loading" animated :rows="10">
                         <el-table :data="entries">
-                            <el-table-column width="200" :label="$t('Submission ID')">
+                            <el-table-column width="200" prop="id" sortable :label="$t('Submission ID')">
                                 <template slot-scope="scope">
-                                    <span>#{{scope.row.id}}</span>
-                                    <span class="ff_payment_badge" v-if="scope.row.total_paid">{{formatMoney(scope.row)}}</span>
+                                    <a :href="scope.row.entry_url" >
+                                        <span>#{{scope.row.id}}</span>
+                                        <span class="ff_payment_badge" v-if="scope.row.total_paid">{{formatMoney(scope.row)}}</span>
+                                    </a>
                                 </template>
                             </el-table-column>
-                            <el-table-column :label="$t('Form')" prop="form.title" width="400"></el-table-column>
-                            <el-table-column width="150" :label="$t('Status')">
+                            <el-table-column :label="$t('Form')" sortable prop="form.title" width="400"></el-table-column>
+                            <el-table-column width="150" prop="status" sortable :label="$t('Status')">
                                 <template slot-scope="scope">
                                     <span v-if="scope.row.status ==  'read' ">{{$t('Read')}}</span>
                                     <span v-else-if="scope.row.status ==  'unread' ">{{$t('Unread')}}</span>
@@ -228,7 +230,7 @@ export default {
             selectedPaymentStatuses: [],
             paginate: {
                 total: 0,
-                current_page: 1,
+                current_page: +(localStorage.getItem('entriesCurrentPage') || 1),
                 last_page: 1,
                 per_page: localStorage.getItem('entriesPerPage') || 10
             },
@@ -274,7 +276,7 @@ export default {
         setPaginate(data = {}) {
             this.paginate = {
                 total: data.total || 0,
-                current_page: data.current_page || 1,
+                current_page: data.current_page || +(localStorage.getItem('entriesCurrentPage') || 1),
                 last_page: data.last_page || 1,
                 per_page: data.per_page || localStorage.getItem('entriesPerPage') || 20,
             }
@@ -282,6 +284,7 @@ export default {
         goToPage(value) {
             let top = this.chart_status === 'yes' ? this.$refs?.entry_chart.clientHeight : 100;
             scrollTop(top).then((_) => {
+	            localStorage.setItem('entriesCurrentPage', value);
                 this.paginate.current_page = value;
                 this.fetchEntries();
             })

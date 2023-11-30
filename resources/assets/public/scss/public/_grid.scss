@@ -1,0 +1,57 @@
+@media (min-width: 768px) {
+    .frm-fluent-form {
+        .ff-t-container {
+            display: flex;
+            width: 100%;
+            gap: 15px;
+            &.ff_cond_v {
+                display: flex !important;
+            }
+            &.mobile {
+                display: block !important;
+            }
+        }
+
+        .ff-t-cell {
+            display: flex;
+            flex-direction: column;
+            vertical-align: inherit;
+            width: 100%;
+            &:first-of-type {
+                padding-left: 0;
+            }
+
+            &:last-of-type {
+                padding-right: 0;
+                flex-grow: 1;
+            }
+
+            .ff_submit_btn_wrapper_custom {
+                display: flex;
+                align-items: flex-end;
+                margin: 0;
+                margin-top: auto;
+
+                &.ff-text {
+                    &-center {
+                        justify-content: center;
+                    }
+
+                    &-right {
+                        justify-content: flex-end;
+                    }
+                }
+
+                button {
+                    margin-bottom: 20px;
+                }
+            }
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    .ff-t-cell {
+        margin-left: 0 !important; // @todo:remove
+    }
+}

@@ -148,7 +148,7 @@ jQuery(document).ready(function () {
 
                         var formData = {
                             data: $inputs.serialize(),
-                            // action: 'fluentform_submit',
+                            action: 'fluentform_submit',
                             form_id: $theForm.data('form_id')
                         };
 
@@ -244,48 +244,41 @@ jQuery(document).ready(function () {
 
                 var sendData = function ($theForm, formData) {
                     function addParameterToURL(param) {
-                        const route = 'form-submit';
-                        let _url = `${window.fluentFormVars.rest.url}/${route}`;
+                        let _url = fluentFormVars.ajaxUrl;
                         _url += (_url.split('?')[1] ? '&' : '?') + param;
                         return _url;
                     }
 
-                    var ajaxRequestUrl = addParameterToURL('t=' + Date.now()+'&_wpnonce=' + window.fluentFormVars.rest.nonce);
+                    const ajaxRequestUrl = addParameterToURL('t=' + Date.now());
 
                     if (this.isSending) {
                         return;
                     }
 
                     var that = this;
-                    var oldResponse;    //For Payment Handling Using Old System
 
                     this.isSending = true;
 
                     $.post(ajaxRequestUrl, formData)
                         .then(function (res) {
-                            if (res?.data){
-
-                                oldResponse = res;
-                                res = res?.data
-                            }
-                            if (!res || !res || !res.result) {
+                            if (!res || !res.data || !res.data.result) {
                                 // This is an error
                                 $theForm.trigger('fluentform_submission_failed', {
                                     form: $theForm,
-                                    response: oldResponse
+                                    response: res
                                 });
                                 showErrorMessages(res);
                                 return;
                             }
 
-                            if (res.append_data) {
-                                addHiddenData(res.append_data);
+                            if (res.data.append_data) {
+                                addHiddenData(res.data.append_data);
                             }
 
-                            if (res.nextAction) {
-                                $theForm.trigger('fluentform_next_action_' + res.nextAction, {
+                            if (res.data.nextAction) {
+                                $theForm.trigger('fluentform_next_action_' + res.data.nextAction, {
                                     form: $theForm,
-                                    response: oldResponse
+                                    response: res
                                 });
                                 return;
                             }
@@ -293,27 +286,27 @@ jQuery(document).ready(function () {
                             $theForm.triggerHandler('fluentform_submission_success', {
                                 form: $theForm,
                                 config: form,
-                                response: oldResponse
+                                response: res
                             });
 
                             jQuery(document.body).trigger('fluentform_submission_success', {
                                 form: $theForm,
                                 config: form,
-                                response: oldResponse
+                                response: res
                             });
 
-                            if ('redirectUrl' in res.result) {
-                                if (res.result.message) {
+                            if ('redirectUrl' in res.data.result) {
+                                if (res.data.result.message) {
                                     $('<div/>', {
                                         'id': formId + '_success',
                                         'class': 'ff-message-success'
                                     })
-                                        .html(res.result.message)
+                                        .html(res.data.result.message)
                                         .insertAfter($theForm);
                                     $theForm.find('.ff-el-is-error').removeClass('ff-el-is-error');
                                 }
 
-                                location.href = res.result.redirectUrl;
+                                location.href = res.data.result.redirectUrl;
                                 return;
                             } else {
                                 const successMsgId = formId + '_success';
@@ -325,12 +318,12 @@ jQuery(document).ready(function () {
                                     'id': successMsgId,
                                     'class': 'ff-message-success'
                                 })
-                                    .html(res.result.message)
+                                    .html(res.data.result.message)
                                     .insertAfter($theForm);
 
                                 $theForm.find('.ff-el-is-error').removeClass('ff-el-is-error');
 
-                                if (res.result.action == 'hide_form') {
+                                if (res.data.result.action == 'hide_form') {
                                     $theForm.hide().addClass('ff_force_hide');
                                     $theForm[0].reset();
                                 } else {
@@ -523,7 +516,7 @@ jQuery(document).ready(function () {
                  * @param {int} formId
                  * @return {int}
                  */
-                 var getHcaptchaClientId = function (formId) {
+                var getHcaptchaClientId = function (formId) {
                     var formIndex;
                     $('form').has('.h-captcha').each(function (index, form) {
                         if ($(this).attr('data-form_id') == formId) {
@@ -631,6 +624,21 @@ jQuery(document).ready(function () {
                     validator().validate(elements, form.rules);
 
                 };
+
+                var addFieldValidationRule = function (elName, ruleName, rule) {
+                    if (!form.rules[elName]) {
+                        form.rules[elName] = {};
+                    }
+                    form.rules[elName][ruleName] = rule;
+                }
+                var removeFieldValidationRule = function (elName, ruleName) {
+                    if (!(elName in form.rules)) {
+                        return;
+                    }
+                    if (ruleName in form.rules[elName]) {
+                        delete form.rules[elName][ruleName];
+                    }
+                }
 
                 /**
                  * Show form validation errors
@@ -754,8 +762,13 @@ jQuery(document).ready(function () {
                     div = $('<div/>', {class: 'error text-danger'});
                     div.attr('role', 'alert');
                     el.closest('.ff-el-group').addClass('ff-el-is-error');
-                    el.closest('.ff-el-input--content').find('div.error').remove();
-                    el.closest('.ff-el-input--content').append(div.text(message));
+                    if (el.closest('.ff-el-input--content').length) {
+                        el.closest('.ff-el-input--content').find('div.error').remove();
+                        el.closest('.ff-el-input--content').append(div.text(message));
+                    } else {
+                        el.find('div.error').remove();
+                        el.append(div.text(message));
+                    }
                 };
 
                 var initInlineErrorItems = function () {
@@ -888,6 +901,8 @@ jQuery(document).ready(function () {
                     addGlobalValidator,
                     config: form,
                     showFormSubmissionProgress,
+                    addFieldValidationRule,
+                    removeFieldValidationRule,
                     hideFormSubmissionProgress
                 }
 
@@ -1228,7 +1243,7 @@ jQuery(document).ready(function () {
                  * @param  jQuery Elelemnt el
                  * @return bool
                  */
-                 this.digits = function (el, rule) {
+                this.digits = function (el, rule) {
                     var val = window.ff_helper.numericVal(el);
                     val = val.toString();
 
@@ -1253,6 +1268,15 @@ jQuery(document).ready(function () {
 
                 this.allowed_image_types = function () {
                     return true;
+                };
+
+                /**
+                 * Validates for force failed
+                 *
+                 * @return true
+                 */
+                this.force_failed = function () {
+                    return false;
                 };
 
                 /**
@@ -1346,7 +1370,7 @@ jQuery(document).ready(function () {
                 return false;
             }
             formInstance.reinitExtras();
-           
+
             if (window.hcaptcha) {
                 hcaptcha.reset(); //two recapthca on same page creates conflicts
             }

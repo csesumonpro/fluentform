@@ -55,7 +55,7 @@ class SubmissionService
                 define('FLUENTFORM_RENDERING_ENTRY', true);
             }
 
-            $submission = $this->model->with(['form', 'user'])->findOrFail($submissionId);
+            $submission = $this->model->with(['form'])->findOrFail($submissionId);
 
             $form = $submission->form;
 
@@ -74,6 +74,23 @@ class SubmissionService
 
             $submission = FormDataParser::parseFormEntry($submission, $form, null, true);
 
+            
+            if($submission->user_id) {
+                $user = get_user_by('ID', $submission->user_id);
+                $userDisplayName = trim($user->first_name.' '.$user->last_name);
+                if(!$userDisplayName) {
+                    $userDisplayName = $user->display_name;
+                }
+                
+                if($user) {
+                    $submission->user = [
+                        'ID' => $user->ID,
+                        'name' => $userDisplayName,
+                        'permalink' => get_edit_user_link($user->ID)
+                    ];
+                }
+            }
+            
             $submission = apply_filters_deprecated(
                 'fluentform_single_response_data',
                 [$submission, $form->id],
@@ -324,6 +341,19 @@ class SubmissionService
                     @unlink($file);
                 }
             }
+            // Empty Temp Uploads
+            if (defined('FLUENTFORMPRO')) {
+                $tempDir = wp_upload_dir()['basedir'] . FLUENTFORM_UPLOAD_DIR . '/temp/';
+                $files = glob($tempDir . '*');
+                if(!empty($files)){
+                    foreach ($files as $file) {
+                        if (basename($file) !== 'index.php') {
+                            unlink($file);
+                        }
+                    }
+                }
+            }
+           
         }
     }
 
@@ -358,7 +388,7 @@ class SubmissionService
 
     public function getNotes($submissionId, $attributes)
     {
-        $formId = intval(Arr::get($attributes, 'form_id'));
+        $formId = (int) Arr::get($attributes, 'form_id');
         $apiLog = 'yes' === sanitize_text_field(Arr::get($attributes, 'api_log'));
 
         $metaKeys = ['_notes'];
@@ -406,7 +436,7 @@ class SubmissionService
 
     public function storeNote($submissionId, $attributes = [])
     {
-        $formId = intval(Arr::get($attributes, 'form_id'));
+        $formId = (int) Arr::get($attributes, 'form_id');
 
         $content = sanitize_textarea_field($attributes['note']['content']);
         $status = sanitize_text_field($attributes['note']['status']);
@@ -482,21 +512,6 @@ class SubmissionService
                     'updated_at' => current_time('mysql'),
                 ]);
         }
-
-        do_action_deprecated(
-            'ff_log_data',
-            [
-                'parent_source_id' => $submission->form_id,
-                'source_type'      => 'submission_item',
-                'source_id'        => $submission->id,
-                'component'        => 'General',
-                'status'           => 'info',
-                'title'            => 'Associate user has been changed from ' . $submission->user_id . ' to ' . $userId,
-            ],
-            FLUENTFORM_FRAMEWORK_UPGRADE,
-            'fluentform/log_data',
-            'Use fluentform/log_data instead of ff_log_data.'
-        );
 
         do_action('fluentform/log_data', [
             'parent_source_id' => $submission->form_id,

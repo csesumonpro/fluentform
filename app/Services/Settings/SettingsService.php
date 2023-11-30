@@ -3,8 +3,10 @@
 namespace FluentForm\App\Services\Settings;
 
 use FluentForm\App\Models\Form;
+use FluentForm\App\Helpers\Helper;
 use FluentForm\App\Models\FormMeta;
 use FluentForm\Framework\Support\Arr;
+use FluentForm\App\Services\FluentConversational\Classes\Form as FluentConversational;
 
 class SettingsService
 {
@@ -12,12 +14,12 @@ class SettingsService
     {
         $metaKey = sanitize_text_field(Arr::get($attributes, 'meta_key'));
 
-        $formId = intval(Arr::get($attributes, 'form_id'));
+        $formId = (int) Arr::get($attributes, 'form_id');
 
         $result = FormMeta::where(['meta_key' => $metaKey, 'form_id' => $formId])->get();
 
         foreach ($result as $item) {
-            $value = json_decode($item->value, true);
+            $value = Helper::isJson($item->value) ? json_decode($item->value, true) : $item->value;
 
             if ('notifications' == $metaKey) {
                 if (!$value) {
@@ -44,9 +46,7 @@ class SettingsService
             'Use fluentform/get_meta_key_settings_response instead of fluentform_get_meta_key_settings_response'
         );
 
-        $result = apply_filters('fluentform/get_meta_key_settings_response', $result, $formId, $metaKey);
-
-        return $result;
+        return apply_filters('fluentform/get_meta_key_settings_response', $result, $formId, $metaKey);
     }
 
     public function general($formId)
@@ -74,7 +74,7 @@ class SettingsService
 
     public function saveGeneral($attributes = [])
     {
-        $formId = intval(Arr::get($attributes, 'form_id'));
+        $formId = (int) Arr::get($attributes, 'form_id');
 
         $formSettings = json_decode(Arr::get($attributes, 'formSettings'), true);
 
@@ -163,11 +163,10 @@ class SettingsService
             'replyTo'                    => 'sanitize_text_field',
             'bcc'                        => 'sanitize_text_field',
             'subject'                    => 'sanitize_text_field',
-            'message'                    => 'wp_kses_post',
+            'message'                    => 'fluentform_sanitize_html',
             'url'                        => 'sanitize_url',
             'webhook'                    => 'sanitize_url',
             'textTitle'                  => 'sanitize_text_field',
-
         ];
 
         return fluentform_backend_sanitizer($settings, $sanitizerMap);
@@ -175,7 +174,7 @@ class SettingsService
 
     public function store($attributes = [])
     {
-        $formId = intval(Arr::get($attributes, 'form_id'));
+        $formId = (int) Arr::get($attributes, 'form_id');
 
         $value = Arr::get($attributes, 'value', '');
 
@@ -209,15 +208,16 @@ class SettingsService
         // If the request has an valid id field it's safe to assume
         // that the user wants to update an existing settings.
         // So, we'll proceed to do so by finding it first.
-        $id = intval(Arr::get($attributes, 'meta_id'));
+        $id = (int) Arr::get($attributes, 'meta_id');
 
         $settingsQuery = FormMeta::where('form_id', $formId);
 
+        $settings = null;
         if ($id) {
             $settings = $settingsQuery->find($id);
         }
 
-        if (isset($settings)) {
+        if (!empty($settings)) {
             $settingsQuery->where('id', $settings->id)->update($data);
             $insertId = $settings->id;
         } else {
@@ -236,5 +236,48 @@ class SettingsService
         $id = intval(Arr::get($attributes, 'meta_id'));
 
         FormMeta::where('form_id', $formId)->where('id', $id)->delete();
+    }
+
+    public function conversationalDesign($formId)
+    {
+        $conversationalForm = new FluentConversational();
+
+        return [
+            'design_settings' => $conversationalForm->getDesignSettings($formId),
+            'meta_settings'   => $conversationalForm->getMetaSettings($formId),
+            'has_pro'         => defined('FLUENTFORMPRO'),
+        ];
+    }
+
+    public function storeConversationalDesign($attributes, $formId)
+    {
+        $metaKey = "ffc_form_settings";
+        $formId = intval($formId);
+
+        $settings = Arr::get($attributes, 'design_settings');
+        FormMeta::persist($formId, $metaKey . '_design', $settings);
+
+        $generatedCss = wp_strip_all_tags(Arr::get($attributes, 'generated_css'));
+        if ($generatedCss) {
+            FormMeta::persist($formId, $metaKey . '_generated_css', $generatedCss);
+        }
+
+        $meta = Arr::get($attributes, 'meta_settings', []);
+        if ($meta) {
+            FormMeta::persist($formId, $metaKey . '_meta', $meta);
+        }
+
+        $params = [
+            'fluent-form' => $formId,
+        ];
+        if (isset($meta['share_key']) && !empty($meta['share_key'])) {
+            $params['form'] = $meta['share_key'];
+        }
+
+        $shareUrl = add_query_arg($params, site_url());
+        return [
+            'message'   => __('Settings successfully updated'),
+            'share_url' => $shareUrl,
+        ];
     }
 }

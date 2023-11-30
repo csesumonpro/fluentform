@@ -105,6 +105,8 @@
                         'validation_rules': {
                             required: {
                                 'value': false,
+                                'global': true,
+                                'global_message': this.editItem.fields[0]?.settings?.validation_rules?.required?.global_message || '',
                                 'message': 'This field is required'
                             }
                         }
@@ -115,6 +117,7 @@
                 if (element == 'input_email') {
                     item.settings.validation_rules.email = {
                         value: true,
+                        global: true,
                         message: 'This field must contain a valid email'
                     };
                 }

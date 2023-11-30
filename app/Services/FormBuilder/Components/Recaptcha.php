@@ -59,7 +59,7 @@ class Recaptcha extends BaseComponent
                 return $formClass;
             });
 
-            add_filter('fluent_form_html_attributes', function ($atts) use ($siteKey) {
+            add_filter('fluentform/html_attributes', function ($atts) use ($siteKey) {
                 $atts['data-recptcha_key'] = $siteKey;
                 return $atts;
             });

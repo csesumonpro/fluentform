@@ -1,6 +1,6 @@
 <?php namespace FluentForm\App\Modules\Logger;
 
-use FluentForm\Database\Migrations\FormLogs;
+use FluentForm\Database\Migrations\Logs;
 use FluentForm\App\Modules\Form\FormDataParser;
 use FluentForm\App\Modules\Form\FormFieldsParser;
 use FluentForm\Framework\Foundation\Application;
@@ -79,7 +79,7 @@ class DataLogger
         $data['created_at'] = current_time('mysql');
 
         if (!get_option('fluentform_db_fluentform_logs_added')) {
-            FormLogs::migrate();
+            Logs::migrate();
         }
 
         wpFluent()->table('fluentform_logs')->insert($data);

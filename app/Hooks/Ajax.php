@@ -11,27 +11,82 @@ use FluentForm\App\Modules\Acl\Acl;
  *
  * @var $app \FluentForm\Framework\Foundation\Application
  */
+
 $app->addAction('wp_ajax_nopriv_fluentform_submit', function () use ($app) {
-    dd('wp_ajax_nopriv_fluentform_submit')
-    (new \FluentForm\App\Modules\Form\FormHandler($app))->onSubmit();
+    (new \FluentForm\App\Modules\SubmissionHandler\SubmissionHandler($app))->submit();
 });
 
 $app->addAction('wp_ajax_fluentform_submit', function () use ($app) {
-    dd('wp_ajax_nopriv_fluentform_submit')
-    (new \FluentForm\App\Modules\Form\FormHandler($app))->onSubmit();
+    //    (new \FluentForm\App\Modules\Form\FormHandler($app))->onSubmit();
+    (new \FluentForm\App\Modules\SubmissionHandler\SubmissionHandler($app))->submit();
 });
 
-$app->addAction('wp_ajax_fluentform-global-settings', function () use ($app) {
-    dd('wp_ajax_fluentform-global-settings');
-    Acl::verify('fluentform_settings_manager');
-    (new \FluentForm\App\Modules\Settings\Settings($app->request))->get();
+/*
+ * We are using this ajax call for updating form fields
+ * REST API seems not working for some servers with Mod Security Enabled
+ */
+$app->addAction('wp_ajax_fluentform-form-update', function () use ($app) {
+    Acl::verify('fluentform_forms_manager');
+    try {
+        $data = $app->request->all();
+        $isValidJson = (!empty($data['formFields'])) && json_decode($data['formFields'], true);
+
+        if(!$isValidJson) {
+            wp_send_json([
+                'message' => 'Looks like the provided JSON is invalid. Please try again or contact support',
+                'reason' => 'formFields JSON validation failed'
+            ], 422);
+        }
+
+        $formService = new \FluentForm\App\Services\Form\FormService();
+        $form = $formService->update($data);
+        wp_send_json([
+            'message' => __('The form is successfully updated.', 'fluentform')
+        ], 200);
+    } catch (\Exception $exception) {
+        wp_send_json([
+            'message' => $exception->getMessage(),
+        ], 422);
+    }
 });
 
-$app->addAction('wp_ajax_fluentform-global-settings-store', function () use ($app) {
-    dd('wp_ajax_fluentform-global-settings-store');
-    Acl::verify('fluentform_settings_manager');
-    (new \FluentForm\App\Modules\Settings\Settings($app->request))->store();
+/*
+ * This ajax endpoint is used to update form general settings
+ * Mod-Security also block this request
+ */
+$app->addAction('wp_ajax_fluentform-save-settings-general-formSettings', function () use ($app) {
+    Acl::verify('fluentform_forms_manager');
+    try {
+        $settingsService = new \FluentForm\App\Services\Settings\SettingsService();
+        $settingsService->saveGeneral($app->request->all());
+        wp_send_json([
+            'message' => __('Settings has been saved.', 'fluentform'),
+        ]);
+    } catch (\FluentForm\Framework\Validator\ValidationException $exception) {
+        wp_send_json($exception->errors(), 422);
+    }
 });
+
+/*
+ * This ajax endpoint is used to update form email notifications settings
+ * Mod-Security also block this request
+ */
+$app->addAction('wp_ajax_fluentform-save-form-email-notification', function () use ($app) {
+    Acl::verify('fluentform_forms_manager');
+    try {
+        $settingsService = new \FluentForm\App\Services\Settings\SettingsService();
+        [$settingsId, $settings] = $settingsService->store($app->request->all());
+
+        wp_send_json([
+            'message'  => __('Settings has been saved.', 'fluentform'),
+            'id'       => $settingsId,
+            'settings' => $settings,
+        ]);
+    } catch (\FluentForm\Framework\Validator\ValidationException $exception) {
+        wp_send_json($exception->errors(), 422);
+    }
+});
+
 
 $app->addAction('wp_ajax_fluentform-forms', function () use ($app) {
     dd('wp_ajax_fluentform-forms');
@@ -49,12 +104,6 @@ $app->addAction('wp_ajax_fluentform-form-find', function () use ($app) {
     //No usage found
     Acl::verify('fluentform_dashboard_access');
     (new \FluentForm\App\Modules\Form\Form($app))->find();
-});
-
-$app->addAction('wp_ajax_fluentform-form-update', function () use ($app) {
-    dd('wp_ajax_fluentform-form-update');
-    Acl::verify('fluentform_forms_manager');
-    (new \FluentForm\App\Modules\Form\Form($app))->update();
 });
 
 $app->addAction('wp_ajax_fluentform-form-delete', function () use ($app) {
@@ -119,12 +168,6 @@ $app->addAction('wp_ajax_fluentform-settings-general-formSettings', function () 
     dd('wp_ajax_fluentform-settings-general-formSettings');
     Acl::verify('fluentform_forms_manager');
     (new \FluentForm\App\Modules\Form\Settings\FormSettings($app))->getGeneralSettingsAjax();
-});
-
-$app->addAction('wp_ajax_fluentform-save-settings-general-formSettings', function () use ($app) {
-    dd('wp_ajax_fluentform-save-settings-general-formSettings');
-    Acl::verify('fluentform_forms_manager');
-    (new \FluentForm\App\Modules\Form\Settings\FormSettings($app))->saveGeneralSettingsAjax();
 });
 
 $app->addAction('wp_ajax_fluentform-settings-formSettings-store', function () use ($app) {
@@ -196,7 +239,7 @@ $app->addAction('wp_ajax_fluentform-form-report', function () use ($app) {
 
 $app->addAction('wp_ajax_fluentform-form-entries-export', function () use ($app) {
     Acl::verify('fluentform_entries_viewer');
-    (new \FluentForm\App\Http\Controllers\TransferController)->exportEntries();
+    (new \FluentForm\App\Modules\Transfer\Transfer())->exportEntries();
 });
 
 $app->addAction('wp_ajax_fluentform-get-entry', function () {
@@ -354,13 +397,13 @@ $app->addAction('wp_ajax_fluentform_install_fluentsmtp', function () {
 // Export forms
 $app->addAction('wp_ajax_fluentform-export-forms', function () use ($app) {
     Acl::verify('fluentform_settings_manager');
-    (new \FluentForm\App\Http\Controllers\TransferController)->exportForms();
+    (new \FluentForm\App\Modules\Transfer\Transfer())->exportForms();
 });
 
 // Import forms
 $app->addAction('wp_ajax_fluentform-import-forms', function () use ($app) {
     Acl::verify('fluentform_settings_manager');
-    (new \FluentForm\App\Http\Controllers\TransferController)->importForms();
+    (new \FluentForm\App\Modules\Transfer\Transfer())->importForms();
 });
 
 $app->addAction('wp_ajax_fluentform-get-all-forms', function () use ($app) {
@@ -421,68 +464,6 @@ $app->addAction('wp_ajax_fluentform_del_managers', function () {
     (new \FluentForm\App\Modules\Acl\Managers())->remove();
 });
 
-// General Integration Settings Here
-$app->addAction('wp_ajax_fluentform_get_global_integration_settings', function () use ($app) {
-    vdd('x');
-    Acl::verify('fluentform_settings_manager');
-    $globalIntegrationManager = new \FluentForm\App\Services\Integrations\GlobalIntegrationManager($app);
-    $globalIntegrationManager->getGlobalSettingsAjax();
-});
-
-$app->addAction('wp_ajax_fluentform_post_global_integration_settings', function () use ($app) {
-    vdd('x');
-    Acl::verify('fluentform_forms_manager');
-    $globalIntegrationManager = new \FluentForm\App\Services\Integrations\GlobalIntegrationManager($app);
-    $globalIntegrationManager->saveGlobalSettingsAjax();
-});
-
-$app->addAction('wp_ajax_fluentform_get_all-general-integration-feeds', function () use ($app) {
-    vdd('x');
-    Acl::verify('fluentform_forms_manager');
-    $globalIntegrationManager = new \FluentForm\App\Services\Integrations\GlobalIntegrationManager($app);
-    $globalIntegrationManager->getAllFormIntegrations();
-});
-
-$app->addAction('wp_ajax_fluentform_post_update_form_integration_status', function () use ($app) {
-    vdd('x');
-    Acl::verify('fluentform_forms_manager');
-    $globalIntegrationManager = new \FluentForm\App\Services\Integrations\GlobalIntegrationManager($app);
-    $globalIntegrationManager->updateNotificationStatus();
-});
-
-$app->addAction('wp_ajax_fluentform_get_form_integration_settings', function () use ($app) {
-    vdd('x');
-    Acl::verify('fluentform_forms_manager');
-    $globalIntegrationManager = new \FluentForm\App\Services\Integrations\GlobalIntegrationManager($app);
-    $globalIntegrationManager->getIntegrationSettings();
-});
-$app->addAction('wp_ajax_fluentform_post_form_integration_settings', function () use ($app) {
-    vdd('x');
-    Acl::verify('fluentform_forms_manager');
-    $globalIntegrationManager = new \FluentForm\App\Services\Integrations\GlobalIntegrationManager($app);
-    $globalIntegrationManager->saveIntegrationSettings();
-});
-$app->addAction('wp_ajax_fluentform-delete-general_integration_feed', function () use ($app) {
-    vdd('x');
-    Acl::verify('fluentform_forms_manager');
-    $globalIntegrationManager = new \FluentForm\App\Services\Integrations\GlobalIntegrationManager($app);
-    $globalIntegrationManager->deleteIntegrationFeed();
-});
-
-$app->addAction('wp_ajax_fluentform_get_form_integration_list', function () use ($app) {
-    vdd('x');
-    Acl::verify('fluentform_forms_manager');
-    $globalIntegrationManager = new \FluentForm\App\Services\Integrations\GlobalIntegrationManager($app);
-    $globalIntegrationManager->getIntegrationList();
-});
-
-$app->addAction('wp_ajax_fluentform_update_modules', function () {
-    vdd('rest-done, api endpoint "integrations/update-status"');
-    Acl::verify('fluentform_settings_manager');
-
-    return (new \FluentForm\App\Modules\AddOnModule())->updateAddOnsStatus();
-});
-
 /*
  * Background Process Receiver
  */
@@ -493,4 +474,29 @@ $app->addAction('wp_ajax_fluentform_background_process', function () {
 
 $app->addAction('wp_ajax_nopriv_fluentform_background_process', function () {
     $this->app['fluentFormAsyncRequest']->handleBackgroundCall();
+});
+
+/*
+ * For REST API Nonce Renewal
+ */
+$app->addAction('wp_ajax_fluentform_renew_rest_nonce', function () {
+    if (!Acl::getCurrentUserPermissions()) {
+        wp_send_json([
+            'error' => 'You do not have permission to do this',
+        ], 403);
+    }
+    
+    wp_send_json([
+        'nonce' => wp_create_nonce('wp_rest'),
+    ], 200);
+});
+/*
+ * For selectGroup Component Grouped Options
+ * Use this filter to pass data to component
+ */
+
+add_action('wp_ajax_fluentform_select_group_ajax_data', function () {
+    $requestData = wpFluentForm('request')->all();
+    $ajaxList = apply_filters('fluentform/select_group_component_ajax_options', [], $requestData);
+    wp_send_json_success($ajaxList);
 });

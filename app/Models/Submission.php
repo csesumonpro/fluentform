@@ -188,9 +188,9 @@ class Submission extends Model
 
         $direction = Arr::get($attributes, 'direction', 'next');
 
-        $operator = 'ASC' === $sortBy && 'next' === $direction ? '>' : '<';
+        $operator = 'ASC' === $sortBy && 'previous' === $direction ? '>' : '<';
 
-        if ('next' === $direction) {
+        if ('previous' === $direction) {
             $operator = 'ASC' === $sortBy ? '>' : '<';
         } else {
             $operator = 'ASC' === $sortBy ? '<' : '>';
@@ -261,22 +261,25 @@ class Submission extends Model
         //delete the pro models this way for now
         // todo: handle these pro models deletion
         try {
-            wpFluent()->table('fluentform_order_items')
-                ->whereIn('submission_id', $submissionIds)
-                ->delete();
+            if(defined('FLUENTFORMPRO_VERSION')) {
+                wpFluent()->table('fluentform_order_items')
+                    ->whereIn('submission_id', $submissionIds)
+                    ->delete();
 
-            wpFluent()->table('fluentform_transactions')
-                ->whereIn('submission_id', $submissionIds)
-                ->delete();
+                wpFluent()->table('fluentform_transactions')
+                    ->whereIn('submission_id', $submissionIds)
+                    ->delete();
 
-            wpFluent()->table('fluentform_subscriptions')
-                ->whereIn('submission_id', $submissionIds)
-                ->delete();
+                wpFluent()->table('fluentform_subscriptions')
+                    ->whereIn('submission_id', $submissionIds)
+                    ->delete();
+            }
 
             wpFluent()->table('ff_scheduled_actions')
                 ->whereIn('origin_id', $submissionIds)
                 ->where('type', 'submission_action')
                 ->delete();
+
         } catch (Exception $exception) {
             // ...
         }

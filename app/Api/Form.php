@@ -22,7 +22,7 @@ class Form
 
         $atts = wp_parse_args($atts, $defaultAtts);
 
-        $perPage = intval(ArrayHelper::get($atts, 'per_page', 10));
+        $perPage = (int) ArrayHelper::get($atts, 'per_page', 10);
         $search = sanitize_text_field(ArrayHelper::get($atts, 'search', ''));
         $status = sanitize_text_field(ArrayHelper::get($atts, 'status', 'all'));
         $filter_by = sanitize_text_field(ArrayHelper::get($atts, 'filter_by', 'all'));

@@ -11,6 +11,7 @@ $router->prefix('forms')->withPolicy('FormPolicy')->group(function ($router) {
     $router->get('/', 'FormController@index');
     $router->post('/', 'FormController@store');
     $router->get('templates', 'FormController@templates');
+    $router->get('ping', 'FormController@ping');
 
     $router->prefix('{form_id}')->group(function ($router) {
         $router->get('/', 'FormController@find');
@@ -42,6 +43,9 @@ $router->prefix('settings')->withPolicy('FormPolicy')->group(function ($router) 
         $router->post('customizer', 'FormSettingsController@storeCustomizer');
 
         $router->post('entry-columns', 'FormSettingsController@storeEntryColumns');
+
+        $router->get('conversational-design', 'FormSettingsController@conversationalDesign');
+        $router->post('store-conversational-design', 'FormSettingsController@storeConversationalDesign');
     });
 });
 /*
@@ -127,10 +131,11 @@ $router->prefix('managers')->withPolicy('RoleManagerPolicy')->group(function ($r
 $router->prefix('analytics')->withPolicy('FormPolicy')->group(function ($router) {
     $router->post('/{form_id}/reset', 'AnalyticsController@reset');
 });
+
 /*
 * Form Submission Handler
 */
-$router->post('form-submit', 'SubmissionHandlerController@submit')->withPolicy('PublicPolicy');
+$router->post('form-submit', 'SubmissionHandlerController@submit')->withPolicy('SubmissionPolicy');
 /*
 * Form Report
 */
@@ -142,4 +147,9 @@ $router->prefix('report')->withPolicy('ReportPolicy')->group(function ($router) 
 * Review Query
 */
 $router->post('notice', 'AdminNoticeController@noticeActions')->withPolicy('FormPolicy');
+
+/*
+* Global Query
+*/
+$router->get('global-search', 'GlobalSearchController@index')->withPolicy('FormPolicy');
 

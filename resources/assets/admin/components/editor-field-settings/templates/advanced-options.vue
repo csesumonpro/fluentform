@@ -29,27 +29,27 @@
                                :value="option.value"
                                :checked="isChecked(option.value)"
                                @change="updateDefaultOption(option)"
-                            >
+                        >
                     </div>
 
                     <vddl-handle
-                        :handle-left="20"
-                        :handle-top="20"
-                        class="handle">
+                            :handle-left="20"
+                            :handle-top="20"
+                            class="handle">
                     </vddl-handle>
 
                     <div
-                        style="max-width: 64px; max-height: 32px; overflow: hidden;"
-                        v-if="editItem.settings.enable_image_input && hasImageSupport"
+                            style="max-width: 64px; max-height: 32px; overflow: hidden;"
+                            v-if="editItem.settings.enable_image_input && hasImageSupport"
                     >
                         <photo-widget enable_clear="yes" v-model="option.image" :for_advanced_option="true" />
                     </div>
 
                     <div>
                         <el-input
-                            :placeholder="$t('label')"
-                            v-model="option.label"
-                            @input="updateValue(option)"
+                                :placeholder="$t('label')"
+                                v-model="option.label"
+                                @input="updateValue(option)"
                         ></el-input>
                     </div>
 
@@ -59,10 +59,10 @@
 
                     <div v-if="editItem.settings.calc_value_status">
                         <el-input
-                            :placeholder="$t('calc value')"
-                            type="number"
-                            step="any"
-                            v-model="option.calc_value"
+                                :placeholder="$t('calc value')"
+                                type="number"
+                                step="any"
+                                v-model="option.calc_value"
                         ></el-input>
                     </div>
 
@@ -75,37 +75,37 @@
         </vddl-list>
 
         <el-button
-            type="warning"
-            size="mini"
-            :disabled="!editItem.attributes.value"
-            @click.prevent="clear"
+                type="warning"
+                size="mini"
+                :disabled="!editItem.attributes.value"
+                @click.prevent="clear"
         >{{ $t('Clear Selection') }}</el-button>
 
         <el-button
-            size="mini"
-            @click="initBulkEdit()"
-            v-if="!editItem.settings.calc_value_status && !editItem.settings.enable_image_input"
+                size="mini"
+                @click="initBulkEdit()"
+                v-if="!editItem.settings.calc_value_status && !editItem.settings.enable_image_input"
         >{{ $t('Bulk Edit / Predefined Data Sets') }} </el-button>
 
         <el-dialog
-            :append-to-body="true"
-            class="ff_backdrop"
-            :visible.sync="bulkEditVisible"
-            width="60%"
+                :append-to-body="true"
+                class="ff_backdrop"
+                :visible.sync="bulkEditVisible"
+                width="60%"
         >
-        <div slot="title">
-            <h4 class="mb-2">{{$t('Edit your options')}}</h4>
-            <p>{{ $t('Please provide the value as LABEL:VALUE as each line or select from predefined data sets') }}</p>
-        </div>
+            <div slot="title">
+                <h4 class="mb-2">{{$t('Edit your options')}}</h4>
+                <p>{{ $t('Please provide the value as LABEL:VALUE as each line or select from predefined data sets') }}</p>
+            </div>
             <div v-if="bulkEditVisible" class="bulk_editor_wrapper mt-4">
                 <el-row :gutter="20">
                     <el-col :span="24">
                         <ul class="ff_bulk_option_groups mb-3">
-                            <li 
-                            @click="setOptions(options)" 
-                            v-for="(options, optionGroup) in editor_options" 
-                            :key="optionGroup"
-                            :class="{ 'active': options === activeClass}"
+                            <li
+                                    @click="setOptions(options)"
+                                    v-for="(options, optionGroup) in editor_options"
+                                    :key="optionGroup"
+                                    :class="{ 'active': options === activeClass}"
                             >{{optionGroup}}</li>
                         </ul>
                     </el-col>
@@ -186,12 +186,12 @@
                 return this.editItem.element != 'select';
             },
             valuesVisible:{
-              get() {
-                return this.editItem.settings.values_visible||false;
-              },
-              set(val) {
-                this.$set(this.editItem.settings, 'values_visible', val);
-              }
+                get() {
+                    return this.editItem.settings.values_visible||false;
+                },
+                set(val) {
+                    this.$set(this.editItem.settings, 'values_visible', val);
+                }
             },
         },
         methods: {

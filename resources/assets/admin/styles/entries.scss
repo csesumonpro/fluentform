@@ -115,6 +115,10 @@ table.editor_table, .ff_entry_table_field, .ff-table {
     list-style: none;
     padding: 7px 0px;
     overflow: hidden;
+    .dashicons,
+    .dashicons-before::before{
+      line-height: inherit;
+    }
     &:hover {
       background: #f7fafc;
     }
@@ -349,6 +353,7 @@ table.editor_table, .ff_entry_table_field, .ff-table {
     &_value {
       margin-top: 8px;
       white-space: pre-line;
+      word-break: break-all;
     }
     &_remove{
       position: absolute;
@@ -359,8 +364,7 @@ table.editor_table, .ff_entry_table_field, .ff-table {
 }
 
 .entry_info_body.narrow_items {
-  padding: 15px;
-  padding: 0px 15px 15px;
+  padding: 0 15px 15px;
   .wpf_each_entry {
     * {
       word-break: break-all;
@@ -413,7 +417,8 @@ a.input-image:hover {
     }
     &-status{
       font-size: 16px;
-      color: $--color-text-regular;
+      color: $--color-text-primary;
+
     }
   }
   [class*="el-icon-"],
@@ -651,6 +656,7 @@ span.ff_tag {
   padding: 4px 6px;
   border-radius: 10px;
   font-size: 10px;
+  text-transform: capitalize;
 }
 
 .el-table .cell.el-tooltip {

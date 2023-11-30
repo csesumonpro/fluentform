@@ -60,14 +60,15 @@
                                     </table>
                                 </el-form-item>
                                 <el-form-item :label="$t('Quiz Questions')" class="quiz-questions ff-form-item">
+                                    <p v-if="resultType == 'personality'">{{ $t('Personality quiz has no right or wrong answer, just enable the questions. Make sure the answers value match with the personality options values. That is all.') }}</p>
                                     <template v-if="quizFields">
                                         <div v-for="(input, key) in quizFields" :key="key">
-                                            <quiz-input :input="getInput(key)" :original_input="quizFields[key]"></quiz-input>
+                                            <quiz-input :input="getInput(key)" :original_input="quizFields[key]" :is_personality_quiz="resultType =='personality'"></quiz-input>
                                         </div>
                                     </template>
                                 </el-form-item>
                             </div>
-                            <div v-if="settings && settings.enabled" class="mt-4">
+                            <div class="mt-4">
                                 <el-button
                                     :loading="saving"
                                     type="primary"
@@ -124,6 +125,7 @@
                 saving: false,
                 settings: false,
                 loading: false,
+                resultType: '',
                 settingsFields: [],
                 quizFields: {},
                 errors: new Errors()
@@ -148,6 +150,7 @@
                         this.settings = response.data.settings;
                         this.quizFields = response.data.quiz_fields;
                         this.settingsFields = response.data.settings_fields;
+                        this.resultType = response.data.settings.result_type;
                     })
                     .fail(error => {
                     })

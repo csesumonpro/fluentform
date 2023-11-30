@@ -24,6 +24,7 @@
         ?>
         <div class="ff_all_forms" id="ff_all_forms_app">
             <ff_all_forms_table></ff_all_forms_table>
+            <global-search></global-search>
         </div>
         <?php
         do_action_deprecated(
@@ -55,7 +56,7 @@ if ($notices) {
     foreach ($notices as $noticeKey => $notice) :
         ?>
         <div class="ff_global_notice ff_notice_<?php echo esc_attr($notice['type']); ?>">
-            <?php echo esc_html($notice['message']); ?>
+            <?php echo wp_kses_post( $notice['message']); ?>
         </div>
     <?php
     endforeach;

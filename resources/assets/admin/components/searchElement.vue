@@ -66,11 +66,12 @@ export default {
 
             if (searchElementStr) {
                 searchResult = this.list.filter((item) => {
-                    let search = this.makeSearchString(item);
                     if (tags[item.element]) {
+                        let search = this.makeSearchString(item);
                         search += tags[item.element].toString();
+                        return search.toLowerCase().includes(searchElementStr);
                     }
-                    return search.toLowerCase().includes(searchElementStr);
+					return false;
                 });
                 this.$emit('update:isSidebarSearch', true);
             } else {

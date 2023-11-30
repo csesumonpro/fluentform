@@ -36,7 +36,7 @@ class Turnstile extends BaseComponent
             return false;
         }
 
-        add_filter('fluent_form_html_attributes', function ($atts) use ($siteKey) {
+        add_filter('fluentform/html_attributes', function ($atts) use ($siteKey) {
             $atts['data-turnstile_key'] = $siteKey;
             return $atts;
         });

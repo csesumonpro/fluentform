@@ -7,6 +7,7 @@
                     :email_report="email_report"
                     :integration_failure_notification="integration_failure_notification"
                     :data="formSettings"
+                    :default_message_setting_fields="default_message_setting_fields"
                     :file_upload_optoins="file_upload_optoins"
                     :captcha_status="captcha_status"
                 />
@@ -44,7 +45,9 @@
                         isIpLogingDisabled: false,
                         file_upload_locations: '',
                     },
+	                default_messages : {}
                 },
+	            default_message_setting_fields: {},
                 email_report: {},
                 integration_failure_notification: {},
                 file_upload_optoins: [],
@@ -67,6 +70,7 @@
                         '_fluentform_failed_integration_notification',
                         '_fluentform_reCaptcha_keys_status',
                         '_fluentform_hCaptcha_keys_status',
+	                    '_fluentform_global_default_message_setting_fields',
                         '_fluentform_turnstile_keys_status'
                     ]
                 })
@@ -80,6 +84,7 @@
                                 errorMessagePlacement: 'inline'
                             };
                         }
+	                    this.default_message_setting_fields = response._fluentform_global_default_message_setting_fields || {};
                         this.formSettings = Object.assign(this.formSettings, settings);
                         let emailReport = response._fluentform_email_report_summary;
                         if (!emailReport) {

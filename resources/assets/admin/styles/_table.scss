@@ -41,13 +41,13 @@
         font-weight: 600;
     }
     .sort-caret{
-        border-width: 3px;
+        border-width: 4px;
     }
     .sort-caret.ascending{
-        top: 9px;
+        top: 7px;
     }
     .sort-caret.descending{
-        bottom: 11px;
+        bottom: 8px;
     }
     .cell {
         strong {

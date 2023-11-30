@@ -9,7 +9,7 @@
     );
     do_action('fluentform/global_menu');
 ?>
-<div class="ff_form_wrap">
+<div class="ff_form_wrap" id="ff_documentation_app">
     <div class="ff_form_wrap_area">
         <div class="ff_documentaion_wrapper">
             <?php
@@ -25,14 +25,7 @@
             ?>
 
             <div class="el-row" style="margin-left: -12px; margin-right: -12px;">
-                <div class="el-col el-col-24" style="padding-left: 12px; padding-right: 12px">
-                    <div class="ff_card h-100">
-                        <h3 class="mb-3"><i class="el-icon el-icon-warning text-warning mr-2" ></i> <?php _e('Fluent Forms Beta Version', 'fluentform') ?></h3>
-                        <p class="text">
-                            <?php _e('As a beta user, if you are experiencing any trouble, please open a support ticket <a href="https://wpmanageninja.com/support-tickets/"> here </a> using the hashtag <span class="text-primary">#fluentforms_beta</span>. We will get back to you soon. Thanks for using our Fluent Forms!', 'fluentform') ?>
-                        </p>
-                    </div>
-                </div><!-- .el-col -->
+                <!-- .el-col -->
                 
                 <?php if(!defined('FLUENTFORMPRO')): ?>
                     <div class="el-col el-col-24" style="padding-left: 12px; padding-right: 12px">
@@ -144,9 +137,9 @@
                             <div class="ff_media_body ml-4">
                                 <h3 class="mb-2"><?php _e('Facing An Issue Or Problem?', 'fluentform') ?></h3>
                                 <p class="text mb-4">
-                                    <?php _e('Please report us and we promise we will fix that as soon as humanly possible Report An Issue', 'fluentform') ?>
+                                    <?php _e('Please report us and we promise we will fix that as soon as humanly possible.', 'fluentform') ?>
                                 </p>
-                                <a target="_blank" class="el-button el-button--warning el-button--soft" href="https://github.com/fluentform/fluentform/issues">
+                                <a target="_blank" class="el-button el-button--warning el-button--soft" href="https://wpmanageninja.com/support-tickets/">
                                     <?php _e('Report An Issue', 'fluentform') ?>
                                 </a>
                             </div>
@@ -206,7 +199,7 @@
                                 <p class="text mb-4">
                                     <?php _e('If you need any feature on fluentform, then please request a feature to us with your requirement.', 'fluentform') ?>
                                 </p>
-                                <a target="_blank" class="el-button el-button--cyan el-button--soft" href="https://wpmanageninja.com/support-tickets/">
+                                <a target="_blank" class="el-button el-button--cyan el-button--soft" href="https://github.com/fluentform/fluentform/issues">
                                     <?php _e('Request Now', 'fluentform') ?>
                                 </a>
                             </div>
@@ -253,4 +246,5 @@
 
         </div>
     </div>
+    <global-search></global-search>
 </div>

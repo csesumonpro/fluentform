@@ -44,14 +44,14 @@ trait ValidatesAttributes
         $type = $this->deduceType($value);
 
         switch ($type) {
-            case 'numeric':
+            case 'numeric' && $this->hasRule($attribute, ['numeric']):
                 return $value;
             case 'array':
                 return count($value);
             case 'file':
                 return $value->getSize() / 1024;
             default:
-                return mb_strlen($value);
+                return function_exists('mb_strlen') ? mb_strlen($value) : strlen($value);
         }
     }
 

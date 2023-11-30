@@ -4,8 +4,8 @@ namespace FluentForm\App\Hooks\Handlers;
 
 use FluentForm\App\Modules\Acl\Acl;
 use FluentForm\Database\DBMigrator;
-use FluentForm\Database\Migrations\FormLogs;
-use FluentForm\Database\Migrations\FormSubmissionDetails;
+use FluentForm\Database\Migrations\Logs;
+use FluentForm\Database\Migrations\SubmissionDetails;
 
 class ActivationHandler
 {
@@ -68,11 +68,11 @@ class ActivationHandler
         $this->migrateGlobalAddOns();
 
         if (!get_option('fluentform_entry_details_migrated')) {
-            FormSubmissionDetails::migrate();
+            SubmissionDetails::migrate();
         }
 
         if (!get_option('fluentform_db_fluentform_logs_added')) {
-            FormLogs::migrate();
+            Logs::migrate();
         }
     }
 
@@ -123,7 +123,7 @@ class ActivationHandler
         update_option('fluentform_global_modules_status', $moduleStatuses, 'no');
     }
 
-    public static function maybeMigrateDefaultForms()
+    public function maybeMigrateDefaultForms()
     {
         global $wpdb;
         $formsTable = $wpdb->prefix . 'fluentform_forms';
@@ -188,32 +188,16 @@ class ActivationHandler
             return $schedules;
         }, 10, 1);
 
-        do_action_deprecated(
-            'fluentform_do_scheduled_tasks',
-            [
-            ],
-            FLUENTFORM_FRAMEWORK_UPGRADE,
-            'fluentform/do_scheduled_tasks',
-            'Use fluentform/do_scheduled_tasks instead of fluentform_do_scheduled_tasks.'
-        );
 
-        $hookName = 'fluentform/do_scheduled_tasks';
+        $hookName = 'fluentform_do_scheduled_tasks';
         if (!wp_next_scheduled($hookName)) {
             wp_schedule_event(time(), 'ff_every_five_minutes', $hookName);
         }
 
-        do_action_deprecated(
-            'fluentform_do_email_report_scheduled_tasks',
-            [
-            ],
-            FLUENTFORM_FRAMEWORK_UPGRADE,
-            'fluentform/do_email_report_scheduled_tasks',
-            'Use fluentform/do_email_report_scheduled_tasks instead of fluentform_do_email_report_scheduled_tasks.'
-        );
-
-        $emailReportHookName = 'fluentform/do_email_report_scheduled_tasks';
+        $emailReportHookName = 'fluentform_do_email_report_scheduled_tasks';
         if (!wp_next_scheduled($emailReportHookName)) {
             wp_schedule_event(time(), 'daily', $emailReportHookName);
         }
+
     }
 }

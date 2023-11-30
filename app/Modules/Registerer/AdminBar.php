@@ -18,7 +18,12 @@ class AdminBar
     public static function isDisabled()
     {
         $settings = get_option('_fluentform_global_form_settings');
-        return $settings && 'no' == ArrayHelper::get($settings, 'misc.admin_top_nav_status');
+
+        if(!$settings || is_multisite()) {
+            return true;
+        }
+
+        return 'no' == ArrayHelper::get($settings, 'misc.admin_top_nav_status');
     }
     
     public function addMenuBar($wpAdminBar)
@@ -27,6 +32,7 @@ class AdminBar
         if(empty($items)){
             return;
         }
+
         foreach ($items as $itemKey => $item) {
             $wpAdminBar->add_menu(
                 [
@@ -88,7 +94,6 @@ class AdminBar
         $fromRole = $currentUserCapability = false;
         if (!current_user_can($dashBoardCapability) && !current_user_can($settingsCapability)) {
             $currentUserCapability = Acl::getCurrentUserCapability();
-            
             if (!$currentUserCapability) {
                 return;
             } else {
@@ -110,6 +115,7 @@ class AdminBar
         $hasUnreadSubmissions = wpFluent()->table('fluentform_submissions')
             ->where('status', 'unread')
             ->count();
+
         $entriesDropdownTitle = __('Entries', 'fluentform');
         if ($hasUnreadSubmissions > 0) {
             $style = "background: #1A7EFB;color: white;border-radius: 8px;padding: 1px 7px; height: 16px; display: inline-flex; align-items: center;";

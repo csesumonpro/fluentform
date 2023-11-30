@@ -38,12 +38,14 @@ import {
     Card,
     Alert,
     Skeleton,
-    SkeletonItem
+    SkeletonItem,
+    OptionGroup,
 } from 'element-ui';
 
 import lang from 'element-ui/lib/locale/lang/en';
 import locale from 'element-ui/lib/locale';
 import mixins from './editor_mixins';
+import globalSearch from './global_search'
 // Global error handling...
 import Errors from '../common/Errors';
 import FormEditor from './views/FormEditor.vue';
@@ -82,6 +84,7 @@ Vue.use(InputNumber);
 Vue.use(Alert);
 Vue.use(Skeleton);
 Vue.use(SkeletonItem);
+Vue.use(OptionGroup);
 
 Vue.use(Loading.directive);
 Vue.prototype.$loading = Loading.service;
@@ -97,10 +100,13 @@ Vue.mixin(mixins);
 
 global.Errors = Errors;
 
-new Vue({
+window.ffEditorOptionsCustomComponents = window.ffEditorOptionsCustomComponents || {};
+
+window.fluentFormEditorApp = new Vue({
     el: "#ff_form_editor_app",
     store,
     components: {
+        globalSearch,
         ff_form_editor: FormEditor
     },
     data: {
@@ -217,7 +223,7 @@ new Vue({
                 if(!formData.stepsWrapper.stepStart.settings.disable_auto_focus) {
                     formData.stepsWrapper.stepStart.settings.disable_auto_focus = 'no';
                 }
-                
+
                 if(!formData.stepsWrapper.stepStart.settings.enable_auto_slider) {
                     formData.stepsWrapper.stepStart.settings.enable_auto_slider = 'no';
                 }
@@ -261,11 +267,11 @@ new Vue({
             let data = {
                 title: this.form.title,
                 formFields: JSON.stringify(formFields),
+                form_id: this.form_id,
+                action: 'fluentform-form-update'
             };
 
-            const url = FluentFormsGlobal.$rest.route('updateForm', this.form_id);
-
-            FluentFormsGlobal.$rest.post(url, data)
+            FluentFormsGlobal.$post(data)
                 .then(response => {
                     this.$success(response.message);
                     this.form_saving = false;
@@ -278,7 +284,8 @@ new Vue({
                     this.saveHash();
                 })
                 .catch(error => {
-                    this.$fail.error(error.responseJSON.title);
+                    console.log(error);
+                    this.$fail(error?.responseJSON.message || 'Saving failed');
                     this.form_saving = false;
                 });
         },
@@ -296,20 +303,23 @@ new Vue({
             this.dropzoneHash = JSON.stringify(this.form.dropzone);
         }
     },
-    mounted() {
-        this.prepareForm();
-        this.loadResources(this.form_id);
-        if(this.is_conversion_form) {
-            jQuery('#wpcontent').addClass('ff_conversion_editor');
-        }
-    },
+
     beforeCreate() {
         // Event listener for page title updater
         this.$on("change-title", module => {
             jQuery("title").text(`${module} - Fluentform`);
         });
         this.$emit("change-title", "Editor");
-    }
+    },
+
+    mounted() {
+        this.prepareForm();
+        this.loadResources(this.form_id);
+
+        if (this.is_conversion_form) {
+            jQuery('#wpcontent').addClass('ff_conversion_editor');
+        }
+    },
 });
 
 // More menus app

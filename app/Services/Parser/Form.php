@@ -25,6 +25,13 @@ class Form
     protected $parsed;
 
     /**
+     * The parsed essential form fields.
+     *
+     * @var array
+     */
+    protected $essentials;
+
+    /**
      * The parsed validations
      *
      * @var array
@@ -452,5 +459,20 @@ class Form
         return array_filter($fields, function ($field) use ($addressElements) {
             return in_array($field['element'], $addressElements);
         });
+    }
+
+    public function getEssentialInputs($formData, $with = [])
+    {
+        // If the form is already parsed we'll return it. Otherwise,
+        // we'll parse the form and return the data after saving it.
+        if (!$this->essentials) {
+            $fields = $this->getFields(true);
+
+            $with = $with ?: ['rules', 'raw'];
+
+            $this->essentials = (new Extractor($fields, $with, $this->inputTypes))->extractEssentials($formData);
+        }
+
+        return $this->essentials;
     }
 }

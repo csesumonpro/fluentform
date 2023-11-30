@@ -10,6 +10,7 @@ use FluentForm\App\Modules\Form\FormFieldsParser;
 use FluentForm\App\Services\Browser\Browser;
 use FluentForm\App\Services\FormBuilder\ShortCodeParser;
 use FluentForm\App\Services\Submission\SubmissionService;
+use FluentForm\Database\Migrations\SubmissionDetails;
 use FluentForm\Framework\Foundation\App;
 use FluentForm\Framework\Helpers\ArrayHelper as Arr;
 use FluentForm\Framework\Validator\ValidationException;
@@ -57,9 +58,24 @@ class SubmissionHandlerService
         if (!$this->form) {
             throw new ValidationException('', 422, null, ['errors' => 'Sorry, No corresponding form found']);
         }
+        
         // Parse the form and get the flat inputs with validations.
-        $this->fields = FormFieldsParser::getInputs($this->form, ['rules', 'raw']);
-        $this->formData = fluentFormSanitizer($formDataRaw, null, $this->fields);
+        $this->fields = FormFieldsParser::getEssentialInputs($this->form, $formDataRaw, ['rules', 'raw']);
+    
+        // @todo Remove this after few version as we are doing it during conversation now
+        // Removing left out fields during conversation which causes validation issues
+        $isConversationalForm = Helper::isConversionForm($formId);
+        if ($isConversationalForm) {
+            $conversationalForm = $this->form;
+            $conversationalForm->form_fields = \FluentForm\App\Services\FluentConversational\Classes\Converter\Converter::convertExistingForm($this->form);
+            $conversationalFields = FormFieldsParser::getInputs($conversationalForm);
+            $this->fields = array_intersect_key($this->fields, $conversationalFields);
+        }
+        $formData = fluentFormSanitizer($formDataRaw, null, $this->fields);
+
+        $acceptedFieldKeys = array_merge($this->fields, array_flip(Helper::getWhiteListedFields($formId)));
+        
+        $this->formData = array_intersect_key($formData, $acceptedFieldKeys);
     }
     
     
@@ -141,50 +157,44 @@ class SubmissionHandlerService
     
     public function processSubmissionData($insertId, $formData, $form)
     {
+        $form = isset($this->form) ? $this->form : $form;
         do_action_deprecated(
             'fluentform_before_form_actions_processing',
             [
                 $insertId,
                 $this->formData,
-                $this->form
+                $form
             ],
             FLUENTFORM_FRAMEWORK_UPGRADE,
             'fluentform/before_form_actions_processing',
             'Use fluentform/before_form_actions_processing instead of fluentform_before_form_actions_processing.'
         );
     
-        do_action('fluentform/before_form_actions_processing', $insertId, $this->formData, $this->form);
+        do_action('fluentform/before_form_actions_processing', $insertId, $this->formData, $form);
         
         if ($insertId) {
             ob_start();
             $this->submissionService->recordEntryDetails($insertId, $form->id, $formData);
             $isError = ob_get_clean();
             if ($isError) {
-                FormSubmissionDetails::migrate();
+                SubmissionDetails::migrate();
             }
         }
         $returnData = $this->getReturnData($insertId, $form, $formData);
         $error = '';
         try {
-            
-            do_action_deprecated(
-                'fluentform_submission_inserted',
-                [
-                    $insertId,
-                    $formData,
-                    $form
-                ],
-                FLUENTFORM_FRAMEWORK_UPGRADE,
-                'fluentform/submission_inserted',
-                'Use fluentform/submission_inserted instead of fluentform_submission_inserted.'
-            );
-            $this->app->doAction(
+
+            do_action('fluentform_submission_inserted', $insertId, $formData, $form);
+
+            do_action(
                 'fluentform/submission_inserted',
                 $insertId,
                 $formData,
                 $form
             );
+
             Helper::setSubmissionMeta($insertId, 'is_form_action_fired', 'yes');
+
             do_action_deprecated(
                 'fluentform_submission_inserted_' . $form->type . '_form',
                 [
@@ -289,6 +299,9 @@ class SubmissionHandlerService
                 true
             );
             $message = $message ? $message : __('The form has been successfully submitted.', 'fluentform');
+
+            $message = fluentform_sanitize_html($message);
+
             $returnData = [
                 'message' => do_shortcode($message),
                 'action'  => $confirmation['samePageFormBehavior'],
@@ -298,23 +311,17 @@ class SubmissionHandlerService
             if ('customPage' == $confirmation['redirectTo']) {
                 $redirectUrl = get_permalink($confirmation['customPage']);
             }
-            if (
-                ('yes' == Arr::get($confirmation, 'enable_query_string')) &&
-                Arr::get($confirmation, 'query_strings')
-            ) {
-                if (strpos($redirectUrl, '?')) {
-                    $redirectUrl .= '&' . Arr::get($confirmation, 'query_strings');
-                } else {
-                    $redirectUrl .= '?' . Arr::get($confirmation, 'query_strings');
-                }
+            $enableQueryString = Arr::get($confirmation, 'enable_query_string') === 'yes';
+            $queryStrings = Arr::get($confirmation, 'query_strings');
+    
+            if ($enableQueryString && $queryStrings) {
+                $separator = strpos($redirectUrl, '?') !== false ? '&' : '?';
+                $redirectUrl .= $separator . $queryStrings;
             }
-
-             $parseUrl =  apply_filters_deprecated(
-                'fluentform_will_parse_url_value',
-                [
-                    true,
-                    $form
-                ],
+            $parseUrl = apply_filters_deprecated('fluentform_will_parse_url_value', [
+                true,
+                $form
+            ],
                 FLUENTFORM_FRAMEWORK_UPGRADE,
                 'fluentform/will_parse_url_value',
                 'Use fluentform/will_parse_url_value instead of fluentform_will_parse_url_value.'
@@ -330,21 +337,21 @@ class SubmissionHandlerService
             );
             if ($isUrlParser) {
                 /*
-                 * For Empty Redirect Value
+                 * Encode Redirect Value
                  */
-                if (strpos($redirectUrl, '=&') || '=' == substr($redirectUrl, -1)) {
+                $encodeUrl = apply_filters('fluentform/will_encode_url_value',false,$redirectUrl, $insertId, $form, $formData);
+                if (strpos($redirectUrl, '&') || '=' == substr($redirectUrl, -1) || $encodeUrl) {
                     $urlArray = explode('?', $redirectUrl);
                     $baseUrl = array_shift($urlArray);
                     
                     $query = wp_parse_url($redirectUrl)['query'];
-                    
                     $queryParams = explode('&', $query);
                     
                     $params = [];
                     foreach ($queryParams as $queryParam) {
                         $paramArray = explode('=', $queryParam);
                         if (!empty($paramArray[1])) {
-                            $params[$paramArray[0]] = $paramArray[1];
+                            $params[$paramArray[0]] = urlencode($paramArray[1]);
                         }
                     }
                     $redirectUrl = add_query_arg($params, $baseUrl);
@@ -359,19 +366,20 @@ class SubmissionHandlerService
                 false,
                 true
             );
-            
+    
+            $redirectUrl = apply_filters('fluentform/redirect_url_value', wp_sanitize_redirect(urldecode($redirectUrl)), $insertId, $form, $formData);
             $returnData = [
-                'redirectUrl' => wp_sanitize_redirect(urldecode($redirectUrl)),
-                'message'     => $message,
+                'redirectUrl' => $redirectUrl,
+                'message'     => fluentform_sanitize_html($message),
             ];
         }
     
-        $returnData = apply_filters_deprecated(
-            'fluentform_submission_confirmation',
-            [
+        $returnData = apply_filters_deprecated('fluentform_submission_confirmation', [
                 $returnData,
                 $form,
-                $confirmation
+                $confirmation,
+                $insertId,
+                $formData
             ],
             FLUENTFORM_FRAMEWORK_UPGRADE,
             'fluentform/submission_confirmation',
@@ -382,7 +390,9 @@ class SubmissionHandlerService
             'fluentform/submission_confirmation',
             $returnData,
             $form,
-            $confirmation
+            $confirmation,
+            $insertId,
+            $formData
         );
     }
     
@@ -435,8 +445,7 @@ class SubmissionHandlerService
                 'fluentform/before_insert_payment_form',
                 'Use fluentform/before_insert_payment_form instead of fluentform_before_insert_payment_form.'
             );
-            $submissionServiceHandler = $this;
-            do_action('fluentform/before_insert_payment_form', $insertData, $formDataRaw, $this->form, $submissionServiceHandler);
+            do_action('fluentform/before_insert_payment_form', $insertData, $formDataRaw, $this->form);
         }
         
         $insertId = Submission::insertGetId($insertData);
@@ -445,7 +454,6 @@ class SubmissionHandlerService
         
         $uidHash = md5(wp_generate_uuid4() . $insertId);
         Helper::setSubmissionMeta($insertId, '_entry_uid_hash', $uidHash, $formId);
-        
         
         return $insertId;
     }

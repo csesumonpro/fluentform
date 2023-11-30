@@ -65,7 +65,7 @@ class GlobalNotificationService
         }
         
         if ($replaced) {
-            Submission::where('id', $insertId)->update($responseInputs);
+            Submission::where('id', $insertId)->update(['response' => \json_encode($responseInputs)]);
         }
     }
     

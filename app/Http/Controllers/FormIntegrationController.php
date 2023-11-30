@@ -9,11 +9,11 @@ class FormIntegrationController extends Controller
     public function index(FormIntegrationService $integrationService)
     {
         try {
-            $formId = $this->request->get('form_id');
+            $formId = (int) $this->request->get('form_id');
             return $this->sendSuccess(
                 $integrationService->get($formId)
             );
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             return $this->sendError([
                 'message' => $e->getMessage(),
             ], 422);

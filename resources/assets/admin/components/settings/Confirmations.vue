@@ -306,13 +306,15 @@
             },
 
             getPages() {
-                const url = FluentFormsGlobal.$rest.route('getFormPages', this.form.id);
+                const url = FluentFormsGlobal.$rest.route('getFormPages', this.form_id);
 
                 FluentFormsGlobal.$rest.get(url)
                     .then(response => {
-                        this.pages = response.pages;
+                        this.pages = response;
                     })
-                    .catch(e => {})
+                    .catch(e => {
+                        this.loading = false;
+                    })
             },
             getPageUrl(id) {
                 let page = this.pages[id];

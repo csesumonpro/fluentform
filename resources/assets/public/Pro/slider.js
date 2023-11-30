@@ -528,7 +528,7 @@ export default function ($, $theForm, fluentFormVars, formSelector) {
                 }
 
                 if (childDomCounts == hiddenDomCounts) {
-                    $activeStepDom.find('.step-nav button[data-action=' + actionType + ']').click();
+                    $activeStepDom.find('.step-nav button[data-action=' + actionType + '], .step-nav img[data-action=' + actionType + ']').click();
                 }
             }, timeout);
         }
@@ -615,10 +615,11 @@ export default function ($, $theForm, fluentFormVars, formSelector) {
     var addFilesToElement = function ($el, fileUrls) {
         var $uploadedList = $el.closest('.ff-el-input--content').find('.ff-uploaded-list');
 
-        $.each(fileUrls, function (index, fileUrl) {
+        $.each(fileUrls, function (index, file) {
+            file = typeof file === 'object' ? file : {url: file, data_src : file};
             var previewContainer = $('<div/>', {
                 class: 'ff-upload-preview',
-                'data-src': fileUrl,
+                'data-src': file.data_src,
                 style: 'border: 1px solid rgb(111, 117, 125)'
             });
             var previewThumb = $('<div/>', {
@@ -626,7 +627,7 @@ export default function ($, $theForm, fluentFormVars, formSelector) {
             });
             previewThumb.append($('<div/>', {
                 class: 'ff-upload-preview-img',
-                style: `background-image: url('${getThumbnail(fileUrl)}');`
+                style: `background-image: url('${getThumbnail(file.url)}');`
             }));
 
             var previewDetails = $('<div/>', {
@@ -638,10 +639,13 @@ export default function ($, $theForm, fluentFormVars, formSelector) {
                 html: fluentFormVars.upload_completed_txt,
                 class: 'ff-upload-progress-inline-text ff-inline-block'
             });
-
+            let name = file.url.substring(file.url.lastIndexOf('/') + 1);
+            if (name.includes('-ff-')) {
+                name = name.substring(name.lastIndexOf('-ff-') + 4);
+            }
             var fileName = $('<div/>', {
                 class: 'ff-upload-filename',
-                html: fileUrl.substring(fileUrl.lastIndexOf('/') + 1)
+                html: name
             });
 
             var progressBarInline = $(`

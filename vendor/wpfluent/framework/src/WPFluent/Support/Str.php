@@ -140,7 +140,10 @@ class Str
      */
     public static function length($value)
     {
-        return mb_strlen($value);
+        if(function_exists('mb_strlen')) {
+            return mb_strlen($value);
+        }
+        return strlen($value);
     }
 
     /**
@@ -168,7 +171,12 @@ class Str
      */
     public static function lower($value)
     {
-        return mb_strtolower($value, 'UTF-8');
+        if(function_exists('mb_strtolower')) {
+            return mb_strtolower($value, 'UTF-8');
+        }
+
+        return strtolower($value);
+
     }
 
     /**
@@ -327,7 +335,12 @@ class Str
      */
     public static function upper($value)
     {
-        return mb_strtoupper($value, 'UTF-8');
+        if(function_exists('mb_strtoupper')) {
+            return mb_strtoupper($value, 'UTF-8');
+        }
+
+        return mb_strtoupper($value);
+
     }
 
     /**
@@ -448,7 +461,11 @@ class Str
      */
     public static function substr($string, $start, $length = null)
     {
-        return mb_substr($string, $start, $length, 'UTF-8');
+        if(function_exists('mb_substr')) {
+            return mb_substr($string, $start, $length, 'UTF-8');
+        }
+
+        return self::substr($string, $start, $length);
     }
 
     /**

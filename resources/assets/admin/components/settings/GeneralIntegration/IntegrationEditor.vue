@@ -228,10 +228,9 @@
                                     </notice>
                                 </template>
 
-                                <template v-else-if="field.component == 'chained-ajax-fields'">
+                                <div class="ff_chained_ajax_field" v-else-if="field.component == 'chained-ajax-fields'">
                                     <template v-for="(optionValue, optionKey) in field.options_labels">
                                         <el-select
-                                                class="w-100"
                                                 v-loading="loading_list"
                                                 @change="chainedAjax(optionKey)"
                                                 v-model="settings.chained_config[optionKey]"
@@ -246,7 +245,7 @@
                                             ></el-option>
                                         </el-select>
                                     </template>
-                                </template>
+                                </div>
 
                                 <template v-else-if="field.component == 'chained_select'">
                                     <chained-selects
@@ -291,6 +290,14 @@
                                             v-on:change="handleChange($event, field.key)"
                                     >
                                     </el-date-picker>
+                                </template>
+
+                                <template v-else-if="field.component == 'wp_editor'">
+                                    <wp_editor
+                                        :editorShortcodes="editorShortcodes"
+                                        :height="field.height || 200"
+                                        v-model="settings[field.key]">
+                                    </wp_editor>
                                 </template>
 
                                 <template v-else>
@@ -347,6 +354,7 @@
     import BtnGroup from '@/admin/components/BtnGroup/BtnGroup.vue';
     import BtnGroupItem from '@/admin/components/BtnGroup/BtnGroupItem.vue';
     import Notice from '@/admin/components/Notice/Notice.vue';
+    import wpEditor from '@/common/_wp_editor';
 
     export default {
         name: 'general_notification_edit',
@@ -369,7 +377,8 @@
             CardBody,
             BtnGroup,
             BtnGroupItem,
-            Notice
+            Notice,
+            'wp_editor' : wpEditor
         },
         props: ['form_id', 'inputs', 'has_pro', 'editorShortcodes'],
         watch: {},
@@ -457,6 +466,9 @@
                     if (this.settings.chained_config[key] == '') {
                         return;
                     }
+                }
+                if (key == 'base_id') {
+                    this.settings.chained_config['table_id'] = '';
                 }
                 this.fromChainedAjax = true;
                 this.loadIntegrationSettings();

@@ -638,10 +638,8 @@ class FormService
         $formLocations = [];
         $posts = get_posts($params);
         foreach($posts as $post) {
-        
             $formIds = self::getShortCodeId($post->post_content);
             if(!empty($formIds) && in_array($formId,$formIds)) {
-            
                 $postType = get_post_type_object($post->post_type);
                 $formLocations[] = [
                     'id'        => $post->ID,
@@ -661,10 +659,12 @@ class FormService
     {
         $ids = [];
         $selector = 'id';
+        $formId = '';
         if (!function_exists('parse_blocks')) {
             return $ids;
         }
         $parsedBlocks = parse_blocks($content);
+
         foreach ($parsedBlocks as $block) {
             if (!array_key_exists('blockName', $block) || !array_key_exists('attrs', $block) || !array_key_exists('formId', $block['attrs'])) {
                 continue;
@@ -675,13 +675,25 @@ class FormService
             }
             $ids[] = (int) $block['attrs']['formId'];
         }
-        if (!has_shortcode($content, $shortcodeTag)) {
+        // Define the regex pattern with a placeholder for any number
+        $hasFormWidgets = false;
+        $pattern = '/<form data-form_id="(\d+)" id="fluentform_(\d+)" data-form_instance="ff_form_instance_(\d+)_(\d+)" method="POST" ><fieldset /';
+        // Perform the regex match
+        if (preg_match($pattern, $content, $matches)) {
+            $hasFormWidgets = isset($matches[0]);
+            $ids[] = isset($matches[1]) ? $matches[1] : '';
+        }
+
+        if (!has_shortcode($content, $shortcodeTag) && !$hasFormWidgets) {
             return $ids;
         }
+
         preg_match_all('/' . get_shortcode_regex() . '/', $content, $matches, PREG_SET_ORDER);
+
         if (empty($matches)) {
             return $ids;
         }
+
         foreach ($matches as $shortcode) {
             if (count($shortcode) >= 2 && $shortcodeTag === $shortcode[2]) {
                 $parsedCode = str_replace(['[', ']', '&#91;', '&#93;'], '', $shortcode[0]);
@@ -695,5 +707,4 @@ class FormService
         }
         return $ids;
     }
-    
 }

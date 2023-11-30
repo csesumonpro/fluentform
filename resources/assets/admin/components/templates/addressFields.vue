@@ -4,7 +4,7 @@
 
     <el-row :gutter="20">
         <template v-for="(field, i) in getOrerderFields">
-            <el-col :key="i" :md="12" v-if="getField(field).settings.visible"  class="address-field-wrapper">
+            <el-col :key="i" :md="is_conversion_form ? 24 : 12" v-if="getField(field).settings.visible"  class="address-field-wrapper">
                 <component :is="guessElTemplate(getField(field))" :item="getField(field)"></component>
             </el-col>
         </template>

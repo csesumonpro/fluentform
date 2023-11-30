@@ -12,10 +12,10 @@
                 v-model="editItem.attributes.type"
                 size="small"
             >
-                <el-radio-button label="single">{{ $t('Single Item') }}</el-radio-button>
-                <el-radio-button label="radio">{{ $t('Radio Selection') }}</el-radio-button>
-                <el-radio-button label="checkbox">{{ $t('Checkbox Selections') }}</el-radio-button>
-                <el-radio-button label="select">{{ $t('Select Fields') }}</el-radio-button>
+                <el-radio-button label="single">{{ $t('Single') }}</el-radio-button>
+                <el-radio-button label="radio">{{ $t('Radio') }}</el-radio-button>
+                <el-radio-button label="checkbox">{{ $t('Checkbox') }}</el-radio-button>
+                <el-radio-button label="select">{{ $t('Select') }}</el-radio-button>
             </el-radio-group>
         </el-form-item>
 
@@ -86,7 +86,7 @@
                             style="max-width: 64px; max-height: 32px; overflow: hidden;"
                             v-if="editItem.settings.enable_image_input && hasImageSupport"
                         >
-                            <photo-widget enable_clear="yes" v-model="option.image"/>
+                            <photo-widget enable_clear="yes" v-model="option.image" :for_advanced_option="true"/>
                         </div>
 
                         <div>

@@ -204,7 +204,7 @@
                                         <div slot="content">
                                             <h6>{{ $t('Numbers of entries') }}</h6>
                                             <p>
-                                                {{ $t('Unead / Total') }}
+                                                {{ $t('Unread / Total Entries') }}
                                             </p>
                                         </div>
 
@@ -322,7 +322,7 @@ export default {
             app: window.FluentFormApp,
             paginate: {
                 total: 0,
-                current_page: 1,
+                current_page: +(localStorage.getItem('formItemsCurrentPage') || 1),
                 last_page: 1,
                 per_page: localStorage.getItem('formItemsPerPage') || 10
             },
@@ -411,6 +411,7 @@ export default {
         },
         goToPage(val) {
             scrollTop().then(_ => {
+	            localStorage.setItem('formItemsCurrentPage', val);
                 this.paginate.current_page = val
                 this.fetchItems();
             });
@@ -547,7 +548,7 @@ export default {
         setDefaultPaginate() {
           this.paginate = {
             total: 0,
-            current_page: 1,
+            current_page: +(localStorage.getItem('formItemsCurrentPage') || 1),
             last_page: 1,
             per_page: localStorage.getItem('formItemsPerPage') || 10
           }

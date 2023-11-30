@@ -19,6 +19,25 @@ export default function (method, route, data = {}) {
                 headers: headers,
             })
             .then(response => resolve(response))
-            .fail(errors => reject(errors.responseJSON));
+            .fail(errors => {
+                if (errors.responseJSON && errors.responseJSON.code == 'rest_cookie_invalid_nonce') {
+                    // Renew nonce from the server and retry the original request.
+                    window.FluentFormsGlobal.$get({
+                        action: "fluentform_renew_rest_nonce",
+                    }).then(response => {
+                        if (response.nonce) {
+                            window.fluent_forms_global_var.rest.nonce = response.nonce;
+                            method = method.toLowerCase();
+
+                            window.FluentFormsGlobal.$rest[method](route, data).then(response => {
+                                resolve(response)
+                            })
+                            .fail(errors => reject(errors.responseJSON));
+                        }
+                    });
+                } else {
+                    reject(errors.responseJSON)
+                }
+            });
     });
 }

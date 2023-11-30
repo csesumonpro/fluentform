@@ -42,16 +42,6 @@ class OxygenWidget
 
     public function registerAddPlusSubsections()
     {
-        do_action_deprecated(
-            'oxygen_add_plus_fluentform_form',
-            [
-
-            ],
-            FLUENTFORM_FRAMEWORK_UPGRADE,
-            'fluentform/add_oxygen_plus_form',
-            'Use fluentform/add_oxygen_plus_form instead of oxygen_add_plus_fluentform_form'
-        );
-
-        do_action('fluentform/add_oxygen_plus_form');
+        do_action('oxygen_add_plus_fluentform_form');
     }
 }

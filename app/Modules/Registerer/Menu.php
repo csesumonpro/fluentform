@@ -162,6 +162,14 @@ class Menu
         );
 
         wp_register_script(
+            'fluentform-docs',
+            fluentFormMix('js/docs.js'),
+            ['jquery'],
+            FLUENTFORM_VERSION,
+            true
+        );
+
+        wp_register_script(
             'fluentform_form_entries',
             fluentFormMix('js/form_entries.js'),
             ['jquery', 'fluentform_chart_js', 'fluentform_vue_chart_js'],
@@ -210,9 +218,7 @@ class Menu
         );
     
         add_filter('admin_footer_text', function ($text) {
-            $text = '<span id="footer-thankyou">Please keep in mind that you are using a beta version and may encounter bugs, remember to include the <b> #fluentforms_beta </b> hash tag in your <a target="_blank" rel="nofollow" href="https://wpmanageninja.com/support-tickets"> Support Ticket</a>.<br>';
-            $text .= '<span id="footer-thankyou">If you like the plugin please rate Fluent Forms <a target="_blank" rel="nofollow" href="https://wordpress.org/support/plugin/fluentform/reviews/#new-post">★★★★★ </a> on  <a target="_blank" rel="nofollow" href="https://wordpress.org/support/plugin/fluentform/reviews/#new-post">WordPress.org</a> to help us spread the word ♥ from the Fluent Forms team. </span>';
-            return $text;
+            return '<span id="footer-thankyou">If you like the plugin please rate Fluent Forms <a target="_blank" rel="nofollow" href="https://wordpress.org/support/plugin/fluentform/reviews/#new-post">★★★★★ </a> on  <a target="_blank" rel="nofollow" href="https://wordpress.org/support/plugin/fluentform/reviews/#new-post">WordPress.org</a> to help us spread the word ♥ from the Fluent Forms team. </span>';
         });
 
         add_filter('update_footer', function ($text) {
@@ -252,6 +258,7 @@ class Menu
             'fluent_forms_admin_nonce' => wp_create_nonce('fluent_forms_admin_nonce'),
             'ajaxurl'                  => admin_url('admin-ajax.php'),
             'admin_i18n'               => TranslationString::getAdminI18n(),
+            'global_search_active'     => apply_filters('fluentform/global_search_active', 'yes'),
             'payments_str'             => TranslationString::getPaymentsI18n(),
             'permissions'              => Acl::getCurrentUserPermissions(),
             'rest'                     => Helper::getRestInfo(),
@@ -650,9 +657,7 @@ class Menu
             ];
         }
 
-        $settingsMenus = apply_filters_deprecated(
-            'fluentform_form_settings_menu',
-            [
+        $settingsMenus = apply_filters_deprecated('fluentform_form_settings_menu', [
                 $settingsMenus,
                 $form_id
             ],
@@ -727,6 +732,8 @@ class Menu
                 'list_url'    => fluentform_integrations_url(),
                 'instruction' => __("Fluent Forms Pro has tons of integrations to take your forms to the next level. From payment gateways to quiz building, SMS notifications to email marketing - you'll get integrations for various purposes. Even if you don't find your favorite tools, you can integrate them easily with Zapier.", 'fluentform'),
             ],
+            'countries'            => getFluentFormCountryList(),
+            'getIpInfo'            => Helper::getIpinfo(),
         ]);
 
         $this->app->view->render('admin.form.settings', [
@@ -751,16 +758,16 @@ class Menu
             'fluentform/disabled_analytics',
             'Use fluentform/disabled_analytics instead of fluentform-disabled_analytics.'
         );
-
+    
         $data = [
-            'plugin'             => $this->app->config->get('app.slug'),
-            'formsCount'         => $formsCount,
-            'hasPro'             => defined('FLUENTFORMPRO'),
-            'upgrade_url'        => fluentform_upgrade_url(),
-            'adminUrl'           => admin_url('admin.php?page=fluent_forms'),
+            'plugin'                  => $this->app->config->get('app.slug'),
+            'formsCount'              => $formsCount,
+            'hasPro'                  => defined('FLUENTFORMPRO'),
+            'upgrade_url'             => fluentform_upgrade_url(),
+            'adminUrl'                => admin_url('admin.php?page=fluent_forms'),
             'adminUrlWithoutPageHash' => admin_url('admin.php'),
-            'isDisableAnalytics' => $this->app->applyFilters('fluentform/disabled_analytics', $isDisabledAnalytics),
-            'plugin_public_url'    => fluentformMix(),
+            'isDisableAnalytics'      => $this->app->applyFilters('fluentform/disabled_analytics', $isDisabledAnalytics),
+            'plugin_public_url'       => fluentformMix(),
         ];
 
         $data = apply_filters_deprecated(
@@ -798,7 +805,7 @@ class Menu
 
     private function enqueueEditorAssets()
     {
-        $formId = intval($this->app->request->get('form_id'));
+        $formId = (int) $this->app->request->get('form_id');
 
         $form = wpFluent()->table('fluentform_forms')->find($formId);
 
@@ -944,6 +951,7 @@ class Menu
             'has_payment_features'           => !defined('FLUENTFORMPRO'),
             'upgrade_url'                    => fluentform_upgrade_url(),
             'is_conversion_form'             => Helper::isConversionForm($formId),
+            'is_autoload_captcha'            => Helper::isAutoloadCaptchaEnabled(),
             'used_name_attributes'           => $this->usedNameAttributes($formId),
             'bulk_options_json'              => '{"Countries":["Afghanistan","Albania","Algeria","American Samoa","Andorra","Angola","Anguilla","Antarctica","Antigua and Barbuda","Argentina","Armenia","Aruba","Australia","Austria","Azerbaijan","Bahamas","Bahrain","Bangladesh","Barbados","Belarus","Belgium","Belize","Benin","Bermuda","Bhutan","Bolivia","Bonaire, Sint Eustatius and Saba","Bosnia and Herzegovina","Botswana","Bouvet Island","Brazil","British Indian Ocean Territory","Brunei Darussalam","Bulgaria","Burkina Faso","Burundi","Cambodia","Cameroon","Canada","Cape Verde","Cayman Islands","Central African Republic","Chad","Chile","China","Christmas Island","Cocos Islands","Colombia","Comoros","Congo, Democratic Republic of the","Congo, Republic of the","Cook Islands","Costa Rica","Croatia","Cuba","Cura\u00e7ao","Cyprus","Czech Republic","C\u00f4te d\'Ivoire","Denmark","Djibouti","Dominica","Dominican Republic","Ecuador","Egypt","El Salvador","Equatorial Guinea","Eritrea","Estonia","Eswatini (Swaziland)","Ethiopia","Falkland Islands","Faroe Islands","Fiji","Finland","France","French Guiana","French Polynesia","French Southern Territories","Gabon","Gambia","Georgia","Germany","Ghana","Gibraltar","Greece","Greenland","Grenada","Guadeloupe","Guam","Guatemala","Guernsey","Guinea","Guinea-Bissau","Guyana","Haiti","Heard and McDonald Islands","Holy See","Honduras","Hong Kong","Hungary","Iceland","India","Indonesia","Iran","Iraq","Ireland","Isle of Man","Israel","Italy","Jamaica","Japan","Jersey","Jordan","Kazakhstan","Kenya","Kiribati","Kuwait","Kyrgyzstan","Lao People\'s Democratic Republic","Latvia","Lebanon","Lesotho","Liberia","Libya","Liechtenstein","Lithuania","Luxembourg","Macau","Macedonia","Madagascar","Malawi","Malaysia","Maldives","Mali","Malta","Marshall Islands","Martinique","Mauritania","Mauritius","Mayotte","Mexico","Micronesia","Moldova","Monaco","Mongolia","Montenegro","Montserrat","Morocco","Mozambique","Myanmar","Namibia","Nauru","Nepal","Netherlands","New Caledonia","New Zealand","Nicaragua","Niger","Nigeria","Niue","Norfolk Island","North Korea","Northern Mariana Islands","Norway","Oman","Pakistan","Palau","Palestine, State of","Panama","Papua New Guinea","Paraguay","Peru","Philippines","Pitcairn","Poland","Portugal","Puerto Rico","Qatar","Romania","Russia","Rwanda","R\u00e9union","Saint Barth\u00e9lemy","Saint Helena","Saint Kitts and Nevis","Saint Lucia","Saint Martin","Saint Pierre and Miquelon","Saint Vincent and the Grenadines","Samoa","San Marino","Sao Tome and Principe","Saudi Arabia","Senegal","Serbia","Seychelles","Sierra Leone","Singapore","Sint Maarten","Slovakia","Slovenia","Solomon Islands","Somalia","South Africa","South Georgia","South Korea","South Sudan","Spain","Sri Lanka","Sudan","Suriname","Svalbard and Jan Mayen Islands","Sweden","Switzerland","Syria","Taiwan","Tajikistan","Tanzania","Thailand","Timor-Leste","Togo","Tokelau","Tonga","Trinidad and Tobago","Tunisia","Turkey","Turkmenistan","Turks and Caicos Islands","Tuvalu","US Minor Outlying Islands","Uganda","Ukraine","United Arab Emirates","United Kingdom","United States","Uruguay","Uzbekistan","Vanuatu","Venezuela","Vietnam","Virgin Islands, British","Virgin Islands, U.S.","Wallis and Futuna","Western Sahara","Yemen","Zambia","Zimbabwe","\u00c5land Islands"],"U.S. States":["Alabama","Alaska","Arizona","Arkansas","California","Colorado","Connecticut","Delaware","District of Columbia","Florida","Georgia","Hawaii","Idaho","Illinois","Indiana","Iowa","Kansas","Kentucky","Louisiana","Maine","Maryland","Massachusetts","Michigan","Minnesota","Mississippi","Missouri","Montana","Nebraska","Nevada","New Hampshire","New Jersey","New Mexico","New York","North Carolina","North Dakota","Ohio","Oklahoma","Oregon","Pennsylvania","Rhode Island","South Carolina","South Dakota","Tennessee","Texas","Utah","Vermont","Virginia","Washington","West Virginia","Wisconsin","Wyoming","Armed Forces Americas","Armed Forces Europe","Armed Forces Pacific"],"Canadian Province\/Territory":["Alberta","British Columbia","Manitoba","New Brunswick","Newfoundland and Labrador","Northwest Territories","Nova Scotia","Nunavut","Ontario","Prince Edward Island","Quebec","Saskatchewan","Yukon"],"Continents":["Africa","Antarctica","Asia","Australia","Europe","North America","South America"],"Gender":["Male","Female","Prefer Not to Answer"],"Age":["Under 18","18-24","25-34","35-44","45-54","55-64","65 or Above","Prefer Not to Answer"],"Marital Status":["Single","Married","Divorced","Widowed"],"Employment":["Employed Full-Time","Employed Part-Time","Self-employed","Not employed but looking for work","Not employed and not looking for work","Homemaker","Retired","Student","Prefer Not to Answer"],"Job Type":["Full-Time","Part-Time","Per Diem","Employee","Temporary","Contract","Intern","Seasonal"],"Industry":["Accounting\/Finance","Advertising\/Public Relations","Aerospace\/Aviation","Arts\/Entertainment\/Publishing","Automotive","Banking\/Mortgage","Business Development","Business Opportunity","Clerical\/Administrative","Construction\/Facilities","Consumer Goods","Customer Service","Education\/Training","Energy\/Utilities","Engineering","Government\/Military","Green","Healthcare","Hospitality\/Travel","Human Resources","Installation\/Maintenance","Insurance","Internet","Job Search Aids","Law Enforcement\/Security","Legal","Management\/Executive","Manufacturing\/Operations","Marketing","Non-Profit\/Volunteer","Pharmaceutical\/Biotech","Professional Services","QA\/Quality Control","Real Estate","Restaurant\/Food Service","Retail","Sales","Science\/Research","Skilled Labor","Technology","Telecommunications","Transportation\/Logistics","Other"],"Education":["High School","Associate Degree","Bachelor\'s Degree","Graduate or Professional Degree","Some College","Other","Prefer Not to Answer"],"Days of the Week":["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],"Months of the Year":["January","February","March","April","May","June","July","August","September","October","November","December"],"How Often":["Every day","Once a week","2 to 3 times a week","Once a month","2 to 3 times a month","Less than once a month"],"How Long":["Less than a month","1-6 months","1-3 years","Over 3 years","Never used"],"Satisfaction":["Very Satisfied","Satisfied","Neutral","Unsatisfied","Very Unsatisfied"],"Importance":["Very Important","Important","Somewhat Important","Not Important"],"Agreement":["Strongly Agree","Agree","Disagree","Strongly Disagree"],"Comparison":["Much Better","Somewhat Better","About the Same","Somewhat Worse","Much Worse"],"Would You":["Definitely","Probably","Not Sure","Probably Not","Definitely Not"],"Size":["Extra Small","Small","Medium","Large","Extra Large"],"Timezone":["(GMT -12-00) Eniwetok, Kwajalein:-12","(GMT -11-00) Midway Island, Samoa:-11","(GMT -10-00) Hawaii:-10","(GMT -9-00) Alaska:-9","(GMT -8-00) Pacific Time (US & Canada):-8","(GMT -7-00) Mountain Time (US & Canada):-7","(GMT -6-00) Central Time (US & Canada), Mexico City:-6","(GMT -5-00) Eastern Time (US & Canada), Bogota, Lima:-5","(GMT -4-00) Atlantic Time (Canada), Caracas, La Paz:-4","(GMT -3-30) Newfoundland:-3.5","(GMT -3-00) Brazil, Buenos Aires, Georgetown:-3","(GMT -2-00) Mid-Atlantic:-2","(GMT -1-00) Azores, Cape Verde Islands:-1","(GMT) Western Europe Time, London, Lisbon, Casablanca:0","(GMT +1-00) Brussels, Copenhagen, Madrid, Paris:1","(GMT +2-00) Kaliningrad, South Africa:2","(GMT +3-00) Baghdad, Riyadh, Moscow, St. Petersburg:3","(GMT +3-30) Tehran:3.5","(GMT +4-00) Abu Dhabi, Muscat, Baku, Tbilisi:4","(GMT +4-30) Kabul:4.5","(GMT +5-00) Ekaterinburg, Islamabad, Karachi, Tashkent:5","(GMT +5-30) Bombay, Calcutta, Madras, New Delhi:5.5","(GMT +5-45) Kathmandu:5.75","(GMT +6-00) Almaty, Dhaka, Colombo:6","(GMT +7-00) Bangkok, Hanoi, Jakarta:7","(GMT +8-00) Beijing, Perth, Singapore, Hong Kong:8","(GMT +9-00) Tokyo, Seoul, Osaka, Sapporo, Yakutsk:9","(GMT +9-30) Adelaide, Darwin:9.5","(GMT +10-00) Eastern Australia, Guam, Vladivostok:10","(GMT +11-00) Magadan, Solomon Islands, New Caledonia:11","(GMT +12-00) Auckland, Wellington, Fiji, Kamchatka:12"]}',
         ];
@@ -959,6 +967,8 @@ class Menu
         );
 
         wp_localize_script('fluentform_editor_script', 'FluentFormApp', apply_filters('fluentform/editor_vars', $data));
+
+        do_action('fluentform/editor_script_loaded', $form);
     }
 
     /**
@@ -981,16 +991,15 @@ class Menu
         // N.B. native 'components' will always use
         // 'settings' as their current component.
         $currentComponent =  $this->app->request->get('component', 'settings');
-        $currentComponent = apply_filters_deprecated(
-            'fluentform_global_settings_current_component',
-            [
+      
+        $currentComponent = apply_filters_deprecated('fluentform_global_settings_current_component', [
                 $currentComponent
             ],
             FLUENTFORM_FRAMEWORK_UPGRADE,
             'fluentform/global_settings_current_component',
             'Use fluentform/global_settings_current_component instead of fluentform_global_settings_current_component.'
         );
-
+        
         $currentComponent = apply_filters(
             'fluentform/global_settings_current_component',
             $currentComponent
@@ -998,17 +1007,16 @@ class Menu
 
         $currentComponent = sanitize_key($currentComponent);
         $components = [];
-        $components = apply_filters_deprecated(
-            'fluentform_global_settings_components',
-            [
+        $components = apply_filters_deprecated('fluentform_global_settings_components', [
                 $components
             ],
             FLUENTFORM_FRAMEWORK_UPGRADE,
             'fluentform/global_settings_components',
             'Use fluentform/global_settings_components instead of fluentform_global_settings_components.'
         );
-
+        
         $components = apply_filters('fluentform/global_settings_components', $components);
+    
 
         $components['reCAPTCHA'] = [
             'hash'  => 're_captcha',
@@ -1024,9 +1032,8 @@ class Menu
             'hash'  => 'turnstile',
             'title' => 'Turnstile (Beta)',
         ];
-
-      
-        $this->app->view->render('admin.settings.global_settings', [
+        
+        $this->app->view->render('admin.globalSettings.menu', [
             'components'       => $components,
             'currentComponent' => $currentComponent,
         ]);
@@ -1045,16 +1052,23 @@ class Menu
             'upgrade_url'  => fluentform_upgrade_url(),
             'hasPro'       => defined('FLUENTFORMPRO'),
             'transfer_str' => TranslationString::getTransferModuleI18n(),
+            'source_query' => sanitize_text_field($this->app->request->get('source')),
+            'status_query' => sanitize_text_field($this->app->request->get('status')),
+            'date_start_query' => sanitize_text_field($this->app->request->get('start_date')),
+            'date_end_query' => sanitize_text_field($this->app->request->get('end_date')),
         ]);
 
         $this->app->view->render('admin.tools.index');
     }
-
+    
     public function addPreviewButton($formId)
     {
-        $previewText = __('Preview', 'fluentform');
         $previewUrl = Helper::getPreviewUrl($formId);
-
+        $previewText = __('Preview & Design', 'fluentform');
+        $formId = (int)$formId;
+        if (Helper::isConversionForm($formId)) {
+            $previewText = __('Preview', 'fluentform');
+        }
         echo '<a target="_blank" class="el-button el-button--info is-plain" href="' . esc_url($previewUrl) . '">' . '<i class="ff-icon ff-icon-eye-filled fs-15"></i> ' . '<span>' . esc_attr($previewText) . '</span>' . '</a>';
     }
 
@@ -1104,9 +1118,7 @@ class Menu
                 $showPayment = $formCount > 2;
             }
         }
-        $showPaymentEntry = apply_filters_deprecated(
-            'fluentform_show_payment_entries',
-            [
+        $showPaymentEntry = apply_filters_deprecated('fluentform_show_payment_entries', [
                 false
             ],
             FLUENTFORM_FRAMEWORK_UPGRADE,
@@ -1124,10 +1136,7 @@ class Menu
     public function renderPaymentEntries()
     {
         do_action_deprecated(
-            'flunetform_render_payment_entries',
-            [
-
-            ],
+            'flunetform_render_payment_entries', [],
             FLUENTFORM_FRAMEWORK_UPGRADE,
             'fluentform/render_payment_entries',
             'Use fluentform/render_payment_entries instead of flunetform/render_payment_entries'

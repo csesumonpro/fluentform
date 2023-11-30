@@ -38,9 +38,9 @@
                             </div>
                             <h3 class="mb-3 title">{{ modal.title }}</h3>
                             <p class="text">{{ modal.description }}</p>
-                            <el-button class="mt-2" type="primary" v-if="!modal.hidePro" target="_blank" :href="campaignUrl">
+                            <a class="el-button mt-2 el-button--primary" v-if="!modal.hidePro" target="_blank" :href="campaignUrl">
                                 {{ $t('Upgrade to PRO') }}
-                            </el-button>
+                            </a>
                         </div>
                     </el-col>
                 </el-row>
@@ -66,7 +66,7 @@
                         <p>{{ $t('Accept Payment online as part of the Forms submission process.With Fluent Forms Powerful payment integration, you can easily accept and process payments in your Fluent Forms via Stripe / PayPal.Payment Module is available on Pro Version.') }}</p>
                         <a  target="_blank"
                             class="el-button el-button--danger"
-                            :href="pay_campaignUrl" >
+                            :href="campaignUrl" >
                             {{ $t('Upgrade to Pro Now') }}
                         </a>
                     </div>

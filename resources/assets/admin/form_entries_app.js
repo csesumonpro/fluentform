@@ -86,6 +86,7 @@ import Entries from './views/Entries.vue';
 import Entry from './views/Entry.vue';
 import VisualReports from './views/Reports/VisualReports.vue';
 import notifier from './notifier';
+import globalSearch from './global_search';
 
 const routes = [
     {
@@ -129,6 +130,9 @@ function formatMoneyFunc(n, decimals, decimal_sep, thousands_sep)
 }
 
 Vue.mixin({
+    components: {
+        globalSearch
+    },
     methods: {
         $t(str) {
             let transString = window.fluent_form_entries_vars.form_entries_str[str];

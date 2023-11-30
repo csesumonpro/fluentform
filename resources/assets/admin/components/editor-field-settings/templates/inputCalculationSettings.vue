@@ -82,6 +82,8 @@
                     return '{repeat.'+item.attributes.name+'}';
                 } else if(item.element == 'multi_payment_component' && item.attributes.type !=='single') {
                     return '{payment.'+item.attributes.name+'}';
+                }  else if(item.element == 'custom_payment_component') {
+                    return '{payment.'+item.attributes.name+'}';
                 }
             },
             isCalculative(item) {
@@ -90,7 +92,8 @@
                     'input_number',
                     'repeater_field',
                     'net_promoter_score',
-                    'rangeslider'
+                    'rangeslider',
+                    'custom_payment_component'
                 ];
 
                 if (paymentElements.indexOf(item.element) != -1) {

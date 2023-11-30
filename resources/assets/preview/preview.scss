@@ -242,6 +242,8 @@ ol{
   opacity: 0;
   visibility: hidden;
   transition: 0.3s;
+  word-break: normal;
+  word-wrap: normal;
 }
 @media (min-width: 1280px){
   .ff_device_control_wrap{
@@ -276,7 +278,8 @@ ol{
     color: #909399;
   }
   &_inner {
-    width: 890px;
+    width: auto;
+    max-width: 890px;
     margin: 0 auto;
     display: flex;
   }
@@ -335,8 +338,9 @@ ol{
 .ff_addons {
   display: flex;
   flex-wrap: wrap;
+  padding:10px;
   li {
-    width: 47%;
+    width: 45%;
     padding: 13px 18px;
     border: 1px solid #E4E7ED;
     margin: 5px;
@@ -389,6 +393,23 @@ ol{
       .el-tabs__item{
         margin-right: 0 !important;
       }
+    }
+  }
+}
+
+// ff global search
+@import "../admin/styles/global_search";
+.global-search-wrapper  {
+  .global-search-container input {
+    border: 1px solid #dadbdd;
+    border-radius: 7px;
+    padding: 9px 35px;
+    background-color: #ffffff;
+    box-shadow: none;
+    color: #606266;
+    &:focus {
+      border-color: #1A7EFB !important;
+      outline: none;
     }
   }
 }

@@ -48,6 +48,7 @@ class ReportHelper
         }
 
         $reports = static::getInputReport($form->id, array_keys($inputs), $statuses);
+
         $subFieldReports = static::getSubFieldInputReport($form->id, array_keys($subfieldInputs), $statuses);
         $reports = array_merge($reports, $subFieldReports);
         foreach ($reports as $reportKey => $report) {
@@ -69,6 +70,7 @@ class ReportHelper
         if (!$fieldNames) {
             return [];
         }
+
         $reports = EntryDetails::select(['field_name', 'sub_field_name', 'field_value'])
             ->where('form_id', $formId)
             ->whereIn('field_name', $fieldNames)
@@ -90,6 +92,7 @@ class ReportHelper
                 'count'     => $report->total_count,
                 'sub_field' => $report->sub_field_name,
             ];
+
             $formattedReports[$report->field_name]['total_entry'] = static::getEntryTotal($report->field_name, $formId,
                 $statuses);
         }
@@ -167,8 +170,7 @@ class ReportHelper
 
     public static function getEntryTotal($fieldName, $formId, $statuses = false)
     {
-        return EntryDetails::select('id')
-            ->where('form_id', $formId)
+        return EntryDetails::select('id')->where('form_id', $formId)
             ->where('field_name', $fieldName)
             ->when(
                 is_array($statuses) && (count($statuses) > 0),
@@ -178,7 +180,7 @@ class ReportHelper
                     });
                 }
             )
-            ->groupBy(['field_name', 'submission_id'])
+            ->distinct(['field_name','submission_id'])
             ->count();
     }
 

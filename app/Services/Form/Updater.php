@@ -26,7 +26,7 @@ class Updater
         try {
             $form = Form::findOrFail($formId);
         } catch (Exception $e) {
-            throw new Exception("The form couldn't be found.");
+            throw new \Exception("The form couldn't be found.");
         }
 
         $data = [

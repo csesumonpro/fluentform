@@ -131,30 +131,8 @@ class Slack
         }
 
         if ('failed' == $status) {
-            do_action_deprecated(
-                'ff_integration_action_result',
-                [
-                    $feed,
-                    'failed',
-                    $message
-                ],
-                FLUENTFORM_FRAMEWORK_UPGRADE,
-                'fluentform/integration_action_result',
-                'Use fluentform/integration_action_result instead of ff_integration_action_result.'
-            );
             do_action('fluentform/integration_action_result', $feed, 'failed', $message);
         } else {
-            do_action_deprecated(
-                'ff_integration_action_result',
-                [
-                    $feed,
-                    'success',
-                    'Submission notification has been successfully delivered to slack channel'
-                ],
-                FLUENTFORM_FRAMEWORK_UPGRADE,
-                'fluentform/integration_action_result',
-                'Use fluentform/integration_action_result instead of ff_integration_action_result.'
-            );
             do_action('fluentform/integration_action_result', $feed, 'success', 'Submission notification has been successfully delivered to slack channel');
         }
 

@@ -16,40 +16,40 @@ class AnalyticsService
         FormMeta::where('meta_key', '_total_views')->where('form_id',$formId)->delete();
         
         return ([
-            'message' => __('Form Analytics has been successfully resetted', 'fluentform'),
+            'message' => __('Form Analytics has been successfully reset', 'fluentform'),
         ]);
     }
     
-    public function store($data)
+    public function store($formId)
     {
         $userId = null;
         if ($user = wp_get_current_user()) {
             $userId = $user->ID;
         }
         $browser = new Browser();
-    
-        $formId = ArrayHelper::get($data, 'form_id');
+        $request = wpFluentForm('request');
+        
         $data = [
             'count'      => 1,
             'form_id'    => $formId,
             'user_id'    => $userId,
-            'ip'         => ArrayHelper::get($data, 'ip'),
+            'ip'         => $request->getIp(),
             'browser'    => $browser->getBrowser(),
             'platform'   => $browser->getPlatform(),
             'created_at' => current_time('mysql'),
-            'source_url' => ArrayHelper::get($data, 'HTTP_REFERER', ''),
+            'source_url' => $request->server('HTTP_REFERER', ''),
         ];
+        
         $query = FormAnalytics::where('ip', $data['ip'])
             ->where('form_id', $data['form_id'])
             ->where('source_url', $data['source_url']);
-    
+        
         if (($record = $query->first())) {
             $query->update(['count' => ++$record->count]);
         } else {
             FormAnalytics::insert($data);
             $this->increaseTotalViews($formId);
         }
-    
     }
     
     

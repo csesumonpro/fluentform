@@ -13,7 +13,7 @@
                         </el-button>
                     </btn-group-item>
                     <btn-group-item as="div">
-                        <el-dropdown @command="exportEntries" trigger="click">
+                        <el-dropdown @command="selectFieldsToExport" trigger="click">
                             <el-button>
                                 {{ $t('Export') }}
                                 <i class="el-icon-arrow-down el-icon--right"></i>
@@ -93,6 +93,7 @@
                                 clearable
                                 v-model="entry_type"
                                 :placeholder="$t('All Types')"
+                                filterable
                                 @change="filterEntryType()"
                         >
                             <el-option
@@ -141,7 +142,7 @@
                         >
                         </el-input>
                     </btn-group-item>
-                    
+
                     <btn-group-item as="div">
                         <el-dropdown trigger="click" class="current_form_name_column" :hide-on-click="false">
                             <el-button>
@@ -198,6 +199,11 @@
                             </div>
                         </div><!-- .ff_advanced_filter_wrap -->
                     </btn-group-item>
+	                <btn-group-item as="div">
+		                <el-button @click="getData" v-loading="loading && visibleColumns">
+			                <i class="ff-icon el-icon-refresh"></i>
+		                </el-button>
+	                </btn-group-item>
                 </btn-group>
             </section-head-content>
         </section-head>
@@ -228,6 +234,7 @@
             <div class="ff_table">
                 <el-skeleton :loading="loading" animated :rows="6">
                     <el-table
+                         :size="isCompact? 'mini':''"
                         :data="entries"
                         :stripe="true"
                         :class="{'compact': isCompact}"
@@ -236,7 +243,7 @@
                     >
 
                         <el-table-column type="selection" width="30"></el-table-column>
-                        <el-table-column label="#" sortable="custom" prop="id" width="100px">
+                        <el-table-column label="#" sortable="custom" prop="id" width="100px" :class-name="idShortByClassName">
                             <template slot-scope="scope">
                                 <div class="has_hover_item">
                                     <router-link :to="{
@@ -291,6 +298,8 @@
                                 :label="column.label"
                                 :show-overflow-tooltip="isCompact"
                                 min-width="200"
+                                sortable="custom"
+                                :prop="'user_inputs_column_field-' + column.field"
                                 :key="index">
                             <template slot-scope="scope">
                                 <span v-html="scope.row.user_inputs[column.field]"></span>
@@ -299,6 +308,8 @@
 
                         <el-table-column
                                 label="Entry Status"
+                                sortable
+                                prop="status"
                                 width="120px">
                             <template slot-scope="scope">
                                 {{ getStatusName(scope.row.status) }}
@@ -308,6 +319,8 @@
                         <template v-if="has_payment">
                             <el-table-column
                                     :label="$t('Amount')"
+                                    sortable="custom"
+                                    prop="payment_total"
                                     min-width="120px">
                                 <template slot-scope="scope">
                                     <span v-html="formatMoney(scope.row.payment_total, scope.row.currency)"></span>
@@ -315,7 +328,9 @@
                             </el-table-column>
                             <el-table-column
                                     :label="$t('Payment Status')"
-                                    min-width="120px">
+                                    sortable
+                                    prop="payment_status"
+                                    min-width="140px">
                                 <template slot-scope="scope">
                                     <span class="ff_badge"
                                         :class="'ff_badge_'+scope.row.payment_status"
@@ -327,7 +342,9 @@
                             </el-table-column>
                             <el-table-column
                                     :label="$t('Payment Method')"
-                                    min-width="120px">
+                                    sortable
+                                    prop="payment_method"
+                                    min-width="140px">
                                 <template slot-scope="scope">
                                     <span class="ff_badge" v-if="scope.row.payment_method"
                                         :class="`ff_badge_${
@@ -344,6 +361,8 @@
 
                         <el-table-column
                                 :label="$t('Submitted at')"
+                                sortable
+                                prop="created_at"
                                 width="120px">
                             <template slot-scope="scope">
                                 {{ dateFormat(scope.row.created_at) }}
@@ -405,7 +424,7 @@
                                 :entry_ids="selection_ids"
                                 :form_id="form_id">
                         </email-resend>
-                        <el-checkbox class="compact_input" v-model="isCompact">{{ $t('Compact View') }}</el-checkbox>
+                        <el-checkbox class="compact_input" v-model="isCompact" @change="handleCompactView">{{ $t('Compact View') }}</el-checkbox>
                     </div>
                 </el-col>
                 <el-col :span="12">
@@ -424,6 +443,56 @@
                     </div>
                 </el-col>
             </el-row>
+
+            <!-- Modal for field select -->
+            <div :class="{'ff_backdrop': input_selection_visibility}">
+                <el-dialog
+                        top="50px"
+                        width="70%"
+                        element-loading-spinner="el-icon-loading"
+                        :loading="exportingEntries"
+                        :visible="input_selection_visibility"
+                        :before-close="closeInputSelection"
+                >
+                    <template slot="title">
+                        <div class="el-dialog__header_group">
+                            <h4 class="mr-3">{{ $t('Select fields for export') }}</h4>
+                        </div>
+                    </template>
+
+                    <el-checkbox v-if="has_pro" class="mt-5" :indeterminate="isIndeterminateFieldsSelection" v-model="checkAllFields" @change="handleCheckAllFieldsChange">{{$t('Check all')}}</el-checkbox>
+
+                    <div class="ff_card_wrap mt-5 mb-4">
+
+                        <el-checkbox-group class="ff_2_col_items mb15" v-model="fieldsToExport" @change="handleCheckedFieldsChange" >
+                           <div>
+                               <p><b>Form Inputs</b></p>
+                               <div class="separator mb-4"></div>
+                               <el-checkbox :disabled="!has_pro"  v-for="(label,name) in input_labels" :label="name" :key="name" >{{ label }}</el-checkbox>
+                           </div>
+                        </el-checkbox-group>
+
+                        <el-checkbox-group class="ff_2_col_items " v-model="shortcodesToExport" @change="handleCheckedFieldsChange">
+                            <div >
+                                <p><b>Submission Info</b></p>
+                                <div class="separator mb-4"></div>
+                                <el-checkbox :disabled="!has_pro" v-for="(label,name) in editor_shortcodes"   :label="name" :key="name" >{{ label }}</el-checkbox>
+                            </div>
+                        </el-checkbox-group>
+                    </div>
+                    <div  class="text-center" v-if="!has_pro">
+                        {{$t('Field selection is available only in Pro version.') }}
+                    </div>
+                    <span slot="footer" class="dialog-footer">
+                        <el-button @click="closeInputSelection" type="info" class="el-button--soft">
+                            {{ $t('Cancel') }}
+                        </el-button>
+                        <el-button type="primary" icon="el-icon-download" @click="exportEntries()">
+                            {{ $t('Export') }}
+                        </el-button>
+                    </span>
+                </el-dialog>
+            </div>
 
         </div>
     </div>
@@ -499,6 +568,7 @@
                 entrySelections: [],
                 columns: [],
                 bulkAction: '',
+	            idShortByClassName: '',
                 paginate: {
                     total: 0,
                     current_page: parseInt(this.$route.query.page) || 1,
@@ -562,7 +632,17 @@
                 visibleColReorderModal: false,
                 visibleColumns: null,
                 columnsOrder: null,
-                radioOption: 'all'
+                radioOption: 'all',
+                input_selection_visibility : false,
+                exportingEntries : false,
+                fieldsToExport : [],
+                shortcodesToExport : [],
+                selectExportFormat : 'csv',
+                editor_shortcodes : window.fluent_form_entries_vars.editor_shortcodes,
+                input_labels : window.fluent_form_entries_vars.input_labels,
+                has_pro : window.fluent_form_entries_vars.has_pro,
+                isIndeterminateFieldsSelection: true,
+                checkAllFields : false,
             }
         },
         computed: {
@@ -709,6 +789,7 @@
 	            if (this.advancedFilter) {
 		            this.advancedFilter = false;
 	            }
+
                 this.loading = true;
 
                 const url = FluentFormsGlobal.$rest.route('getSubmissions');
@@ -718,6 +799,7 @@
                         this.entries = response.data;
                         this.setPaginate(response);
                         this.resetUrlParams();
+	                    this.idShortByClassName = this.sort_by === 'ASC' ? 'ascending' : 'descending';
                     })
                     .catch((error) => {
 
@@ -732,8 +814,42 @@
                     if (column.prop === 'id') {
                         this.sort_by = (column.order === 'ascending') ? 'ASC' : 'DESC';
                         this.getData();
+                    } else if (column.prop.includes('user_inputs_column_field-')) {
+						let field = column.prop.split('user_inputs_column_field-')[1];
+	                    this.entries.sort((a, b) => {
+		                    a = a.user_inputs[field] || "";
+		                    b = b.user_inputs[field] || "";
+		                    return this.getSortOrder(a, b, column.order);
+	                    });
+						this.idShortByClassName = '';
+                    } else if (column.prop === 'payment_total') {
+	                    this.entries.sort((a, b) => {
+		                    return this.getSortOrder(a.payment_total, b.payment_total, column.order);
+	                    });
+	                    this.idShortByClassName = '';
                     }
                 }
+            },
+
+            getSortOrder(a, b, sortBy) {
+                let order;
+				try {
+					a = a.toString();
+					b = b.toString();
+					const isNumber = (a !== '' && !isNaN(a)) && (b !== '' && !isNaN(b));
+					if (isNumber) {
+						order = Number(a) - Number(b);
+					} else {
+						order = a.localeCompare(b);
+                    }
+					if (sortBy === 'descending') {
+						order ||= -1;
+						order *= -1;
+					}
+                } catch (e) {
+                    order = 0;
+				}
+	            return order;
             },
             handleSelectionChange(val) {
                 this.entrySelections = val;
@@ -900,10 +1016,31 @@
             handleSwitchForm(formId) {
                 window.location.href = window.fluent_form_entries_vars.entries_url_base + formId;
             },
-            exportEntries(format = 'csv') {
+            closeInputSelection(){
+                this.input_selection_visibility  = false;
+            },
+            selectFieldsToExport(format = 'csv'){
+                this.selectExportFormat = format;
 
+                if (format == 'json'){
+                    //@todo add json column selection support
+                    this.exportEntries();
+                }else{
+                    this.input_selection_visibility  = true;
+                }
+            },
+            exportEntries() {
+
+                this.input_selection_visibility  = false;
+
+                let selectedShortcodes = [];
+                this.shortcodesToExport.forEach( (element)=> {
+                    selectedShortcodes.push({
+                        label: this.editor_shortcodes[element],
+                        value: element,
+                    });
+                });
                 let selectedEntries = [];
-
                 this.entrySelections.forEach(function (element) {
                     selectedEntries.push(element.id);
                 });
@@ -911,15 +1048,17 @@
                 let data = {
 	                action: 'fluentform-form-entries-export',
 	                form_id: this.form_id,
-                    format: format,
+                    format:  this.selectExportFormat || 'csv',
                     entry_type: this.entry_type,
                     entries: selectedEntries,
                     sort_by: this.sort_by,
                     search: this.search_string,
                     payment_statuses: this.selectedPaymentStatuses,
+                    fields_to_export: this.fieldsToExport,
+                    shortcodes_to_export: selectedShortcodes,
 	                fluent_forms_admin_nonce: window.fluent_forms_global_var.fluent_forms_admin_nonce
                 };
-                if (this.advancedFilter) {
+                if (this.hasEnabledDateFilter) {
                     data.date_range = this.filter_date_range;
                     data.is_favourite = this.show_favorites;
                 }
@@ -977,6 +1116,26 @@
             refreshColumnsOrder(columnsOrder) {
                 this.columnsOrder = columnsOrder ? [...columnsOrder] : null;
                 this.visibleColReorderModal = false;
+            },
+            handleCompactView() {
+                localStorage.setItem('compactView', this.isCompact);
+            },
+            handleCheckAllFieldsChange(val) {
+                const fields = Object.keys(this.input_labels);
+                const shortCodes= Object.keys(this.editor_shortcodes);
+
+                this.fieldsToExport = val ? fields : [];
+                this.shortcodesToExport = val ? shortCodes : [];
+
+                this.isIndeterminateFieldsSelection = false;
+            },
+            handleCheckedFieldsChange(value){
+                let checkedCount = value.length;
+                const fieldsCount = Object.keys(this.input_labels).length
+                const shortCodeCountCount = Object.keys(this.editor_shortcodes).length
+                this.checkAll = checkedCount === shortCodeCountCount + fieldsCount;
+
+                this.isIndeterminateFieldsSelection = checkedCount > 0 && checkedCount <  shortCodeCountCount + fieldsCount;
             }
         },
         mounted() {
@@ -984,6 +1143,9 @@
             (new ClipboardJS('.copy')).on('success', (e) => {
                 this.$copy();
             });
+            this.isCompact = localStorage.getItem('compactView') === 'true' ? true : false;
+            this.fieldsToExport = Object.keys(this.input_labels)
+            this.shortcodesToExport = ['{submission.id}','{submission.created_at}','{submission.status}']
         },
         beforeCreate() {
             ffEntriesEvents.$emit('change-title', 'All Entries');

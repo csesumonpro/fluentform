@@ -113,3 +113,24 @@ small {
         box-shadow: none;
     }
 }
+
+.ff_all_forms .inactive_form {
+    opacity: .6;
+}
+.ff_forms_table {
+    .el-table__row:hover {
+        .row-actions {
+            position: relative;
+            opacity: 1;
+
+            &-item a {
+                cursor: pointer;
+            }
+        }
+    }
+    .row-actions {
+        transition: 0.2s all;
+        left: 0;
+        opacity: 0;
+    }
+}

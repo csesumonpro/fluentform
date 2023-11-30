@@ -15,6 +15,8 @@
                  :class="item.element == 'container' ? 'hover-action-top-right' : 'hover-action-middle'">
                 <div class="item-actions">
                     <i class="el-icon el-icon-rank"></i>
+                    <i v-if="index > 0" @click.stop="handleUpDown(index, -1)" class="el-icon el-icon-top"></i>
+                    <i v-if="(index + 1) < wrapper.length" @click.stop="handleUpDown(index, 1)" class="el-icon el-icon-bottom"></i>
                     <i @click="editSelected(index, item)" class="el-icon el-icon-edit"></i>
                     <i @click="duplicateSelected(index, item)" class="el-icon el-icon-document-copy"></i>
                     <i @click="askRemoveConfirm(index)" class="el-icon el-icon-delete"></i>

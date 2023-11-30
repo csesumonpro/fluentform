@@ -7,7 +7,7 @@
             <el-radio v-model="conditional_logics.status" :label="false">{{ $t('No') }}</el-radio>
         </el-form-item>
 
-        <template v-if="conditional_logics.status">
+        <div class="ff_conditions_warp" v-if="conditional_logics.status">
             <el-form-item>
                 <elLabel slot="label" :label="$t('Condition Match')"
                          :helpText="$t('Select to match whether all rules are required or any. if the match success then the field will be shown')"></elLabel>
@@ -25,7 +25,7 @@
                 >
                     <option value="" disabled>Select</option>
                     <template v-for="(dep, meta, i) in dependencies">
-                        <option 
+                        <option
                             v-if="meta != editItem.attributes.name"
                             :key="i"
                             :value="meta">{{ dep.field_label || meta }}
@@ -77,7 +77,7 @@
                     <action-btn-remove @click="decreaseLogic(i)" size="mini"></action-btn-remove>
                 </action-btn>
             </div>
-        </template>
+        </div>
 
         <el-dialog
                 width="30%"
@@ -230,8 +230,16 @@
                                         field_label: formItem.settings.label
                                     }
                                 } else {
+                                    let options = [];
+                                    each(formItem.settings.pricing_options, (priceOption) => {
+                                        options.push({
+                                            label: priceOption.label,
+                                            value: priceOption.label
+                                        })
+                                    });
+
                                     dependencies[formItem.attributes.name] = {
-                                        options: formItem.settings.pricing_options,
+                                        options: options,
                                         field_label: formItem.settings.label
                                     }
                                 }
@@ -271,7 +279,7 @@
             },
             formatOptions(items) {
                 let options = [];
-                
+
                 each(items, (value, key) => options.push({
                     label: value,
                     value: key

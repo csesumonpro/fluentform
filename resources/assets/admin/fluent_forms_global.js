@@ -32,6 +32,4 @@ import Rest from "./Rest.js";
     }
     window.FluentFormsGlobal = new FluentFormsGlobal();
 
-    // jQuery('.update-nag, .notice:not(.ff_form_wrap .notice):not(.ff_notice_review_query), #wpbody-content > .updated, #wpbody-content > .error:not(.error_notice_ff_fluentform_pro_license)').remove();
-
 })(jQuery)

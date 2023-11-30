@@ -1,6 +1,7 @@
 import Vue from 'vue';
 import AddOnModules from './views/AddonModules';
 import notifier from './notifier';
+import globalSearch from './global_search';
 
 import {
     Button,
@@ -12,7 +13,8 @@ import {
     Radio,
     RadioGroup,
     Row,
-    Col
+    Col,
+    Loading
 } from 'element-ui';
 
 Vue.use(RadioButton);
@@ -24,6 +26,7 @@ Vue.use(Input);
 Vue.use(Switch);
 Vue.use(Row);
 Vue.use(Col);
+Vue.use(Loading);
 
 Vue.prototype.$notify = Notification;
 
@@ -43,6 +46,7 @@ Vue.mixin({
 var app = new Vue({
     el: '#ff_add_ons_app',
     components: {
+        globalSearch,
         'fluent-add-ons': AddOnModules
     }
 });

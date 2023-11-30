@@ -20,6 +20,8 @@
         align-items: center;
         position: relative;
         padding: 10px;
+        overflow: hidden;
+
         .el-button{
             position: absolute;
             top: 50%;
@@ -28,13 +30,14 @@
         }
         + .ff_file_upload_result{
             margin-top: 10px;
+
         }
     }
     &_preview{
         width: 44px;
         height: 44px;
         img{
-            width: 100%;
+            width: 44px;
             height: 100%;
             object-fit: cover;
             border-radius: 4px;

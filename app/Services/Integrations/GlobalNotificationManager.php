@@ -2,7 +2,7 @@
 
 namespace FluentForm\App\Services\Integrations;
 
-use FluentForm\App\Databases\Migrations\ScheduledActions;
+use FluentForm\Database\Migrations\ScheduledActions;
 use FluentForm\App\Models\EntryDetails;
 use FluentForm\App\Models\FormMeta;
 use FluentForm\App\Models\Submission;

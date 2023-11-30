@@ -36,6 +36,7 @@ import product from './templates/product.vue'
 import paymentMethodHolder from './templates/paymentMethodHolder.vue'
 import inputMultiPayment from './templates/inputMultiPayment.vue';
 import inputSubscriptionPayment from './templates/inputSubscriptionPayment.vue';
+import inputCalendar from './templates/inputCalendar.vue';
 import { Splitpanes, Pane } from 'splitpanes'
 
 export default {
@@ -89,6 +90,7 @@ export default {
         ff_inputMultiPayment: inputMultiPayment,
         ff_inputSubscriptionPayment: inputSubscriptionPayment,
         ff_fieldsRepeatSettings: repeatFields,
+        ff_inputCalendar: inputCalendar,
         Splitpanes, Pane
     },
     data() {
@@ -159,6 +161,16 @@ export default {
             if (index > -1) {
                 this.wrapper.splice(index + 1, 0, freshCopy);
             }
+        },
+
+        /**
+         * Action for clicking up down from an element
+         * @param index
+         * @param delta up/down index
+         */
+        handleUpDown(index, delta) {
+            const [firstIndex, lastIndex] = [index, index + delta].sort();
+            this.wrapper.splice(firstIndex, 2, this.wrapper[lastIndex], this.wrapper[firstIndex]);
         },
 
         /**

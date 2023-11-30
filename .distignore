@@ -17,4 +17,5 @@ resources/img
 guten_block/
 public/js/*.css
 .prettierrc
-
+jsconfig.json
+composer.lock

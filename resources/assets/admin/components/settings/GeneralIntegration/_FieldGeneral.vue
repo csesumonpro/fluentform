@@ -26,15 +26,15 @@
                 default: 'text'
             }
         },
-        data() {
-            return {
-                fieldValue: this.value
-            }
-        },
-        watch: {
-            fieldValue() {
-                this.$emit('input', this.fieldValue);
-            }
-        }
+	    computed : {
+		    fieldValue: {
+			    get() {
+				    return this.value;
+			    },
+			    set(value) {
+				    this.$emit('input', value);
+			    }
+		    }
+	    }
     }
 </script>

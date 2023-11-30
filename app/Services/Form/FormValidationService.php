@@ -5,10 +5,12 @@ namespace FluentForm\App\Services\Form;
 use FluentForm\App\Helpers\Helper;
 use FluentForm\App\Models\FormMeta;
 use FluentForm\App\Modules\Form\AkismetHandler;
+use FluentForm\App\Modules\Form\FormDataParser;
 use FluentForm\App\Modules\Form\FormFieldsParser;
 use FluentForm\App\Modules\HCaptcha\HCaptcha;
 use FluentForm\App\Modules\ReCaptcha\ReCaptcha;
 use FluentForm\App\Modules\Turnstile\Turnstile;
+use FluentForm\App\Services\FormBuilder\Components\SelectCountry;
 use FluentForm\Framework\Foundation\App;
 use FluentForm\Framework\Helpers\ArrayHelper as Arr;
 use FluentForm\Framework\Validator\ValidationException;
@@ -36,6 +38,7 @@ class FormValidationService
     
     /**
      * @param $fields
+     * @param $formData
      * @return bool
      * @throws ValidationException
      */
@@ -56,10 +59,8 @@ class FormValidationService
         foreach ($fields as $fieldName => $field) {
             if (isset($formData[$fieldName])) {
                 $element = $field['element'];
-
-                apply_filters_deprecated(
-                    'fluentform_input_data_' . $element,
-                    [
+    
+                $formData[$fieldName] = apply_filters_deprecated('fluentform_input_data_' . $element, [
                         $formData[$fieldName],
                         $field,
                         $formData,
@@ -69,7 +70,6 @@ class FormValidationService
                     'fluentform/input_data_' . $element,
                     'Use fluentform/input_data_' . $element . ' instead of fluentform_input_data_' . $element
                 );
-
                 $formData[$fieldName] = apply_filters('fluentform/input_data_' . $element, $formData[$fieldName], $field, $formData, $this->form);
             }
         }
@@ -77,9 +77,7 @@ class FormValidationService
         $originalValidations = FormFieldsParser::getValidations($this->form, $formData, $fields);
         
         // Fire an event so that one can hook into it to work with the rules & messages.
-        $originalValidations = apply_filters_deprecated(
-            'fluentform_validations',
-            [
+        $originalValidations = apply_filters_deprecated('fluentform_validations', [
                 $originalValidations,
                 $this->form,
                 $formData
@@ -113,9 +111,7 @@ class FormValidationService
                 $errors[$attribute] = $rules;
             }
             // Fire an event so that one can hook into it to work with the errors.
-            $errors = apply_filters_deprecated(
-                'fluentform_validation_error',
-                [
+            $errors = apply_filters_deprecated('fluentform_validation_error', [
                     $errors,
                     $this->form,
                     $fields,
@@ -133,11 +129,9 @@ class FormValidationService
             $field['data_key'] = $fieldKey;
             $inputName = Arr::get($field, 'raw.attributes.name');
             $field['name'] = $inputName;
-    
-            $error = apply_filters_deprecated(
-                'fluentform_validate_input_item_' . $field['element'],
-                [
-                    '',
+            $error = $this->validateInput($field, $formData, $this->form);
+            $error = apply_filters_deprecated('fluentform_validate_input_item_' . $field['element'], [
+                    $error,
                     $field,
                     $formData,
                     $fields,
@@ -149,7 +143,7 @@ class FormValidationService
                 'Use fluentform/validate_input_item_' . $field['element'] . ' instead of fluentform_validate_input_item_' . $field['element']
             );
 
-            $error = apply_filters('fluentform/validate_input_item_' . $field['element'], '', $field, $formData, $fields, $this->form, $errors);
+            $error = apply_filters('fluentform/validate_input_item_' . $field['element'], $error, $field, $formData, $fields, $this->form, $errors);
             if ($error) {
                 if (empty($errors[$inputName])) {
                     $errors[$inputName] = [];
@@ -161,9 +155,7 @@ class FormValidationService
             }
         }
     
-        $errors = apply_filters_deprecated(
-            'fluentform_validation_errors',
-            [
+        $errors = apply_filters_deprecated('fluentform_validation_errors', [
                 $errors,
                 $formData,
                 $this->form,
@@ -177,9 +169,7 @@ class FormValidationService
         $errors = apply_filters('fluentform/validation_errors', $errors, $formData, $this->form, $fields);
     
         if ('yes' == Helper::getFormMeta($this->form->id, '_has_user_registration') && !get_current_user_id()) {
-            $errors = apply_filters_deprecated(
-                'fluentform_validation_user_registration_errors',
-                [
+            $errors = apply_filters_deprecated('fluentform_validation_user_registration_errors', [
                     $errors,
                     $formData,
                     $this->form,
@@ -194,9 +184,7 @@ class FormValidationService
         }
     
         if ('yes' == Helper::getFormMeta($this->form->id, '_has_user_update') && get_current_user_id()) {
-            $errors = apply_filters_deprecated(
-                'fluentform_validation_user_update_errors',
-                [
+            $errors = apply_filters_deprecated('fluentform_validation_user_update_errors', [
                     $errors,
                     $formData,
                     $this->form,
@@ -214,6 +202,111 @@ class FormValidationService
         }
         
         return true;
+    }
+
+    protected function validateInput($field, $formData, $form, $fieldName = '', $inputValue = [])
+    {
+        $error = '';
+        if (!$fieldName) {
+            $fieldName = Arr::get($field, 'name');
+        }
+        if (!$fieldName) {
+            return $error;
+        }
+        if (!$inputValue) {
+            $inputValue = Arr::get($formData, $fieldName);
+        }
+        if ($inputValue) {
+            $rawField = Arr::get($field, 'raw');
+            if (!$rawField) {
+                $rawField = $field;
+            }
+            $fieldType = Arr::get($rawField, 'element');
+            $rawField = apply_filters('fluentform/rendering_field_data_' . $fieldType, $rawField, $form);
+            $options = [];
+            if ("net_promoter_score" === $fieldType) {
+                $options = Arr::get($rawField, 'options', []);
+            } elseif ('ratings' == $fieldType) {
+                $options = array_keys(Arr::get($rawField, 'options', []));
+            } elseif ('gdpr_agreement' == $fieldType || 'terms_and_condition' == $fieldType) {
+                $options = ['on'];
+            } elseif (in_array($fieldType, ['input_radio', 'select', 'input_checkbox'])) {
+                if (Arr::isTrue($rawField, 'attributes.multiple')) {
+                    $fieldType = 'multi_select';
+                }
+                $options = array_column(
+                    Arr::get($rawField, 'settings.advanced_options', []),
+                    'value'
+                );
+            }
+
+            if ($options) {
+                $options = array_map('sanitize_text_field', $options);
+            }
+
+            $isValid = true;
+            switch ($fieldType) {
+                case 'input_radio':
+                case 'select':
+                case 'net_promoter_score':
+                case 'ratings':
+                case 'gdpr_agreement':
+                case 'terms_and_condition':
+                case 'input_checkbox':
+                case 'multi_select':
+                    if (is_array($inputValue)) {
+                        $isValid = array_diff($inputValue, $options);
+                        $isValid = empty($isValid);
+                    } else {
+                        $isValid = in_array($inputValue, $options);
+                    }
+                    break;
+                case 'input_number':
+                    if (is_array($inputValue)) {
+                        $hasNonNumricValue = in_array(false, array_map('is_numeric', $inputValue));
+                        if ($hasNonNumricValue) {
+                            $isValid = false;
+                        }
+                    } else {
+                        $isValid = is_numeric($inputValue);
+                    }
+                    break;
+                case 'select_country':
+                    $fieldData = Arr::get($field, 'raw');
+                    $data = (new SelectCountry())->loadCountries($fieldData);
+                    $validCountries = Arr::get($fieldData, 'settings.country_list.priority_based', []);
+                    $validCountries = array_merge($validCountries, array_keys(Arr::get($data, 'options')));
+                    $isValid = in_array($inputValue, $validCountries);
+                    break;
+                case 'repeater_field':
+                    foreach (Arr::get($rawField, 'fields', []) as $index => $repeaterField) {
+                        $repeaterFiedValue = array_filter(array_column($inputValue, $index));
+                        if ($repeaterFiedValue && $error = $this->validateInput($repeaterField, $formData, $form, $fieldName, $repeaterFiedValue)) {
+                            $isValid = false;
+                            break;
+                        }
+                    }
+                    break;
+                case 'tabular_grid':
+                    $rows = array_keys(Arr::get($rawField, 'settings.grid_rows', []));
+                    $submitdRows = array_keys(Arr::get($formData, $fieldName, []));
+                    $rowDiff = array_diff($submitdRows, $rows);
+                    $isValid = empty($rowDiff);
+                    if ($isValid) {
+                        $columns = array_keys(Arr::get($rawField, 'settings.grid_columns', []));
+                        $submitdCols = Arr::flatten(Arr::get($formData, $fieldName, []));
+                        $colDiff = array_diff($submitdCols, $columns);
+                        $isValid = empty($colDiff);
+                    }
+                    break;
+                default:
+                    break;
+            }
+            if (!$isValid) {
+                $error = __('The given data was invalid', 'fluentform');
+            }
+        }
+        return $error;
     }
     
     /**
@@ -238,7 +331,6 @@ class FormValidationService
                 ->count();
             
             if ($submissionCount >= $maxSubmissionCount) {
-    
                 throw new ValidationException('', 429, null,  [
                     'errors' => [
                         'restricted' => [
@@ -271,16 +363,11 @@ class FormValidationService
         // 1. limitNumberOfEntries
         // 2. scheduleForm
         // 3. requireLogin
-        $isAllowed = apply_filters_deprecated(
-            'fluentform_is_form_renderable',
-            [
-                $isAllowed,
-                $this->form
-            ],
-            FLUENTFORM_FRAMEWORK_UPGRADE,
-            'fluentform/is_form_renderable',
-            'Use fluentform/is_form_renderable instead of fluentform_is_form_renderable.'
-        );
+        // 4. restricted submission based on ip, country and keywords
+        
+        /* This filter is deprecated and will be removed soon */
+        $isAllowed = apply_filters('fluentform_is_form_renderable', $isAllowed, $this->form);
+        
         $isAllowed = apply_filters('fluentform/is_form_renderable', $isAllowed, $this->form);
         
         if (!$isAllowed['status']) {
@@ -297,6 +384,10 @@ class FormValidationService
         $restrictions = Arr::get($this->form->settings, 'restrictions.denyEmptySubmission', []);
         
         $this->handleDenyEmptySubmission($restrictions, $fields);
+
+        $formRestrictions = Arr::get($this->form->settings, 'restrictions.restrictForm', []);
+
+        $this->handleRestrictedSubmission($formRestrictions, $fields);
     }
     
     /**
@@ -317,20 +408,7 @@ class FormValidationService
                 // Filter out the other meta fields that aren't actual inputs.
                     array_intersect_key($this->formData, $fields)
                 );
-                
-                // TODO: Extract this function into global functions file...
-                $arrayFilterRecursive = function ($array) use (&$arrayFilterRecursive) {
-                    foreach ($array as $key => $item) {
-                        is_array($item) && $array[$key] = $arrayFilterRecursive($item);
-                        if (empty($array[$key])) {
-                            unset($array[$key]);
-                        }
-                    }
-                    return $array;
-                };
-                
-                if (!count($arrayFilterRecursive($filteredFormData))) {
-    
+                if (!count(Helper::arrayFilterRecursive($filteredFormData))) {
                     throw new ValidationException('', 422, null,  [
                         'errors' => [
                             'restricted' => [
@@ -342,6 +420,29 @@ class FormValidationService
             }
         }
     }
+
+    /**
+     * Handle response when form submission is restricted based on ip, country or keywords.
+     *
+     * @param array $settings
+     * @param $fields
+     * @throws ValidationException
+     */
+    protected function handleRestrictedSubmission($settings, &$fields)
+    {
+        // Determine this restriction is enabled ot not
+        if (!Arr::get($settings, 'enabled')) {
+            return;
+        }
+        $ipInfo = $this->getIpInfo();
+        $country = Arr::get($ipInfo, 'country');
+    
+        $this->checkIpRestriction($settings);
+    
+        $this->checkCountryRestriction($settings, $country);
+    
+        $this->checkKeyWordRestriction($settings);
+    }
     
     
     /**
@@ -351,16 +452,10 @@ class FormValidationService
     protected function validateNonce()
     {
         $formId = $this->form->id;
-        $shouldVerifyNonce = apply_filters_deprecated(
-            'fluentform_nonce_verify',
-            [
-                false,
-                $formId
-            ],
-            FLUENTFORM_FRAMEWORK_UPGRADE,
-            'fluentform/nonce_verify',
-            'Use fluentform/nonce_verify instead of fluentform_nonce_verify.'
-        );
+        $shouldVerifyNonce = false;
+        /* This filter is deprecated and will be removed soon. */
+        $shouldVerifyNonce = $this->app->applyFilters('fluentform_nonce_verify', $shouldVerifyNonce, $formId);
+    
         $shouldVerifyNonce = $this->app->applyFilters('fluentform/nonce_verify', $shouldVerifyNonce, $formId);
         
         if ($shouldVerifyNonce) {
@@ -390,7 +485,7 @@ class FormValidationService
     public function handleSpamError()
     {
         $settings = get_option('_fluentform_global_form_settings');
-        if (!$settings || 'validation_failed' != ArrayHelper::get($settings, 'misc.akismet_validation')) {
+        if (!$settings || 'validation_failed' != Arr::get($settings, 'misc.akismet_validation')) {
             return;
         }
         
@@ -571,5 +666,136 @@ class FormValidationService
         }
         
         return [$rules, $messages];
+    }
+
+    /**
+     * Get IP info from ipinfo.io
+     *
+     * @throws ValidationException
+     */
+    private function getIpInfo() {
+        $token = Helper::getIpinfo();
+        $url = 'https://ipinfo.io';
+        if ($token) {
+            $url = 'https://ipinfo.io/?token=' . $token;
+        }
+        $data = wp_remote_get($url);
+        $code = wp_remote_retrieve_response_code($data);
+        $body = wp_remote_retrieve_body($data);
+        $result = \json_decode($body, true);
+        if ($code === 200) {
+            return $result;
+        } else {
+            $message = __('Sorry! There is an error in your geocode IP address settings. Please check the token', 'fluentform');
+            self::throwValidationException($message);
+        }
+    }
+    
+    /**
+     * @param $value
+     * @param $providedKeywords
+     * @return bool
+     */
+    public static function containsRestrictedKeywords($value, $providedKeywords) {
+        preg_match_all('/\b[\p{L}\d\s]+\b/u', $value, $matches);
+        $words = $matches[0] ?? [];
+
+        foreach ($providedKeywords as $keyword) {
+            foreach ($words as $word) {
+                if (strtoupper($word) === strtoupper($keyword)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+    
+    
+    private function checkIpRestriction($settings)
+    {
+        $ip = $this->app->request->getIp();
+        if (Arr::get($settings, 'fields.ip.status') && $ip) {
+            $providedIp = array_map('trim', explode(',', Arr::get($settings, 'fields.ip.values')));
+
+            $isFailed = Arr::get($settings, 'fields.ip.validation_type') === 'fail_on_condition_met';
+
+            $failedSubmissionIfExists = $isFailed && in_array($ip, $providedIp);
+            $allowSubmissionIfNotExists = !$isFailed && !in_array($ip, $providedIp);
+
+            if ($failedSubmissionIfExists || $allowSubmissionIfNotExists) {
+                $defaultMessage = __('Sorry! You can\'t submit a form from your IP address.', 'fluentform');
+                $message = Arr::get($settings, 'fields.ip.message', $defaultMessage);
+                self::throwValidationException($message);
+            }
+        }
+    }
+    
+    private function checkCountryRestriction($settings, $country)
+    {
+        if (Arr::get($settings, 'fields.country.status') && $country) {
+            $providedCountry = Arr::get($settings, 'fields.country.values');
+
+            $isFailed = Arr::get($settings, 'fields.country.validation_type') === 'fail_on_condition_met';
+
+            $failedSubmissionIfExists = $isFailed && in_array($country, $providedCountry);
+            $allowSubmissionIfNotExists = !$isFailed && !in_array($country, $providedCountry);
+
+            if ($failedSubmissionIfExists || $allowSubmissionIfNotExists) {
+                $defaultMessage = __('Sorry! You can\'t submit a form from the country you are residing.', 'fluentform');
+                $message = Arr::get($settings, 'fields.country.message', $defaultMessage);
+                self::throwValidationException($message);
+            }
+        }
+    }
+    
+    private function checkKeyWordRestriction($settings)
+    {
+        if (!Arr::get($settings, 'fields.keywords.status')) {
+            return;
+        }
+        
+        $providedKeywords = explode(',', Arr::get($settings, 'fields.keywords.values'));
+        $providedKeywords =  array_map('trim', $providedKeywords);
+        $inputSubmission = array_intersect_key(
+            $this->formData,
+            array_flip(
+                array_keys(
+                    FormFieldsParser::getInputs($this->form)
+                )
+            )
+        );
+        $defaultMessage = __('Sorry! Your submission contains some restricted keywords.', 'fluentform');
+        $message = Arr::get($settings, 'fields.keywords.message', $defaultMessage);
+
+        self::checkKeywordsMatching($inputSubmission, $message, $providedKeywords);
+    }
+
+    private static function checkKeywordsMatching($inputSubmission, $message, $providedKeywords)
+    {
+        foreach ($inputSubmission as $value) {
+            if (!empty($value)) {
+                if (is_array($value)) {
+                    self::checkKeywordsMatching($value, $message, $providedKeywords);
+                } else {
+                    if (self::containsRestrictedKeywords($value, $providedKeywords)) {
+                        self::throwValidationException($message);
+                    }
+                }
+            }
+        }
+    }
+    
+    /**
+     * @throws ValidationException
+     */
+    public static function throwValidationException($message) {
+        throw new ValidationException('', 422, null,  [
+            'errors' => [
+                'restricted' => [
+                    $message
+                ],
+            ],
+        ]);
     }
 }

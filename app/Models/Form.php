@@ -148,6 +148,28 @@ class Form extends Model
                     'enabled' => false,
                     'message' => __('Sorry, you cannot submit an empty form. Let\'s hear what you wanna say.', 'fluentform'),
                 ],
+                'restrictForm' => [
+                    'enabled' => false,
+                    'fields' =>  [
+                        'ip' => [
+                            'status' => false,
+                            'values' => '',
+                            'message' => __('Sorry! You can\'t submit a form from your IP address.', 'fluentform'),
+                            'validation_type' => 'fail_on_condition_met'
+                        ],
+                        'country' => [
+                            'status' => false,
+                            'values' => [],
+                            'message' => __('Sorry! You can\'t submit a form the country you are residing.', 'fluentform'),
+                            'validation_type' => 'fail_on_condition_met'
+                        ],
+                        'keywords' => [
+                            'status' => false,
+                            'values' => '',
+                            'message' => __('Sorry! Your submission contains some restricted keywords.', 'fluentform')
+                        ],
+                    ]
+                ]
             ],
             'layout' => [
                 'labelPlacement'        => 'top',
@@ -243,6 +265,10 @@ class Form extends Model
                 ->delete();
 
             wpFluent()->table('fluentform_transactions')
+                ->where('form_id', $formId)
+                ->delete();
+
+            wpFluent()->table('fluentform_subscriptions')
                 ->where('form_id', $formId)
                 ->delete();
         }

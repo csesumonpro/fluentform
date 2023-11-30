@@ -93,4 +93,26 @@ class FormSettingsController extends Controller
             ], 423);
         }
     }
+
+    public function conversationalDesign(SettingsService $settingsService, $formId)
+    {
+        try {
+            return $this->sendSuccess($settingsService->conversationalDesign($formId));
+        } catch (Exception $e) {
+            return $this->sendError([
+                'message' => $e->getMessage(),
+            ], 423);
+        }
+    }
+
+    public function storeConversationalDesign(SettingsService $settingsService, $formId)
+    {
+        try {
+            return $this->sendSuccess($settingsService->storeConversationalDesign($this->request->all(), $formId));
+        } catch (Exception $e) {
+            return $this->sendError([
+                'message' => $e->getMessage(),
+            ], 423);
+        }
+    }
 }

@@ -634,6 +634,9 @@ export default {
         },
         isPostForm() {
             return window.FluentFormApp.form.type === 'post';
+        },
+        isAutoloadCaptchaEnabled() {
+            return !!window.FluentFormApp.is_autoload_captcha;
         }
     },
     watch: {
@@ -726,6 +729,13 @@ export default {
                 });
                 return false;
             }
+            if (this.isAutoloadCaptchaEnabled && (item.element === 'recaptcha' || item.element === 'hcaptcha' || item.element === 'turnstile')) {
+                this.$message({
+                    message: this.$t('Captcha has been enabled globally.'),
+                    type: 'warning',
+                });
+                return false;
+            }
 
             item.uniqElKey = 'el_' + new Date().getTime();
 
@@ -754,6 +764,15 @@ export default {
             if (this.editorInserterInContainer && freshCopy.element == 'container') {
                 this.$message({
                     message: this.$t('You can not insert a container into another.'),
+                    type: 'warning',
+                });
+
+                return;
+            }
+
+            if (this.isAutoloadCaptchaEnabled && (freshCopy.element === 'recaptcha' || freshCopy.element === 'hcaptcha' || freshCopy.element === 'turnstile')) {
+                this.$message({
+                    message: this.$t('Captcha has been enabled globally.'),
                     type: 'warning',
                 });
 
@@ -974,9 +993,10 @@ export default {
          */
         formRenameSuccess(title) {
             this.form.title = title;
-            jQuery('#js-ff-nav-title').find('span').text(title);
+            jQuery('#js-ff-nav-title').find('div').text(title);
         }
     },
+
     created() {
         /**
          * Event: To clear editor inserter dependency
@@ -1005,9 +1025,9 @@ export default {
             this.editorInserterInContainer = true;
         });
     },
+
     mounted() {
         this.fetchSettings();
-
 
         this.garbageCleaner();
         this.initSaveBtn();

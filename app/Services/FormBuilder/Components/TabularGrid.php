@@ -37,12 +37,12 @@ class TabularGrid extends BaseComponent
         $elementHelpMessage = $this->getElementHelpMessage($data, $form);
         $elementLabel = $this->setClasses($data)->buildElementLabel($data, $form);
 
-        $elMarkup = "<table class='ff-table ff-checkable-grids ff_flexible_table'><thead><tr><th></th><th>" . fluentform_sanitize_html($columnHeaders) . '</th></tr></thead><tbody>';
+        $elMarkup = "<table class='ff-table ff-checkable-grids ff_flexible_table' role='table'><thead><tr><th></th><th>" . fluentform_sanitize_html($columnHeaders) . '</th></tr></thead><tbody>';
 
         $tabIndex = \FluentForm\App\Helpers\Helper::getNextTabIndex();
         foreach ($this->makeTabularData($data) as $index => $row) {
-            $elMarkup .= '<tr>';
-            $elMarkup .= "<td class='ff_grid_header'>" . fluentform_sanitize_html($row['label']) . '</td>';
+            $elMarkup .= '<tr role="row"">';
+            $elMarkup .= "<td class='ff_grid_header' role='cell'>" . fluentform_sanitize_html($row['label']) . '</td>';
             $isRowChecked = in_array($row['name'], $checked) ? 'checked' : '';
             foreach ($row['columns'] as $column) {
                 $name = $data['attributes']['name'] . '[' . $row['name'] . ']';
@@ -65,7 +65,7 @@ class TabularGrid extends BaseComponent
                     $ariaRequired = 'true';
                 }
 
-                $input = '<input aria-valuenow="'. $row['name'] .'-'. $column['label'] . '" ' . $attributes . " {$isChecked} aria-invalid='false' aria-required={$ariaRequired}>"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $attributes is escaped before being passed in.
+                $input = '<input aria-label="'. $row['name'] .'-'. $column['label'] . '" ' . $attributes . " {$isChecked} aria-invalid='false' aria-required={$ariaRequired}>"; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $attributes is escaped before being passed in.
                 $elMarkup .= "<td data-label='" . fluentform_sanitize_html($column['label']) . "'>{$input}</td>";
             }
             $elMarkup .= '</tr>';

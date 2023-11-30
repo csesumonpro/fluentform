@@ -1,13 +1,20 @@
-.fluentform .clearfix {
-  &:before,
-  &:after {
-    display: table;
-    content: " ";
+.fluentform {
+  * {
+    box-sizing: border-box;
   }
-  &:after {
-    clear: both;
+  .clearfix {
+    &:before,
+    &:after {
+      display: table;
+      content: " ";
+    }
+    &:after {
+      clear: both;
+    }
   }
 }
-@import "_var.scss";
-@import "_grid";
-@import "components.scss";
+@import "_var";
+@import "public/_grid";
+@import "public/components";
+@import "public/public_helpers";
+@import "public/responsive";

@@ -75,8 +75,26 @@ $page = sanitize_text_field($_GET['page']);
             </li>
         <?php endif; ?>
     </ul>
-
-
+    <?php
+        $globalSearchActive = apply_filters('fluentform/global_search_active', 'yes');
+        $globalSearchButtonClickScript = "";
+        if ($globalSearchActive == 'yes') {
+            $globalSearchButtonClickScript = "jQuery('.global-search-menu-button').on('click', function() {
+                    document.dispatchEvent(new CustomEvent('global-search-menu-button-click'));
+                });";
+            $user_agent = getenv("HTTP_USER_AGENT");
+            if (!empty($user_agent) && strpos($user_agent, "Win") !== FALSE) {
+                $key = "Ctrl ";
+            } else {
+                $key = "⌘";
+            }
+        }
+    ?>
+    <?php if($globalSearchActive == 'yes'):?>
+        <button class="global-search-menu-button">
+            <span class="el-icon-search"></span> <span><?php _e('Search','fluentform') ?></span> <span class="shortcut"><?php echo esc_html($key)?>K </span>
+        </button>
+    <?php endif; ?>
     <?php
 
     do_action_deprecated(
@@ -95,6 +113,7 @@ $page = sanitize_text_field($_GET['page']);
                 jQuery('.ff_menu_toggle').on('click', function() {
                     targetElem.toggleClass('ff_menu_active');
                 });
+                $globalSearchButtonClickScript
            ");
     ?>
 </div>

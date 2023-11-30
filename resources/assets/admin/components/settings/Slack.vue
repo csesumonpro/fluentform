@@ -67,7 +67,7 @@
                         </el-form-item>
                     </template>
 
-                    <div v-if="slack.enabled">
+                    <div>
                         <el-button type="primary" icon="el-icon-success" @click="save">
                             {{loading ? $t('Saving ') : $t('Save ')}} {{ $t('Settings') }}
                         </el-button>

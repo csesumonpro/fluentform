@@ -10,7 +10,7 @@
             <card-body>
                 <div class="ff_migrator_navigation">
                     <el-skeleton :loading="loading" animated :rows="8">
-                        <el-tabs v-model="currentFormType" @tab-click="getForms">
+                        <el-tabs v-if="migratorData.length" v-model="currentFormType" @tab-click="getForms">
                             <el-tab-pane 
                                 :label="migrators.name" 
                                 v-for="(migrators,index) in migratorData" 
@@ -107,7 +107,7 @@
                                         :hide-on-single-page="true"
                                         :page-size="per_page"
                                         :current-page.sync="page_number"
-                                        layout="prev, pager, next"
+                                        layout="total, prev, pager, next"
                                         :total="total">
                                     </el-pagination>
                                 </div>
@@ -147,6 +147,10 @@
                             </div>
                         
                         </el-tabs>
+                        <p v-else>
+                          <b>{{ $t('Migration tools only works if you have any other contact form plugin already installed along with Fluent Forms.') }}</b>
+                          <a href="https://wpmanageninja.com/docs/fluent-form/import-export/fluent-forms-migrator-caldera-forms-ninja-forms-gravity-forms/" target="_blank"> {{ $t('Learn More') }}</a>
+                        </p>
                     </el-skeleton>
                 </div>
             </card-body>
@@ -174,7 +178,7 @@
                 forms: [],
                 loading: false,
                 page_number: 1,
-                per_page: 3,
+                per_page: 5,
                 total: 0,
                 multipleSelection: [],
                 entryPageUrl : false,

@@ -18,13 +18,14 @@ class ReportService
      */
     public function form($attr = [])
     {
-        $formId = intval(Arr::get($attr, 'form_id'));
+        $formId = (int) Arr::get($attr, 'form_id');
         ReportHelper::maybeMigrateData($formId);
         try {
             $form = Form::findOrFail($formId);
         } catch (Exception $e) {
-            throw new Exception("The form couldn't be found.");
+            throw new \Exception("The form couldn't be found.");
         }
+
         $statuses = Arr::get($attr, 'statuses', []);
         return ReportHelper::generateReport($form, $statuses);
     }

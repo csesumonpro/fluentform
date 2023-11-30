@@ -19,7 +19,7 @@ class GlobalIntegrationService
             'fluentform/global_integration_settings_' . $settingsKey,
             'Use fluentform/global_integration_settings_' . $settingsKey . ' instead of fluentform_global_integration_settings_' . $settingsKey
         );
-        $settings = apply_filters('fluentform/global_integration_settings_' . $settingsKey, []);
+        $settings = apply_filters('fluentform/global_integration_settings_' . $settingsKey, $settings);
         $fieldSettings = apply_filters_deprecated(
             'fluentform_global_integration_fields_' . $settingsKey,
             [
@@ -29,7 +29,7 @@ class GlobalIntegrationService
             'fluentform/global_integration_fields_' . $settingsKey,
             'Use fluentform/global_integration_fields_' . $settingsKey . ' instead of fluentform_global_integration_fields_' . $settingsKey
         );
-        $fieldSettings = apply_filters('fluentform/global_integration_fields_' . $settingsKey, []);
+        $fieldSettings = apply_filters('fluentform/global_integration_fields_' . $settingsKey, $fieldSettings);
         if (!$fieldSettings) {
             $message = __('Sorry! No integration failed found with: ', 'fluentform').$settingsKey;
            return [
@@ -61,7 +61,9 @@ class GlobalIntegrationService
     public function isEnabled($integrationKey)
     {
         $globalModules = get_option('fluentform_global_modules_status');
-        return $globalModules && isset($globalModules[$integrationKey]) && 'yes' == $globalModules[$integrationKey];
+        $isEnabled = $globalModules && isset($globalModules[$integrationKey]) && 'yes' == $globalModules[$integrationKey];
+
+        return apply_filters('fluentform/is_integration_enabled_'.$integrationKey, $isEnabled);
     }
 
     /**

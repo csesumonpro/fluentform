@@ -31,10 +31,10 @@
             </div>
 
             <div v-else style="margin-top: 10px;">
-                <el-input :placeholder="$t('Please input a remote csv url...')" v-model="dataSourceUrl">
+                <el-input class="chain-select-upload-button" :placeholder="$t('Please input a remote csv url...')" v-model="dataSourceUrl">
                     <template slot="append">
                         <el-button
-                            size="mini"
+                            size="medium"
                             type="primary"
                             icon="el-icon-download"
                             @click="fetchRemoteFile"

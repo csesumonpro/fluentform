@@ -96,17 +96,7 @@ class AddOnModule
 
         wpFluentForm('view')->render('admin.addons.list', []);
     }
-
-    public function updateAddOnsStatus()
-    {
-        $addons = wp_unslash(wpFluentForm('request')->get('addons'));
-        update_option('fluentform_global_modules_status', $addons, 'no');
-
-        wp_send_json_success([
-            'message' => 'Status successfully updated',
-        ], 200);
-    }
-
+    
     public function getPremiumAddOns()
     {
         $purchaseUrl = fluentform_upgrade_url();
@@ -398,6 +388,14 @@ class AddOnModule
                 'enabled'      => 'no',
                 'purchase_url' => $purchaseUrl,
                 'category'     => 'wp_core',
+            ],
+            'notion' => [
+                'title'        => __('Notion', 'fluentform'),
+                'description'  => __('Capture Fluent Forms Submission to your Notion workspaces — and do it exactly the way you want.', 'fluentform'),
+                'logo'         => fluentformMix('img/integrations/notion.png'),
+                'enabled'      => 'no',
+                'purchase_url' => $purchaseUrl,
+                'category'     => 'crm',
             ],
         ];
     }

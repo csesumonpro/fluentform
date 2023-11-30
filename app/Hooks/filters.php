@@ -29,6 +29,13 @@ add_filter('fluentform/get_global_settings_values', function ($values, $key) {
         if (in_array('_fluentform_turnstile_details', $key)) {
             $values = FluentForm\App\Modules\Turnstile\Turnstile::ensureSettings($values);
         }
+
+        if (in_array('_fluentform_global_default_message_setting_fields', $key)) {
+            $values['_fluentform_global_default_message_setting_fields'] = \FluentForm\App\Helpers\Helper::globalDefaultMessageSettingFields();
+        }
+        if (in_array('_fluentform_global_form_settings', $key) && !isset($values['_fluentform_global_form_settings']['default_messages'])) {
+            $values['_fluentform_global_form_settings']['default_messages'] = \FluentForm\App\Helpers\Helper::getAllGlobalDefaultMessages();
+        }
     }
 
     return $values;
@@ -106,10 +113,15 @@ $app->addFilter('fluentform/rendering_form', function ($form) {
     } elseif ('turnstile' == $type) {
         $captcha = $turnstile;
     }
-
+    if (!isset($captcha)) {
+        return $form;
+    }
     // place recaptcha below custom submit button
     $hasCustomSubmit = false;
     foreach ($form->fields['fields'] as $index => $field) {
+        if (in_array($field['element'], ['recaptcha', 'hcaptcha', 'turnstile'])) {
+            \FluentForm\Framework\Helpers\ArrayHelper::forget($form->fields['fields'], $index);
+        }
         if ('custom_submit_button' == $field['element']) {
             $hasCustomSubmit = true;
             array_splice($form->fields['fields'], $index, 0, [$captcha]);
@@ -181,6 +193,33 @@ foreach ($elements as $element) {
     }, 10, 4);
 }
 
+/*
+ * Validation rule wise resolve global validation message.
+ *
+ */
+$rules = [
+    "required",
+    "email",
+    "numeric",
+    "min",
+    "max",
+    "digits",
+    "url",
+    "allowed_image_types",
+    "allowed_file_types",
+    "max_file_size",
+    "max_file_count",
+    "valid_phone_number",
+];
+foreach ($rules as $ruleName) {
+    $app->addFilter('fluentform/get_global_message_' . $ruleName,
+        function ($message) use ($ruleName) {
+            return \FluentForm\App\Helpers\Helper::getGlobalDefaultMessage($ruleName);
+        }
+    );
+}
+
+
 $app->addFilter('fluentform/response_render_textarea', function ($value, $field, $formId, $isHtml) {
     $value = $value ? nl2br($value) : $value;
 
@@ -241,7 +280,7 @@ $app->addFilter('fluentform/disabled_analytics', function ($status) {
     return $status;
 });
 
-// permision based filters
+// permission based filters
 $app->addFilter('fluentform/permission_callback', function ($status, $permission) {
     return (new \FluentForm\App\Modules\Acl\RoleManager())->currentUserFormFormCapability();
 }, 10, 2);
@@ -253,7 +292,7 @@ $app->addFilter('fluentform/validate_input_item_input_text', ['\FluentForm\App\H
 $app->addFilter('fluentform/will_return_html', function ($result, $integration, $key) {
     $dictionary = [
         'notifications' => ['message'],
-        'pdfFeed'       => ['body'],
+        'pdfFeed'       => apply_filters('fluentform/pdf_html_format', [])
     ];
 
     if (!isset($dictionary[$integration])) {
@@ -280,14 +319,39 @@ $app->addFilter('fluentform/response_render_input_number', function ($response, 
     return \FluentForm\App\Helpers\Helper::getNumericFormatted($response, $formatter);
 }, 10, 4);
 
-// Support for wp-fusion integration
-// Before includes Fluent Forms integration wp-fusion plugin checks 'FluentForm\Framework\Foundation\Bootstrap' dependency class exist.
-// In Fluent Forms 5.0.0 'FluentForm\Framework\Foundation\Bootstrap' no longer exist.
-// We will replace 'FluentForm\Framework\Foundation\Bootstrap' to  'FluentForm\Framework\Foundation\Application' by respective filter hook provide by wp-fusion.
-// @todo - notify them for updating name also fluentforms hook they are used. If they confirm with update, remove bellow add_filter.
-add_filter('wpf_integrations', function($integrations) {
-    if (is_array($integrations) && isset($integrations['fluent-forms'])) {
-        $integrations['fluent-forms'] = 'FluentForm\Framework\Foundation\Application';
+$app->addFilter(
+    'fluentform/create_default_settings',
+    function($defaultSettings) {
+        if (!isset($defaultSettings['restrictions']['restrictForm'])) {
+            $defaultSettings['restrictions']['restrictForm'] = [
+                'enabled' => false,
+                'fields' =>  [
+                    'ip' => [
+                        'status' => false,
+                        'values' => '',
+                        'message' => __('Sorry! You can\'t submit a form from your IP address.', 'fluentform'),
+                        'validation_type' => 'fail_on_condition_met'
+                    ],
+                    'country' => [
+                        'status' => false,
+                        'values' => [],
+                        'message' => __('Sorry! You can\'t submit a form the country you are residing.', 'fluentform'),
+                        'validation_type' => 'fail_on_condition_met'
+                    ],
+                    'keywords' => [
+                        'status' => false,
+                        'values' => '',
+                        'message' => __('Sorry! Your submission contains some restricted keywords.', 'fluentform')
+                    ],
+                ]
+            ];
+        }
+        return $defaultSettings;
     }
-    return $integrations;
-});
+);
+
+
+/*
+ * Remove this after WP Fusion Update their plugin
+ */
+add_filter('fluentform/is_integration_enabled_wpfusion', '__return_true');

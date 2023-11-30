@@ -7,10 +7,14 @@ use FluentForm\App\Models\Form;
 use FluentForm\App\Models\FormMeta;
 use FluentForm\App\Models\Submission;
 use FluentForm\App\Models\SubmissionMeta;
+use FluentForm\App\Services\FormBuilder\Components\SelectCountry;
 use FluentForm\Framework\Helpers\ArrayHelper;
+use FluentForm\App\Helpers\Traits\GlobalDefaultMessages;
 
 class Helper
 {
+    use GlobalDefaultMessages;
+
     public static $tabIndex = 0;
 
     public static $formInstance = 0;
@@ -103,7 +107,7 @@ class Helper
             'read'      => 'Read',
             'favorites' => 'Favorites',
         ];
-    
+
         $statuses = apply_filters_deprecated(
             'fluentform_entry_statuses_core',
             [
@@ -152,7 +156,7 @@ class Helper
         $grid = apply_filters_deprecated(
             'fluentform_subfield_reportable_inputs',
             [
-                'tabular_grid'
+                ['tabular_grid']
             ],
             FLUENTFORM_FRAMEWORK_UPGRADE,
             'fluentform/subfield_reportable_inputs',
@@ -169,10 +173,10 @@ class Helper
 
     public static function setFormMeta($formId, $metaKey, $value)
     {
-       if ($meta = FormMeta::persist($formId, $metaKey, $value)) {
-           return $meta->id;
-       }
-       return null;
+        if ($meta = FormMeta::persist($formId, $metaKey, $value)) {
+            return $meta->id;
+        }
+        return null;
     }
 
     public static function getSubmissionMeta($submissionId, $metaKey, $default = false)
@@ -182,10 +186,10 @@ class Helper
 
     public static function setSubmissionMeta($submissionId, $metaKey, $value, $formId = false)
     {
-      if ($meta = SubmissionMeta::persist($submissionId, $metaKey, $value, $formId)) {
-          return $meta->id;
-      }
-      return null;
+        if ($meta = SubmissionMeta::persist($submissionId, $metaKey, $value, $formId)) {
+            return $meta->id;
+        }
+        return null;
     }
 
     public static function isEntryAutoDeleteEnabled($formId)
@@ -286,6 +290,7 @@ class Helper
         }
 
         $ids = [];
+        $attributes = [];
 
         foreach ($matches as $shortcode) {
             if (count($shortcode) >= 2 && $tag === $shortcode[2]) {
@@ -295,9 +300,72 @@ class Helper
                 $result = shortcode_parse_atts($parsedCode);
 
                 if (!empty($result[$selector])) {
+
+                    if($tag == 'fluentform' && !empty($result['type']) && $result['type'] == 'conversational') {
+                        continue;
+                    }
+
                     $ids[$result[$selector]] = $result[$selector];
+
+                    $theme = ArrayHelper::get($result, 'theme');
+
+                    if ($theme) {
+                        $attributes[] = [
+                            'formId' => $result[$selector],
+                            'theme'  => $theme
+                        ];
+                    }
                 }
             }
+        }
+
+        if ($attributes) {
+            $ids['attributes'] = $attributes;
+        }
+
+        return $ids;
+    }
+
+    public static function getFormsIdsFromBlocks($content)
+    {
+        $ids = [];
+        $attributes = [];
+
+        if (!function_exists('parse_blocks')) {
+            return $ids;
+        }
+
+        $has_block = false !== strpos($content, '<!-- wp:fluentfom/guten-block' . ' ');
+
+        if (!$has_block) {
+            return $ids;
+        }
+
+        $parsedBlocks = parse_blocks($content);
+        foreach ($parsedBlocks as $block) {
+            if (!ArrayHelper::exists($block, 'blockName') || !ArrayHelper::get($block, 'attrs.formId')) {
+                continue;
+            }
+
+            $hasBlock = strpos($block['blockName'], 'fluentfom/guten-block') === 0;
+            if ($hasBlock) {
+                $formId = (int) $block['attrs']['formId'];
+                
+                $ids[] = $formId;
+
+                $theme = ArrayHelper::get($block, 'attrs.themeStyle');
+
+                if ($theme) {
+                    $attributes[] = [
+                        'formId' => $formId,
+                        'theme'  => $theme
+                    ];
+                }
+            }
+        }
+
+        if ($attributes) {
+            $ids['attributes'] = $attributes;
         }
 
         return $ids;
@@ -342,9 +410,22 @@ class Helper
                     ->where('field_name', $fieldName)
                     ->where('field_value', $inputValue)
                     ->exists();
+
+                // if form has pending payment then the value doesn't exist in EntryDetails table
+                // further checking on Submission table if the value exists
+                if (!$exist && $form->has_payment) {
+                    $allSubmission = Submission::where('form_id', $form->id)->get()->toArray();
+
+                    foreach($allSubmission as $submission) {
+                        $response = json_decode(ArrayHelper::get($submission, 'response'), true);
+                        $exist = $inputValue == ArrayHelper::get($response, $fieldName);
+                    }
+                }
+
                 if ($exist) {
+                    $typeName = ArrayHelper::get($field, 'element', 'input_text');
                     return [
-                        'unique' => ArrayHelper::get($field, 'raw.settings.unique_validation_message'),
+                        'unique' => apply_filters('fluentform/validation_message_unique_'. $typeName, ArrayHelper::get($field, 'raw.settings.unique_validation_message'), $field),
                     ];
                 }
             }
@@ -352,7 +433,9 @@ class Helper
 
         return $validation;
     }
+    
 
+    
     public static function hasPartialEntries($formId)
     {
         static $cache = [];
@@ -368,11 +451,11 @@ class Helper
     public static function getNumericFormatters()
     {
         $data = [
-            'none' => [
+            'none'                 => [
                 'value' => '',
                 'label' => 'None',
             ],
-            'comma_dot_style' => [
+            'comma_dot_style'      => [
                 'value'    => 'comma_dot_style',
                 'label'    => __('US Style with Decimal (EX: 123,456.00)', 'fluentform'),
                 'settings' => [
@@ -392,7 +475,7 @@ class Helper
                     'symbol'    => '',
                 ],
             ],
-            'dot_comma_style' => [
+            'dot_comma_style'      => [
                 'value'    => 'dot_comma_style',
                 'label'    => __('EU Style with Decimal (Ex: 123.456,00)', 'fluentform'),
                 'settings' => [
@@ -634,13 +717,13 @@ class Helper
 
         return $content;
     }
-    
+
     public static function sanitizeOrderValue($orderType = '')
     {
         $orderBys = ['ASC', 'DESC'];
-        
+
         $orderType = trim(strtoupper($orderType));
-        
+
         return in_array($orderType, $orderBys) ? $orderType : 'DESC';
     }
 
@@ -663,11 +746,11 @@ class Helper
         );
 
         return apply_filters('fluentform/truncate_password_values', $isTruncate, $formId) &&
-        (
-            (defined('FLUENTFORM_RENDERING_ENTRIES') && FLUENTFORM_RENDERING_ENTRIES) ||
-            (defined('FLUENTFORM_RENDERING_ENTRY') && FLUENTFORM_RENDERING_ENTRY) ||
-            (defined('FLUENTFORM_EXPORTING_ENTRIES') && FLUENTFORM_EXPORTING_ENTRIES)
-        );
+            (
+                (defined('FLUENTFORM_RENDERING_ENTRIES') && FLUENTFORM_RENDERING_ENTRIES) ||
+                (defined('FLUENTFORM_RENDERING_ENTRY') && FLUENTFORM_RENDERING_ENTRY) ||
+                (defined('FLUENTFORM_EXPORTING_ENTRIES') && FLUENTFORM_EXPORTING_ENTRIES)
+            );
     }
 
     // make tabular-grid value markdown format
@@ -758,5 +841,76 @@ class Helper
         }
 
         return $title;
+    }
+    
+    public static function getIpinfo()
+    {
+        return ArrayHelper::get(get_option('_fluentform_global_form_settings'), 'misc.geo_provider_token');
+    }
+    
+    public static function isAutoloadCaptchaEnabled()
+    {
+        return ArrayHelper::get(get_option('_fluentform_global_form_settings'), 'misc.autoload_captcha');
+    }
+
+    public static function maybeDecryptUrl($url)
+    {
+        $uploadDir = str_replace('/', '\/', FLUENTFORM_UPLOAD_DIR . '/temp');
+        $pattern = "/(?<={$uploadDir}\/).*$/";
+        preg_match($pattern, $url, $match);
+        if (!empty($match)) {
+            $url = str_replace($match[0], Protector::decrypt($match[0]), $url);
+        }
+        return $url;
+    }
+    
+    public static function arrayFilterRecursive($arrayItems)
+    {
+        foreach ($arrayItems as $key => $item) {
+            is_array($item) && $arrayItems[$key] = self::arrayFilterRecursive($item);
+            if (empty($arrayItems[$key])) {
+                unset($arrayItems[$key]);
+            }
+        }
+        return $arrayItems;
+    }
+    
+    public static function isBlockEditor()
+    {
+       return defined( 'REST_REQUEST' ) && REST_REQUEST && ! empty( $_REQUEST['context'] ) && $_REQUEST['context'] === 'edit';
+    }
+    public static function resolveValidationRulesGlobalOption(&$field)
+    {
+        if (isset($field['fields']) && is_array($field['fields'])) {
+            foreach ($field['fields'] as &$subField) {
+                static::resolveValidationRulesGlobalOption($subField);
+            }
+        } else {
+            if (ArrayHelper::get($field, 'settings.validation_rules')) {
+                foreach ($field['settings']['validation_rules'] as $key => &$rule) {
+                    if(!isset($rule['global'])) {
+                        $rule['global'] = false;
+                    }
+                    $rule['global_message'] = static::getGlobalDefaultMessage($key);
+                }
+            }
+        }
+    }
+
+    public static function getWhiteListedFields($formId)
+    {
+        $whiteListedFields = [
+            '__fluent_form_embded_post_id',
+            '_fluentform_' . $formId . '_fluentformnonce',
+            '_wp_http_referer',
+            'g-recaptcha-response',
+            'h-captcha-response',
+            'cf-turnstile-response',
+            '__stripe_payment_method_id',
+            '__ff_all_applied_coupons',
+            '__entry_intermediate_hash',
+        ];
+
+        return apply_filters('fluentform/white_listed_fields', $whiteListedFields, $formId);
     }
 }

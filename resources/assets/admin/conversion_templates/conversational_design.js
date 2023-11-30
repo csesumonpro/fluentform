@@ -44,6 +44,7 @@ locale.use(lang);
 
 import DesignSkeleton from './Parts/Skeleton.vue';
 import notifier from '@/admin/notifier'
+import globalSearch from '../global_search';
 
 Vue.mixin({
     methods: {
@@ -71,7 +72,8 @@ new Vue({
     el: '#ff_conversation_form_design_app',
     data: {},
     components: {
-        DesignSkeleton: DesignSkeleton
+        DesignSkeleton: DesignSkeleton,
+        globalSearch
     },
     beforeCreate() {
         this.$on('change-title', (module) => {

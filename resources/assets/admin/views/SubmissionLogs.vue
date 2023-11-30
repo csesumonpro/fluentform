@@ -16,14 +16,14 @@
             </card-head>
             <card-body>
                 <div class="entry_info_body">
-                    <el-skeleton :loading="loading" animated :rows="6">
+                    <el-skeleton :loading="loading" animated :rows="4">
                         <div class="wpf_entry_details">
                             <template v-if="logs && logs.length">
                                 <div v-for="(log, logKey) in logs" class="entry_submission_log wpf_each_entry" :key="logKey">
                                     <div class="wpf_entry_label">
                                         <span class="ff_tag" :class="'log_status_' + log.status">{{log.status}}</span>
-                                        {{ $t('in') }} 
-                                        <span class="entry_submission_log_component">{{log.title}}</span> 
+                                        {{ $t('in') }}
+                                        <span class="entry_submission_log_component">{{log.title}}</span>
                                         {{ $t('at') }}
                                         {{log.created_at}}
                                         <span class="wpf_entry_remove">
@@ -83,9 +83,9 @@
         methods: {
             fetchLogs() {
                 this.loading = true;
-                
+
                 const url = FluentFormsGlobal.$rest.route('getSubmissionLogs', this.entry_id);
-                
+
                 FluentFormsGlobal.$rest.get(url, {
                     source_type: 'submission_item',
                     log_type: this.log_type
@@ -97,10 +97,10 @@
                         this.loading = false;
                     });
             },
-            
+
             removeLog(logId) {
                 const url = FluentFormsGlobal.$rest.route('deleteSubmissionLogs', this.entry_id);
-                
+
                 let data = {
                     log_ids: [logId],
                     log_type: this.log_type

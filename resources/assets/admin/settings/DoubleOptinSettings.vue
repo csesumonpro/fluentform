@@ -8,7 +8,7 @@
                 <card-body>
                     <notice class="ff_alert_between" type="danger-soft">
                         <div>
-                            <h6 class="title">{{$t('This is a Pro Feature')}}</h6> 
+                            <h6 class="title">{{$t('This is a Pro Feature')}}</h6>
                             <p class="text">{{$t('Please upgrade to pro to unlock this feature.')}}</p>
                         </div>
                         <a target="_blank" href="https://fluentforms.com/pricing/?utm_source=plugin&amp;utm_medium=wp_install&amp;utm_campaign=ff_upgrade&amp;theme_style=twentytwentythree" class="el-button el-button--danger el-button--small">
@@ -162,7 +162,7 @@
                     </card-body>
                 </card>
 
-                <div class="mt-4" v-if="hasPro && settings.enabled == 'yes'">
+                <div class="mt-4" v-if="hasPro">
                     <el-button v-loading="saving" type="primary" icon="el-icon-success" @click="save">
                         {{ $t('Save Settings') }}
                     </el-button>

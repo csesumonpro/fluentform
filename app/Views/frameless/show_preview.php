@@ -44,7 +44,7 @@
         </div>
     </div>
     <div class="ff_preview_body">
-        <div class="ff_form_preview_wrapper">
+        <div class="ff_form_preview_wrapper" style="width:100%">
             <div class="ff_form_preview_header">
                 <div class="ff_dot_wrap">
                     <span class="dot dot-red"></span>
@@ -115,17 +115,15 @@
                             You can style every element of the forms including input fields, form container, success / error messages and many more.</p>
                         <h5>Other Features</h5>
                         <ul class="ff_feature_list">
-                            <li><i class="el-icon el-icon-check"></i> Stripe & PayPal Integration</li>
-                            <li><i class="el-icon el-icon-check"></i> Advanced Form Styler</li>
+                            <li><i class="el-icon el-icon-check"></i> Stripe & PayPal with 6 Payment Integration</li>
                             <li><i class="el-icon el-icon-check"></i> Style Export & Import</li>
+                            <li><i class="el-icon el-icon-check"></i> Conditional Email Routing</li>
                             <li><i class="el-icon el-icon-check"></i> Advanced Form Fields</li>
                             <li><i class="el-icon el-icon-check"></i> Quiz & Survey Forms</li>
-                            <li><i class="el-icon el-icon-check"></i> Payment Processing</li>
                             <li><i class="el-icon el-icon-check"></i> Inventory Module</li>
-                            <li><i class="el-icon el-icon-check"></i> 42+ CRM & Other integrations</li>
-                            <li><i class="el-icon el-icon-check"></i> Calculated Fields for quotation form</li>
+                            <li><i class="el-icon el-icon-check"></i> 40+ Integrations</li>
+                            <li><i class="el-icon el-icon-check"></i> Calculated Fields</li>
                             <li><i class="el-icon el-icon-check"></i> Multi-Step Forms</li>
-                            <li><i class="el-icon el-icon-check"></i> Conditional Logics</li>
                             <li><i class="el-icon el-icon-check"></i> File Upload Feature</li>
                             <li><i class="el-icon el-icon-check"></i> SMS Notifications</li>
                             <li><i class="el-icon el-icon-check"></i> Visual Data Reporting</li>

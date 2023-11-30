@@ -26,7 +26,7 @@ class Response
          return new \WP_REST_Response($data, $code);
     }
 
-    public function sendError($data = null, $code = 423)
+    public function sendError($data = null, $code = 422)
     {
          return new \WP_REST_Response($data, $code);
     }

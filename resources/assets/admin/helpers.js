@@ -43,14 +43,19 @@ export const scrollTop = (scrollTop = 0, milliSecond = 300, selector = 'html, bo
     jQuery(selector).animate({ scrollTop }, milliSecond).promise()
 );
 
-export const handleSidebarActiveLink = ($link, init = false) => {
+export const handleSidebarActiveLink = ($link, init = false, firstLoad = false) => {
     //make current link active and others deactivate
     $link.addClass('active').siblings().removeClass('active');
 
     // toggle sub-links if curren link has sub-links
     if ($link.hasClass('has_sub_menu')) {
-        $link.toggleClass('is-submenu'); // toggle sub-link icon
-        $link.find('.ff_list_submenu').slideToggle();
+
+        if(firstLoad){
+            $link.find('.ff_list_submenu').show();
+        }else{
+            $link.toggleClass('is-submenu'); // toggle sub-link icon
+            $link.find('.ff_list_submenu').slideToggle();
+        }
     }
 
     // make first sub-link active if it has submenu
@@ -61,9 +66,18 @@ export const handleSidebarActiveLink = ($link, init = false) => {
 
     if (init) {
         const $parentLink = $link.closest('li.ff_list_button_item');
+
         if ($parentLink.length && $parentLink.hasClass('has_sub_menu')) {
-            $parentLink.addClass('is-submenu active'); // toggle sub-link icon
-            $parentLink.find('.ff_list_submenu').slideToggle();
+            if (firstLoad) {
+                $parentLink.addClass('active'); // toggle sub-link icon
+                $parentLink.find('.ff_list_submenu').show();
+
+            } else {
+                $parentLink.find('.ff_list_submenu').slideToggle();
+                $parentLink.addClass('is-submenu active'); // toggle sub-link icon
+            }
+
+
         }
     }
 

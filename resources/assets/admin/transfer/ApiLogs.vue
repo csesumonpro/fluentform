@@ -4,15 +4,15 @@
             <div class="ff_card_head">
                 <h5 class="title">{{$t('Api Logs')}}</h5>
                 <p class="text" style="max-width: 700px;">
-                    {{ $t('All the external CRM / API call logs and you can see and track if there has any issue with any of your API configuration. Last 2 months data only') }}
+                    {{ $t('Get external CRM and API call logs here. Track api logs activity. (Last 2 months logs)') }}
                 </p>
             </div><!-- .ff_card_head -->
             <div class="ff_card_body">
                 <el-row :gutter="24">
-                    <el-col :span="8">
+                    <el-col :span="5">
                         <div class="ff_form_group">
                             <h6 class="fs-15 mb-3">Form</h6>
-                            <el-select class="w-100" @change="getLogs()" clearable v-model="selected_form" :placeholder="$t('Select Form')">
+                            <el-select class="w-100" @change="getLogs()" multiple clearable v-model="selected_form" :placeholder="$t('Select Form')">
                                 <el-option
                                     v-for="item in available_forms"
                                     :key="item.id"
@@ -22,10 +22,10 @@
                             </el-select>
                         </div>
                     </el-col>
-                    <el-col :span="8">
+                    <el-col :span="5">
                         <div class="ff_form_group">
                             <h6 class="fs-15 mb-3">Source</h6>
-                            <el-select class="w-100"  @change="getLogs()" clearable v-model="selected_component" :placeholder="$t('Select Component')">
+                            <el-select class="w-100"  @change="getLogs()" multiple clearable v-model="selected_component" :placeholder="$t('Select Component')">
                                 <el-option
                                     v-for="item in available_components"
                                     :key="item.value"
@@ -37,10 +37,10 @@
                             </el-select>
                         </div>
                     </el-col>
-                    <el-col :span="8">
+                    <el-col :span="5">
                         <div class="ff_form_group">
                             <h6 class="fs-15 mb-3">Status</h6>
-                            <el-select class="w-100" @change="getLogs()" clearable v-model="selected_status" :placeholder="$t('Select Status')">
+                            <el-select class="w-100" @change="getLogs()" multiple clearable v-model="selected_status" :placeholder="$t('Select Status')">
                                 <el-option
                                     v-for="item in available_statuses"
                                     :key="item.value"
@@ -48,6 +48,24 @@
                                     :value="item.value">
                                 </el-option>
                             </el-select>
+                        </div>
+                    </el-col>
+                    <el-col :span="8">
+                        <div class="ff_form_group">
+                            <h6 class="fs-15 mb-3">Date</h6>
+                            <el-date-picker
+                                    v-model="filter_date_range"
+                                    type="datetimerange"
+                                    @change="getLogs()"
+                                    :picker-options="pickerOptions"
+                                    format="dd MMM yyyy HH:mm:ss"
+                                    value-format="yyyy-MM-dd HH:mm:ss"
+                                    range-separator="-"
+                                    align="right"
+                                    :default-time="['00:00:01', '23:59:59']"
+                                    :start-placeholder="$t('Start date')"
+                                    :end-placeholder="$t('End date')">
+                            </el-date-picker>
                         </div>
                     </el-col>
                 </el-row>
@@ -75,9 +93,9 @@
                                     <p v-html="props.row.note"></p>
                                 </template>
                             </el-table-column>
-                            <el-table-column width="50px" :label="$t('ID')">
+                            <el-table-column width="100px" :label="$t('ID')">
                                 <template slot-scope="props">
-                                    <a :href="props.row.submission_url">#{{props.row.origin_id}}</a>
+                                    <a :href="props.row.submission_url">#{{props.row.submission_id}}</a>
                                 </template>
                             </el-table-column>
                             <el-table-column prop="form_title" :label="$t('Form')"></el-table-column>
@@ -90,10 +108,10 @@
                             </el-table-column>
                             <el-table-column :label="$t('Component')">
                                 <template slot-scope="props">
-                                    <div>{{getReadableName(props.row.action)}}</div>
+                                    <div>{{getReadableName(props.row.component)}}</div>
                                 </template>
                             </el-table-column>
-                            <el-table-column prop="created_at" :label="$t('Date')" width="180"></el-table-column>
+                            <el-table-column prop="updated_at" :label="$t('Date')" width="180"></el-table-column>
                             <el-table-column width="70" :label="$t('Action')">
                                 <template slot-scope="props">
                                     <remove :plain="true" @on-confirm="deleteItems(props.row.id)">
@@ -126,7 +144,7 @@
             </div><!-- .ff_card_body -->
 
         </div><!-- .ff_card -->
-    
+
     </div>
 </template>
 
@@ -137,6 +155,7 @@
 
   export default {
         name: 'ApiLogs',
+        props: ['app'],
         components:{
           remove
         },
@@ -147,9 +166,9 @@
                 available_statuses: [],
                 available_components: [],
                 available_forms: [],
-                selected_form: '',
-                selected_status: '',
-                selected_component: '',
+                selected_form: [],
+                selected_status: [],
+                selected_component: [],
                 multipleSelection: [],
                 paginate: {
                     total: 0,
@@ -157,20 +176,67 @@
                     last_page: 1,
                     per_page: localStorage.getItem('apiLogsPerPage') || 10
                 },
+                filter_date_range :[],
+                pickerOptions: {
+                    disabledDate(time) {
+                        return time.getTime() >= Date.now();
+                    },
+                    shortcuts: [
+                        {
+                            text: 'Today',
+                            onClick(picker) {
+	                            const todayStart = new Date(new Date().setHours(0, 0, 1, 0))
+	                            const todayEnd = new Date(new Date().setHours(23, 59, 59, 999))
+                                picker.$emit('pick', [todayStart, todayEnd]);
+                            }
+                        },
+                        {
+                            text: 'Yesterday',
+                            onClick(picker) {
+                                const start = new Date();
+	                            start.setTime(start.getTime() - 3600 * 1000 * 24 * 1);
+	                            const yesterStart = new Date(start.setHours(0, 0, 1, 0))
+	                            const yesterEnd = new Date(start.setHours(23, 59, 59, 999))
+	                            picker.$emit('pick', [yesterStart, yesterEnd]);
+                            }
+                        },
+                        {
+                            text: 'Last week',
+                            onClick(picker) {
+                                const end = new Date();
+                                const start = new Date();
+                                start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+	                            const lastWeedStart = new Date(start.setHours(0, 0, 1, 0))
+	                            const lastWeedEnd = new Date(end.setHours(23, 59, 59, 999))
+                                picker.$emit('pick', [lastWeedStart, lastWeedEnd]);
+                            }
+                        }, {
+                            text: 'Last month',
+                            onClick(picker) {
+                                const end = new Date();
+                                const start = new Date();
+                                start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+	                            const lastMonthStart = new Date(start.setHours(0, 0, 1, 0))
+	                            const lastMonthEnd = new Date(end.setHours(23, 59, 59, 999))
+                                picker.$emit('pick', [lastMonthStart, lastMonthEnd]);
+                            }
+                        }
+                    ]
+                },
             }
         },
         methods: {
             getLogs() {
                 this.loading = true;
-                
-                const url = FluentFormsGlobal.$rest.route('getLogs');
 
+                const url = FluentFormsGlobal.$rest.route('getLogs');
                 FluentFormsGlobal.$rest.get(url, {
                     page: this.paginate.current_page,
                     per_page: this.paginate.per_page,
                     form_id: this.selected_form,
                     status: this.selected_status,
                     component: this.selected_component,
+                    date_range : this.filter_date_range,
                     type: 'api',
                 })
                     .then(response => {
@@ -262,6 +328,17 @@
         mounted() {
             this.getLogs();
             this.getAvailableFilters();
+        },
+        created() {
+            if (this.app.status_query != ''){
+                this.selected_status = [this.app.status_query];
+            }
+            if (this.app.source_query != ''){
+                this.selected_component = [this.app.source_query];
+            }
+            if (this.app.date_start_query != '' && this.app.date_end_query != ''){
+                this.filter_date_range = [this.app.date_start_query,this.app.date_end_query ]
+            }
         }
-    }
+  }
 </script>

@@ -35,7 +35,7 @@
                     <tr v-for="(reportItem,reportIndex) in tableData" :key="reportIndex">
                         <td>{{getLabel(reportItem.value, true)}}</td>
                         <td>{{reportItem.count}}</td>
-                        <td>{{ parseInt(reportItem.count / report.total_entry * 100) }}</td>
+                        <td>{{ parseInt(parseInt(reportItem.count) / parseInt(report.total_entry) * 100) }}</td>
                     </tr>
                     </tbody>
                 </table>

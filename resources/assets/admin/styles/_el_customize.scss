@@ -105,6 +105,7 @@
         padding-bottom: 10px;
         line-height: 1;
         color: $base-color;
+        font-weight: 500;
     }
 
     .el-form-item__content {
@@ -623,6 +624,13 @@
         }
     }
     
+}
+
+.chain-select-upload-button {
+    .el-input-group__append,
+    .el-input-group__prepend {
+        width: 70px;
+    }
 }
 
 // dark radio

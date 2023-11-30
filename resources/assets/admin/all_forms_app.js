@@ -74,6 +74,7 @@ locale.use(lang);
 import Acl from '@/common/Acl';
 
 import AllForms from './views/AllForms.vue';
+import globalSearch from './global_search'
 import notifier from './notifier';
 
 Vue.mixin({
@@ -105,6 +106,7 @@ Vue.mixin({
 new Vue({
     el: '#ff_all_forms_app',
     components: {
+        globalSearch,
         'ff_all_forms_table': AllForms
     },
     data: {},

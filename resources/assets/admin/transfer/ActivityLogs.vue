@@ -4,15 +4,15 @@
             <card-head>
                 <h5 class="title">{{ $t('Activity Logs') }}</h5>
                 <p class="text">
-                    {{ ('All the form submission & General internal logs. You can see and track if there has any issue with any of your Form.') }}
+                    {{ ('Get all form submissions and general activity logs here. Track activity of your forms.') }}
                 </p>
             </card-head>
             <card-body>
                 <el-row :gutter="24">
-                    <el-col :span="8">
+                    <el-col :span="5">
                         <div class="ff_form_group">
                             <h6 class="mb-3 fs-15">Form</h6>
-                            <el-select class="w-100" @change="getLogs()" clearable v-model="selected_form" :placeholder="$t('Select Form')">
+                            <el-select class="w-100" @change="getLogs()" multiple clearable v-model="selected_form" :placeholder="$t('Select Form')">
                                 <el-option
                                     v-for="item in available_forms"
                                     :key="item.id"
@@ -22,10 +22,10 @@
                             </el-select>
                         </div>
                     </el-col>
-                    <el-col :span="8">
+                    <el-col :span="5">
                         <div class="ff_form_group">
                             <h6 class="mb-3 fs-15">{{ $t('Source') }}</h6>
-                            <el-select class="w-100" @change="getLogs()" clearable v-model="selected_component" :placeholder="$t('Select Component')">
+                            <el-select class="w-100" @change="getLogs()" multiple clearable v-model="selected_component" :placeholder="$t('Select Component')">
                                 <el-option
                                     v-for="item in available_components"
                                     :key="item.value"
@@ -35,10 +35,10 @@
                             </el-select>
                         </div>
                     </el-col>
-                    <el-col :span="8">
+                    <el-col :span="5">
                         <div class="ff_form_group">
                             <h6 class="mb-3 fs-15">{{ $t('Status') }}</h6>
-                            <el-select class="w-100" @change="getLogs()" clearable v-model="selected_status" :placeholder="$t('Select Status')">
+                            <el-select class="w-100" @change="getLogs()" multiple clearable v-model="selected_status" :placeholder="$t('Select Status')">
                                 <el-option
                                     v-for="item in available_statuses"
                                     :key="item.value"
@@ -48,6 +48,24 @@
                             </el-select>
                         </div>
                     </el-col>
+	                <el-col :span="8">
+		                <div class="ff_form_group">
+			                <h6 class="fs-15 mb-3">Date</h6>
+			                <el-date-picker
+				                v-model="filter_date_range"
+				                type="datetimerange"
+				                @change="getLogs()"
+				                :picker-options="pickerOptions"
+				                format="dd MMM yyyy HH:mm:ss"
+				                value-format="yyyy-MM-dd HH:mm:ss"
+				                :default-time="['00:00:01', '23:59:59']"
+				                range-separator="-"
+                                align="right"
+				                :start-placeholder="$t('Start date')"
+				                :end-placeholder="$t('End date')">
+			                </el-date-picker>
+		                </div>
+	                </el-col>
                 </el-row>
 
                 <div class="ff_activity_logs_body mt-4">
@@ -60,7 +78,7 @@
                                 </button>
                             </remove>
                         </div>
-                        
+
                         <el-table
                             :data="logs"
                             stripe
@@ -143,11 +161,12 @@
 
     export default {
         name: 'ActivityLogs',
+	    props: ['app'],
         components:{
             remove,
-            Card, 
-            CardHead, 
-            CardBody 
+            Card,
+            CardHead,
+            CardBody
         },
         data() {
             return {
@@ -156,9 +175,9 @@
                 available_statuses: [],
                 available_components: [],
                 available_forms: [],
-                selected_form: '',
-                selected_status: '',
-                selected_component: '',
+                selected_form: [],
+                selected_status: [],
+                selected_component: [],
                 multipleSelection: [],
                 paginate: {
                     total: 0,
@@ -166,6 +185,53 @@
                     last_page: 1,
                     per_page: localStorage.getItem('activityLogsPerPage') || 10
                 },
+	            filter_date_range :[],
+	            pickerOptions: {
+		            disabledDate(time) {
+			            return time.getTime() >= Date.now();
+		            },
+		            shortcuts: [
+			            {
+				            text: 'Today',
+				            onClick(picker) {
+					            const todayStart = new Date(new Date().setHours(0, 0, 1, 0))
+					            const todayEnd = new Date(new Date().setHours(23, 59, 59, 999))
+					            picker.$emit('pick', [todayStart, todayEnd]);
+				            }
+			            },
+			            {
+				            text: 'Yesterday',
+				            onClick(picker) {
+					            const start = new Date();
+					            start.setTime(start.getTime() - 3600 * 1000 * 24 * 1);
+					            const yesterStart = new Date(start.setHours(0, 0, 1, 0))
+					            const yesterEnd = new Date(start.setHours(23, 59, 59, 999))
+					            picker.$emit('pick', [yesterStart, yesterEnd]);
+				            }
+			            },
+			            {
+				            text: 'Last week',
+				            onClick(picker) {
+					            const end = new Date();
+					            const start = new Date();
+					            start.setTime(start.getTime() - 3600 * 1000 * 24 * 7);
+					            const lastWeedStart = new Date(start.setHours(0, 0, 1, 0))
+					            const lastWeedEnd = new Date(end.setHours(23, 59, 59, 999))
+					            picker.$emit('pick', [lastWeedStart, lastWeedEnd]);
+				            }
+			            }, {
+				            text: 'Last month',
+				            onClick(picker) {
+					            const end = new Date();
+					            const start = new Date();
+					            start.setTime(start.getTime() - 3600 * 1000 * 24 * 30);
+					            const lastMonthStart = new Date(start.setHours(0, 0, 1, 0))
+					            const lastMonthEnd = new Date(end.setHours(23, 59, 59, 999))
+					            picker.$emit('pick', [lastMonthStart, lastMonthEnd]);
+				            }
+			            }
+		            ]
+	            },
             }
         },
         methods: {
@@ -179,7 +245,8 @@
                     per_page: this.paginate.per_page,
                     form_id: this.selected_form,
                     status: this.selected_status,
-                    component: this.selected_component
+                    component: this.selected_component,
+	                date_range : this.filter_date_range,
                 })
                     .then(response => {
                         this.logs = response.data;
@@ -260,6 +327,17 @@
         mounted() {
             this.getLogs();
             this.getAvailableFilters();
-        }
+        },
+	    created() {
+		    if (this.app.status_query != ''){
+			    this.selected_status = [this.app.status_query];
+		    }
+		    if (this.app.source_query != ''){
+			    this.selected_component = [this.app.source_query];
+		    }
+		    if (this.app.date_start_query != '' && this.app.date_end_query != ''){
+			    this.filter_date_range = [this.app.date_start_query, this.app.date_end_query]
+		    }
+	    }
     }
 </script>

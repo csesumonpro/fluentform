@@ -19,6 +19,7 @@ class EmailNotificationActions
     public function register()
     {
         add_filter('fluentform/notifying_async_email_notifications', '__return_false', 9);
+        add_filter('fluentform/notifying_async_notifications', '__return_false', 9);
 
         add_filter('fluentform/global_notification_active_types', function ($types) {
             $types['notifications'] = 'email_notifications';
@@ -26,6 +27,7 @@ class EmailNotificationActions
         });
 
         add_action('fluentform/integration_notify_notifications', [$this, 'notify'], 10, 4);
+
         add_action('fluentform/notify_on_form_submit', [$this, 'notifyOnSubmitPaymentForm'], 10, 3);
     }
 

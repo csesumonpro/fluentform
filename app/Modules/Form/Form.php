@@ -556,6 +556,7 @@ class Form
             } catch (\Exception $exception) {
             }
         }
+
         $errors = ob_get_clean();
         return $errors;
     }

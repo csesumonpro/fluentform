@@ -58,3 +58,37 @@
         }
     }
 }
+//Menu back transition
+.ff_menu_back {
+    .el-icon-arrow-left {
+        position: relative;
+        width: 18px;
+        transition: 0.3s all;
+        font-weight: bold;
+
+        &:after {
+            position: absolute;
+            content: "";
+            top: 50%;
+            transform: translateY(-52%);
+            right: -0.6px;
+            width: 0;
+            height: 1.3px;
+            background-color: #353537;
+            transition: 0.3s all;
+            background-color: #1A7EFB;
+        }
+    }
+
+    .ff_menu_link:hover {
+        .el-icon-arrow-left {
+            transform: translateX(-2.4px);
+            color: #1A7EFB;
+        }
+
+        .el-icon-arrow-left:after {
+            width: 13px;
+            font-weight: bold;
+        }
+    }
+}

@@ -19,7 +19,7 @@ class Text extends BaseComponent
     {
         $elementName = $data['element'];
         $data = apply_filters_deprecated(
-            'fluentform/rendering_field_data_' . $elementName,
+            'fluentform_rendering_field_data_' . $elementName,
             [
                 $data,
                 $form
@@ -93,7 +93,7 @@ class Text extends BaseComponent
                     'Use fluentform/disable_input_mode instead of fluentform_disable_inputmode'
                 );
                 if (! apply_filters('fluentform/disable_input_mode', $isDisable)) {
-                    $inputMode = ArrayHelper::get($data, 'attributes.inputmode');
+                    $inputMode = apply_filters('fluentform/number_input_mode', ArrayHelper::get($data, 'attributes.inputmode'), $data, $form);
                     if (! $inputMode) {
                         $inputMode = 'numeric';
                     }

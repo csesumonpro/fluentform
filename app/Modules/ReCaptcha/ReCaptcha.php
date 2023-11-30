@@ -42,10 +42,10 @@ class ReCaptcha
                         $value
                     ],
                     FLUENTFORM_FRAMEWORK_UPGRADE,
-                    'fluentforms/recaptcha_v3_ref_score',
-                    'Use fluentforms/recaptcha_v3_ref_score instead of fluentforms_recaptcha_v3_ref_score.'
+                    'fluentform/recaptcha_v3_ref_score',
+                    'Use fluentform/recaptcha_v3_ref_score instead of fluentforms_recaptcha_v3_ref_score.'
                 );
-                $checkScore = apply_filters('fluentforms/recaptcha_v3_ref_score', $value);
+                $checkScore = apply_filters('fluentform/recaptcha_v3_ref_score', $value);
                 $isValid = $score >= $checkScore;
             } else {
                 $isValid = $result->success;

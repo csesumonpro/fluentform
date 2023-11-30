@@ -14,7 +14,7 @@
                             :wrapper="optionsToRender"
                             effect-allowed="move">
                 <vddl-nodrag class="nodrag">
-                    <div class="checkbox">
+                    <div class="checkbox" v-if="!listItem.hide_default_value">
                         <input ref="defaultOptions"
                                class="form-control"
                                :type="optionsType"
@@ -37,15 +37,16 @@
                         <el-input v-model="option.value"></el-input>
                     </div>
 
-                    <div class="action-btn">
-                        <i @click="increase(index)" class="icon icon-plus-circle"></i>
-                        <i @click="decrease(index)" class="icon icon-minus-circle"></i>
-                    </div>
+
+                    <action-btn>
+                        <action-btn-add @click="increase(index)" size="mini"></action-btn-add>
+                        <action-btn-remove @click="decrease(index)" size="mini"></action-btn-remove>
+                    </action-btn>
                 </vddl-nodrag>
             </vddl-draggable>
         </vddl-list>
 
-        <el-button type="warning" size="mini" :disabled="!editItem.attributes.value" @click.prevent="clear">Clear
+        <el-button v-if="!listItem.hide_default_value" type="warning" size="mini" :disabled="!editItem.attributes.value" @click.prevent="clear">Clear
             Selection
         </el-button>
         <el-button @click="initBulkEdit()" size="mini">{{ $t('Bulk Edit') }}</el-button>
@@ -56,10 +57,18 @@
             :title="$t('Edit your options')"
             :visible.sync="bulkEditVisible"
         >
-            <div class="bulk_editor_wrapper">
-                <h4>{{ $t('Please provide the value as LABEL:VALUE as each line.') }}</h4>
-                <el-input type="textarea" :rows="5" v-model="value_key_pair_text"></el-input>
-                <p>{{ $t('You can simply give value only the system will convert the label as value') }}</p>
+            <div slot="title">
+                <h4 class="mb-2">{{$t('Edit your options')}}</h4>
+                <p>{{ $t('Please provide the value as LABEL:VALUE as each line or select from predefined data sets') }}</p>
+            </div>
+            <div v-if="bulkEditVisible" class="bulk_editor_wrapper mt-4">
+                <el-row :gutter="20">
+
+                    <el-col :span="24">
+                        <el-input type="textarea" :rows="5" v-model="value_key_pair_text"></el-input>
+                        <p class="mt-2">{{ $t('You can simply give value only the system will convert the label as value') }}</p>
+                    </el-col>
+                </el-row>
             </div>
             <span slot="footer" class="dialog-footer">
                 <el-button size="mini" @click="bulkEditVisible = false">{{ $t('Cancel') }}</el-button>
@@ -73,17 +82,23 @@
 
 <script type="text/babel">
     import elLabel from '../../includes/el-label.vue'
+    import ActionBtn from '@/admin/components/ActionBtn/ActionBtn.vue';
+    import ActionBtnAdd from '@/admin/components/ActionBtn/ActionBtnAdd.vue';
+    import ActionBtnRemove from '@/admin/components/ActionBtn/ActionBtnRemove.vue';
     import each from 'lodash/each';
 
     export default {
-        name: 'select-options',
+        name: 'selectOptions',
         props: ['editItem', 'listItem'],
         components: {
-            elLabel
+            elLabel,
+            ActionBtn,
+            ActionBtnAdd,
+            ActionBtnRemove
         },
         data() {
             return {
-                valuesVisible: false,
+                valuesVisible: false || this.listItem.show_values,
                 optionsToRender: [],
                 bulkEditVisible: false,
                 value_key_pair_text: ''

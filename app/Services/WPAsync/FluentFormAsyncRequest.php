@@ -33,6 +33,10 @@ class FluentFormAsyncRequest
      */
     protected $app = null;
 
+    static $formCache = [];
+    static $entryCache = [];
+    static $submissionCache = [];
+
     /**
      * Construct the Object
      * @param \FluentForm\Framework\Foundation\Application $app
@@ -40,6 +44,11 @@ class FluentFormAsyncRequest
     public function __construct(Application $app)
     {
         $this->app = $app;
+    }
+
+    public function queue($feed)
+    {
+        return wpFluent()->table($this->table)->insertGetId($feed);
     }
 
     public function queueFeeds($feeds)
@@ -50,21 +59,15 @@ class FluentFormAsyncRequest
 
     public function dispatchAjax($data = [])
     {
-        apply_filters_deprecated(
-            'fluentform_https_local_ssl_verify',
-            [
-                false
-            ],
-            FLUENTFORM_FRAMEWORK_UPGRADE,
-            'fluentform/https_local_ssl_verify',
-            'Use fluentform/https_local_ssl_verify instead of fluentform_https_local_ssl_verify.'
-        );
+        /* This hook is deprecated and will be removed soon */
+        $sslVerify = apply_filters('fluentform_https_local_ssl_verify', false);
+        
         $args = array(
             'timeout' => 0.1,
             'blocking' => false,
             'body' => $data,
             'cookies' => wpFluentForm('request')->cookie(),
-            'sslverify' => apply_filters('fluentform/https_local_ssl_verify', false),
+            'sslverify' => apply_filters('fluentform/https_local_ssl_verify', $sslVerify),
         );
 
         $queryArgs = array(
@@ -140,16 +143,9 @@ class FluentFormAsyncRequest
         }
 
         if($originId && !empty($form) && !empty($submission)) {
-            do_action_deprecated(
-                'fluentform_global_notify_completed',
-                [
-                    $submission->id,
-                    $form
-                ],
-                FLUENTFORM_FRAMEWORK_UPGRADE,
-                'fluentform/global_notify_completed',
-                'Use fluentform/global_notify_completed instead of fluentform_global_notify_completed.'
-            );
+            /* This hook is deprecated and will be removed soon */
+            do_action('fluentform_global_notify_completed', $submission->id, $form);
+            
             do_action('fluentform/global_notify_completed', $submission->id, $form);
         }
     }
@@ -158,5 +154,70 @@ class FluentFormAsyncRequest
     {
         $formInputs = FormFieldsParser::getEntryInputs($form, ['admin_label', 'raw']);
         return FormDataParser::parseFormEntry($submission, $form, $formInputs);
+    }
+
+    public function process($queue)
+    {
+        if (is_numeric($queue)) {
+            $queue = wpFluent()->table($this->table)->where('status', 'pending')->find($queue);
+        }
+
+        if (!$queue || empty($queue->action)) {
+            return;
+        }
+
+        $action = $queue->action;
+        $feed = maybe_unserialize($queue->data);
+        $feed['scheduled_action_id'] = $queue->id;
+
+        if (isset(static::$submissionCache[$queue->origin_id])) {
+            $submission = static::$submissionCache[$queue->origin_id];
+        } else {
+            $submission = wpFluent()->table('fluentform_submissions')->find($queue->origin_id);
+            
+            static::$submissionCache[$submission->id] = $submission;
+        }
+
+        if (isset(static::$formCache[$submission->form_id])) {
+            $form = static::$formCache[$submission->form_id];
+        } else {
+            $form = wpFluent()->table('fluentform_forms')->find($submission->form_id);
+            
+            static::$formCache[$form->id] = $form;
+        }
+
+        if (isset(static::$entryCache[$submission->id])) {
+            $entry = static::$entryCache[$submission->id];
+        } else {
+            $entry = $this->getEntry($submission, $form);
+            
+            static::$entryCache[$submission->id] = $entry;
+        }
+
+        $formData = json_decode($submission->response, true);
+
+        wpFluent()->table($this->table)
+            ->where('id', $queue->id)
+            ->update([
+                'status' => 'processing',
+                'retry_count' => $queue->retry_count + 1,
+                'updated_at' => current_time('mysql')
+            ]);
+
+        do_action($action, $feed, $formData, $entry, $form);
+
+        $this->maybeFinished($submission->id, $form);
+    }
+
+    public function maybeFinished($originId, $form)
+    {
+        $pendingFeeds = wpFluent()->table($this->table)->where([
+            'status'    => 'pending',
+            'origin_id' => $originId
+        ])->get();
+
+        if (!$pendingFeeds) {
+            do_action('fluentform/global_notify_completed', $originId, $form);
+        }
     }
 }

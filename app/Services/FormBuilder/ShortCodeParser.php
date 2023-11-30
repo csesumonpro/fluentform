@@ -133,7 +133,7 @@ class ShortCodeParser
                 $value = wpFluentForm('request')->cookie($scookieProperty);
             } elseif (false !== strpos($matches[1], 'payment.')) {
                 $property = substr($matches[1], strlen('payment.'));
-                $value = apply_filters_deprecated(
+                $deprecatedValue = apply_filters_deprecated(
                     'fluentform_payment_smartcode',
                     [
                         '',
@@ -144,7 +144,8 @@ class ShortCodeParser
                     'fluentform/payment_smartcode',
                     'Use fluentform/payment_smartcode instead of fluentform_payment_smartcode.'
                 );
-                $value = apply_filters('fluentform/payment_smartcode', $value, $property, self::getInstance());
+
+                $value = apply_filters('fluentform/payment_smartcode', $deprecatedValue, $property, self::getInstance());
             } else {
                 $value = static::getOtherData($matches[1]);
             }
@@ -359,6 +360,9 @@ class ShortCodeParser
             return static::getUserAgent()->getBrowser();
         } elseif (in_array($key, ['all_data', 'all_data_without_hidden_fields'])) {
             $formFields = FormFieldsParser::getEntryInputs(static::getForm());
+            $inputLabels = FormFieldsParser::getAdminLabels(static::getForm(), $formFields);
+            $response = FormDataParser::parseFormSubmission(static::getEntry(), static::getForm(), $formFields, true);
+
             $status = apply_filters_deprecated(
                 'fluentform_all_data_skip_password_field',
                 [
@@ -368,12 +372,14 @@ class ShortCodeParser
                 'fluentform/all_data_skip_password_field',
                 'Use fluentform/all_data_skip_password_field instead of fluentform_all_data_skip_password_field.'
             );
+
             if (apply_filters('fluentform/all_data_skip_password_field', $status)) {
                 $passwords = FormFieldsParser::getInputsByElementTypes(static::getForm(), ['input_password']);
                 if (is_array($passwords) && ! empty($passwords)) {
-                    ArrayHelper::forget($formFields, array_keys($passwords));
+                    ArrayHelper::forget($response->user_inputs, array_keys($passwords));
                 }
             }
+
             $hideHiddenField = true;
             $hideHiddenField = apply_filters_deprecated(
                 'fluentform_all_data_without_hidden_fields',
@@ -390,23 +396,21 @@ class ShortCodeParser
             if ($skipHiddenFields) {
                 $hiddenFields = FormFieldsParser::getInputsByElementTypes(static::getForm(), ['input_hidden']);
                 if (is_array($hiddenFields) && ! empty($hiddenFields)) {
-                    ArrayHelper::forget($formFields, array_keys($hiddenFields));
+                    ArrayHelper::forget($response->user_inputs, array_keys($hiddenFields));
                 }
             }
 
-            $inputLabels = FormFieldsParser::getAdminLabels(static::getForm(), $formFields);
-            $response = FormDataParser::parseFormSubmission(static::getEntry(), static::getForm(), $formFields, true);
-
             $html = '<table class="ff_all_data" width="600" cellpadding="0" cellspacing="0"><tbody>';
-            foreach ($inputLabels as $key => $label) {
-                if (array_key_exists($key, $response->user_inputs) && '' !== ArrayHelper::get($response->user_inputs, $key)) {
-                    $data = ArrayHelper::get($response->user_inputs, $key);
+            foreach ($inputLabels as $inputKey => $label) {
+                if (array_key_exists($inputKey, $response->user_inputs) && '' !== ArrayHelper::get($response->user_inputs, $inputKey)) {
+                    $data = ArrayHelper::get($response->user_inputs, $inputKey);
                     if (is_array($data) || is_object($data)) {
                         continue;
                     }
                     $html .= '<tr class="field-label"><th style="padding: 6px 12px; background-color: #f8f8f8; text-align: left;"><strong>' . $label . '</strong></th></tr><tr class="field-value"><td style="padding: 6px 12px 12px 12px;">' . $data . '</td></tr>';
                 }
             }
+
             $html .= '</tbody></table>';
             $html = apply_filters_deprecated(
                 'fluentform_all_data_shortcode_html',
@@ -442,6 +446,13 @@ class ShortCodeParser
             return apply_filters('fluentform/shortcode_parser_callback_random_string', $value, $prefix, static::getInstance());
         }
 
+
+        // if it's multi line then just return
+        if (false !== strpos($key, PHP_EOL)) { // most probably it's a css
+            return '{' . $key . '}';
+        }
+
+
         $groups = explode('.', $key);
         if (count($groups) > 1) {
             $group = array_shift($groups);
@@ -456,11 +467,13 @@ class ShortCodeParser
                 'fluentform/smartcode_group_' . $group,
                 'Use fluentform/smartcode_group_' . $group . ' instead of fluentform_smartcode_group_' . $group
             );
-            $handlerValue = apply_filters('fluentform/smartcode_group_' . $group, $property, static::getInstance());
+
+            $handlerValue = apply_filters('fluentform/smartcode_group_' . $group, $handlerValue, static::getInstance());
             if ($handlerValue != $property) {
                 return $handlerValue;
             }
         }
+
         // This fallback actually
         $handlerValue = apply_filters_deprecated(
             'fluentform_shortcode_parser_callback_' . $key,
@@ -472,11 +485,14 @@ class ShortCodeParser
             'fluentform/shortcode_parser_callback_' . $key,
             'Use fluentform/shortcode_parser_callback_' . $key . ' instead of fluentform_shortcode_parser_callback_' . $key
         );
-        $handlerValue = apply_filters('fluentform/shortcode_parser_callback_' . $key, '{' . $key . '}', static::getInstance());
+
+
+        $handlerValue = apply_filters('fluentform/shortcode_parser_callback_' . $key, $handlerValue, static::getInstance());
 
         if ($handlerValue) {
             return $handlerValue;
         }
+
         return '';
     }
 

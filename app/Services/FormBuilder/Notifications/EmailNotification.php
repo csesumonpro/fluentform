@@ -96,23 +96,6 @@ class EmailNotification
 
         if (! $sendAddresses || ! $subject) {
             if ($entryId) {
-                do_action_deprecated(
-                    'ff_log_data',
-                    [
-                        [
-                            'parent_source_id' => $form->id,
-                            'source_type'      => 'submission_item',
-                            'source_id'        => $entryId,
-                            'component'        => 'EmailNotification',
-                            'status'           => 'error',
-                            'title'            => 'Email sending skipped',
-                            'description'      => "Email skipped to send because email/subject may not valid.<br />Subject: {$notification['subject']}. <br/>Email: " . implode(', ', $sendAddresses),
-                        ]
-                    ],
-                    FLUENTFORM_FRAMEWORK_UPGRADE,
-                    'fluentform/log_data',
-                    'Use fluentform/log_data instead of ff_log_data.'
-                );
                 do_action('fluentform/log_data', [
                     'parent_source_id' => $form->id,
                     'source_type'      => 'submission_item',
@@ -171,23 +154,6 @@ class EmailNotification
                 $failedMailSubject = ArrayHelper::get($error->error_data, 'wp_mail_failed.subject');
                 if ($failedMailSubject == $notification['subject']) {
                     $reason = $error->get_error_message();
-                    do_action_deprecated(
-                        'ff_log_data',
-                        [
-                            [
-                                'parent_source_id' => $form->id,
-                                'source_type'      => 'submission_item',
-                                'source_id'        => $entryId,
-                                'component'        => 'EmailNotification',
-                                'status'           => 'failed',
-                                'title'            => 'Email sending failed',
-                                'description'      => "Email Notification failed to sent.<br />Subject: {$notification['subject']}. <br/>Reason: " . $reason,
-                            ]
-                        ],
-                        FLUENTFORM_FRAMEWORK_UPGRADE,
-                        'fluentform/log_data',
-                        'Use fluentform/log_data instead of ff_log_data.'
-                    );
                     do_action('fluentform/log_data', [
                         'parent_source_id' => $form->id,
                         'source_type'      => 'submission_item',
@@ -202,32 +168,6 @@ class EmailNotification
         }
         $result = false;
         foreach ($sendAddresses as $address) {
-            do_action_deprecated(
-                'ff_log_data',
-                [
-                    [
-                        'parent_source_id' => $form->id,
-                        'source_type'      => 'submission_item',
-                        'source_id'        => $entryId,
-                        'component'        => 'EmailNotification',
-                        'status'           => 'info',
-                        'title'            => 'Email sending initiated',
-                        'description'      => 'Email Notification broadcasted to ' . $address . ".<br />Subject: {$subject}",
-                    ]
-                ],
-                FLUENTFORM_FRAMEWORK_UPGRADE,
-                'fluentform/log_data',
-                'Use fluentform/log_data instead of ff_log_data.'
-            );
-            do_action('fluentform/log_data', [
-                'parent_source_id' => $form->id,
-                'source_type'      => 'submission_item',
-                'source_id'        => $entryId,
-                'component'        => 'EmailNotification',
-                'status'           => 'info',
-                'title'            => 'Email sending initiated',
-                'description'      => 'Email Notification broadcasted to ' . $address . ".<br />Subject: {$subject}",
-            ]);
             $address =  apply_filters_deprecated(
                 'fluentform_email_to',
                 [
@@ -241,6 +181,17 @@ class EmailNotification
                 'Use fluentform/email_to instead of fluentform_email_to.'
             );
             $emailTo = apply_filters('fluentform/email_to', $address, $notification, $submittedData, $form);
+
+            do_action('fluentform/log_data', [
+                'parent_source_id' => $form->id,
+                'source_type'      => 'submission_item',
+                'source_id'        => $entryId,
+                'component'        => 'EmailNotification',
+                'status'           => 'info',
+                'title'            => 'Email sending initiated',
+                'description'      => 'Email Notification broadcasted to ' . $address . ".<br />Subject: {$subject}",
+            ]);
+
             $result = $this->broadCast([
                 'email'       => $emailTo,
                 'subject'     => $subject,

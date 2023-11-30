@@ -224,17 +224,6 @@ class Acl
 
         if (!wp_verify_nonce($nonce, $key)) {
             $message = __('Nonce verification failed, please try again.', 'fluentform');
-    
-            $message = apply_filters_deprecated(
-                'fluentform_nonce_error',
-                [
-                    $message
-                ],
-                FLUENTFORM_FRAMEWORK_UPGRADE,
-                'fluentform/nonce_error',
-                'Use fluentform/nonce_error instead of fluentform_nonce_error.'
-            );
-
             $message = apply_filters('fluentform/nonce_error', $message);
 
             wp_send_json_error([

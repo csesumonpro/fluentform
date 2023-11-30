@@ -66,7 +66,6 @@ export default {
             visible: false,
             fields: [
                 "Name Fields",
-                "Address Fields",
                 "Section Break",
                 "Shortcode",
                 "Action Hook",

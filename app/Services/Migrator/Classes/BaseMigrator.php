@@ -1469,6 +1469,19 @@ abstract class BaseMigrator
                 }
                 unset($metas['confirmations']);
             }
+
+            //when have webhooks
+            if ($webhooks = ArrayHelper::get($metas, 'webhooks')) {
+                \FluentForm\App\Models\FormMeta::remove($formId, 'fluentform_webhook_feed');
+                foreach ($webhooks as $webhook) {
+                    \FluentForm\App\Models\FormMeta::create([
+                        'form_id'  => $formId,
+                        'meta_key' => 'fluentform_webhook_feed',
+                        'value'    => json_encode($webhook)
+                    ]);
+                }
+                unset($metas['webhooks']);
+            }
             foreach ($metas as $metaKey => $metaData) {
                 (new \FluentForm\App\Modules\Form\Form(wpFluentForm()))->updateMeta($formId, $metaKey, $metaData);
             }
@@ -1636,6 +1649,16 @@ abstract class BaseMigrator
                 'created_at'    => $created_at ?: current_time('mysql'),
                 'updated_at'    => $updated_at ?: current_time('mysql')
             ];
+
+            if ($is_favourite = ArrayHelper::get($entry, 'is_favourite')) {
+                $insertData['is_favourite'] = $is_favourite;
+                ArrayHelper::forget($entry, 'is_favourite');
+            }
+            if ($status = ArrayHelper::get($entry, 'status')) {
+                $insertData['status'] = $status;
+                ArrayHelper::forget($entry, 'status');
+            }
+
             $insertId = wpFluent()->table('fluentform_submissions')->insertGetId($insertData);
 
             $uidHash = md5(wp_generate_uuid4() . $insertId);
@@ -1705,6 +1728,36 @@ abstract class BaseMigrator
             }
         }
         return $values;
+    }
+
+    protected function getResolveOperator($key)
+    {
+        return ArrayHelper::get([
+            'equal'            => '=',
+            'is'               => '=',
+            '=='               => '=',
+            'e'                => '=',
+            'not_equal'        => '!=',
+            'isnot'            => '!=',
+            '!='               => '!=',
+            '!e'               => '!=',
+            'greater_than'     => '>',
+            '>'                => '>',
+            'greater_or_equal' => '>=',
+            '>='               => '>=',
+            'less_than'        => '<',
+            '<'                => '<',
+            'less_or_equal'    => '<=',
+            '<='               => '<=',
+            'starts_with'      => 'startsWith',
+            '^'                => 'startsWith',
+            'ends_with'        => 'endsWith',
+            '~'                => 'endsWith',
+            'contains'         => 'contains',
+            'c'                => 'contains',
+            '!c'               => 'doNotContains',
+            'not_contains'     => 'doNotContains'
+        ], $key);
     }
 
 }

@@ -75,6 +75,20 @@ class FormBuilder
             $formClass .= ' ' . $extraFormClass;
         }
 
+        $themeStyle = ArrayHelper::get($atts, 'theme');
+
+        if (!$themeStyle) {
+            $selectedStyle = Helper::getFormMeta($form->id, '_ff_selected_style');
+
+            $selectedStyle = $selectedStyle ? $selectedStyle : 'ffs_default';
+
+            $themeStyle = $selectedStyle;
+
+            $atts['theme'] = $selectedStyle;
+        }
+
+        $form->theme = $themeStyle;
+
         $formBody = $this->buildFormBody($form);
 
         if (strpos($formBody, '{dynamic.')) {
@@ -99,6 +113,10 @@ class FormBuilder
             $formClass .= ' fluentform_has_payment';
         }
 
+        if ($themeStyle) {
+            $formClass .= ' ' . $themeStyle;
+        }
+
         $data = [
             'data-form_id'       => $form->id,
             'id'                 => 'fluentform_' . $form->id,
@@ -114,17 +132,25 @@ class FormBuilder
                 $form
             ],
             FLUENTFORM_FRAMEWORK_UPGRADE,
-            'fluentform/form_html_attributes',
-            'Use fluentform/form_html_attributes instead of fluent_form_html_attributes.'
+            'fluentform/html_attributes',
+            'Use fluentform/html_attributes instead of fluent_form_html_attributes.'
         );
 
-        $formAttributes = apply_filters('fluentform/form_html_attributes', $data, $form);
+        $formAttributes = apply_filters('fluentform/html_attributes', $data, $form);
 
         $formAtts = $this->buildAttributes($formAttributes);
+      
 
+        $wrapperClasses = trim('fluentform ff-default fluentform_wrapper_' . $form->id . ' ' . ArrayHelper::get($atts, 'css_classes'));
+
+        if ($themeStyle === 'ffs_inherit_theme') {
+            $wrapperClasses = str_replace("ff-default", "ff-inherit-theme-style", $wrapperClasses);
+        } else if ($themeStyle) {
+            $wrapperClasses .= ' ' . $themeStyle . '_wrap';
+        }
+
+        $wrapperClasses = apply_filters('fluentform/form_wrapper_classes', $wrapperClasses, $form);
         ob_start();
-
-        $wrapperClasses = trim('fluentform fluentform_wrapper_' . $form->id . ' ' . ArrayHelper::get($atts, 'css_classes'));
 
         echo "<div class='" . esc_attr($wrapperClasses) . "'>";
 
@@ -137,9 +163,8 @@ class FormBuilder
             'fluentform/before_form_render',
             'Use fluentform/before_form_render instead of fluentform_before_form_render.'
         );
-
-        do_action('fluentform/before_form_render', $form);
-
+        
+        do_action('fluentform/before_form_render', $form, $atts);
         echo '<form ' . $formAtts . '>'; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- $formAtts is escaped before being passed in.
     
         $isAccessible = apply_filters_deprecated(
@@ -157,17 +182,10 @@ class FormBuilder
         if ($isAccessible) {
             echo $this->fieldsetHtml($form);
         }
-
-        do_action_deprecated(
-            'fluentform_form_element_start',
-            [
-                $form
-            ],
-            FLUENTFORM_FRAMEWORK_UPGRADE,
-            'fluentform/form_element_start',
-            'Use fluentform/form_element_start instead of fluentform_form_element_start.'
-        );
-
+        
+        /* This hook is deprecated & will be removed soon */
+        do_action('fluentform_form_element_start', $form);
+        
         do_action('fluentform/form_element_start', $form);
 
         echo "<input type='hidden' name='__fluent_form_embded_post_id' value='" . get_the_ID() . "' />";
@@ -242,8 +260,8 @@ class FormBuilder
                     $form
                 ],
                 FLUENTFORM_FRAMEWORK_UPGRADE,
-                'fluentform_render_item_' . $item['element'],
-                'Use fluentform_render_item_' . $item['element'] . ' instead of fluentform_render_item_' . $item['element']
+                'fluentform/render_item_' . $item['element'],
+                'Use fluentform/render_item_' . $item['element'] . ' instead of fluentform_render_item_' . $item['element']
             );
 
             do_action('fluentform/render_item_' . $item['element'], $item, $form);
@@ -426,6 +444,9 @@ class FormBuilder
             $rules = $item['settings']['validation_rules'];
             foreach ($rules as $ruleName => $rule) {
                 if (isset($rule['message'])) {
+                    if (isset($rule['global']) && $rule['global']) {
+                        $rule['message'] = apply_filters('fluentform/get_global_message_' . $ruleName, $rule['message']);
+                    }
                     $rules[$ruleName]['message'] = apply_filters_deprecated(
                         'fluentform_validation_message_' . $ruleName,
                         [
@@ -438,17 +459,17 @@ class FormBuilder
                     );
                     $rules[$ruleName]['message'] = apply_filters('fluentform/validation_message_' . $ruleName, $rule['message'], $item);
 
-                    apply_filters_deprecated(
+                    $rules[$ruleName]['message'] = apply_filters_deprecated(
                         'fluentform_validation_message_' . $item['element'] . '_' . $ruleName,
                         [
-                            $rule['message'],
+                            $rules[$ruleName]['message'],
                             $item
                         ],
                         FLUENTFORM_FRAMEWORK_UPGRADE,
                         'fluentform/validation_message_' . $item['element'] . '_' . $ruleName,
                         'Use fluentform/validation_message_' . $item['element'] . '_' . $ruleName . ' instead of fluentform_validation_message_' . $item['element'] . '_' . $ruleName
                     );
-                    $rules[$ruleName]['message'] = apply_filters('fluentform/validation_message_' . $item['element'] . '_' . $ruleName, $rule['message'], $item);
+                    $rules[$ruleName]['message'] = apply_filters('fluentform/validation_message_' . $item['element'] . '_' . $ruleName, $rules[$ruleName]['message'], $item);
                 }
             }
     
@@ -546,9 +567,8 @@ class FormBuilder
      */
     private function fieldsetHtml($form)
     {
-        return '<fieldset style="border: none!important;margin: 0!important;padding: 0!important;background-color: transparent!important;
-                                 box-shadow: none!important;outline: none!important; min-inline-size: auto;">
-                    <legend class="ff_screen_reader_title" style="display: block; margin: 0!important;padding: 0!important;height: 0!important;text-indent: -999999px;width: 0!important;">'
+        return '<fieldset  style="border: none!important;margin: 0!important;padding: 0!important;background-color: transparent!important;box-shadow: none!important;outline: none!important; min-inline-size: 100%;">
+                    <legend class="ff_screen_reader_title" style="display: block; margin: 0!important;padding: 0!important;height: 0!important;text-indent: -999999px;width: 0!important;overflow:hidden;">'
                             .$form->title.
                     '</legend>';
     }

@@ -125,21 +125,21 @@ class Select extends BaseComponent
         } elseif (! empty($data['attributes']['placeholder'])) {
             $opts .= '<option value="">' . wp_strip_all_tags($data['attributes']['placeholder']) . '</option>';
         }
-
         foreach ($formattedOptions as $option) {
             if (in_array($option['value'], $defaultValues)) {
                 $selected = 'selected';
             } else {
                 $selected = '';
             }
-
+    
             $atts = [
                 'data-calc_value'        => ArrayHelper::get($option, 'calc_value'),
                 'data-custom-properties' => ArrayHelper::get($option, 'calc_value'),
                 'value'                  => ArrayHelper::get($option, 'value'),
+                'disabled'               => ArrayHelper::get($option, 'disabled') ? 'disabled' : ''
             ];
-
-            $opts .= '<option ' . $this->buildAttributes($atts) . " {$selected}>" . wp_strip_all_tags($option['label']) . '</option>';
+            
+            $opts .= '<option '. $this->buildAttributes($atts) . " {$selected}>" . wp_strip_all_tags($option['label']) . '</option>';
         }
 
         return $opts;

@@ -7,14 +7,14 @@
             <div class="quiz-field-setting">
                 {{ original_input.label }}
             </div>
-            <div class="quiz-field-setting"  v-if="input.enabled == true && hasOptions(input)" >
+            <div class="quiz-field-setting"  v-if="input.enabled == true && hasOptions(input) && !is_personality_quiz" >
                 <el-checkbox true-label="yes" false-label="no" v-model="input.has_advance_scoring">
                     {{ $t('Advance Scoring') }}
                 </el-checkbox>
             </div>
         </div>
         <transition name="slide-down">
-            <div v-if="input.enabled == true && input.has_advance_scoring == 'no'" class="quiz-field">
+            <div v-if="input.enabled == true && input.has_advance_scoring == 'no' && !is_personality_quiz" class="quiz-field">
                 <div class="quiz-field-setting">
                     <div class="lead-title mb-2">{{ $t('Score') }}</div>
                     <el-input-number size="small" v-model="input.points" controls-position="right" :min="1" :max="100"></el-input-number>
@@ -44,14 +44,14 @@
                         default-first-option
                         :automatic-dropdown=false
                         :placeholder="$t('Type your Answers')">
-                        
+
                         <el-option
                             v-for="(item, key) in original_input.options"
                             :key="key"
                             :label="item"
                             :value="key"> {{ item }}
                         </el-option>
-                    
+
                     </el-select>
                 </div>
                 <div class="quiz-field-setting" v-else-if="isRadioInput(input.element)">
@@ -73,8 +73,8 @@
             <div>
                 <span v-for="(item, key) in original_input.options" class="quiz-field" :key="key">
                     <div  class="quiz-field-setting">
-                       <el-input-number 
-                            size="small" 
+                       <el-input-number
+                            size="small"
                             v-model="input.advance_points[key]"
                             controls-position="right"
                             :min="0" :max="100">
@@ -98,6 +98,9 @@ export default {
         },
         original_input :{
             type: Object,
+        },
+        is_personality_quiz :{
+            type: Boolean,
         }
     },
     data() {

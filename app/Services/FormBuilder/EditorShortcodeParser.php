@@ -42,7 +42,7 @@ class EditorShortcodeParser
         'browser.name'     => 'parseBrowserProperties',
         'browser.platform' => 'parseBrowserProperties',
 
-        'get.param_name'           => 'parseQueryParam',
+        'get.param_name'           => 'parseRequestParam',
         'random_string.param_name' => 'parseRandomString',
     ];
 
@@ -75,7 +75,7 @@ class EditorShortcodeParser
             }
 
             if (false !== strpos($handler, 'get.')) {
-                return static::parseQueryParam($handler);
+                return static::parseRequestParam($handler);
             }
             if (false !== strpos($handler, 'random_string.')) {
                 return static::parseRandomString($handler);
@@ -139,38 +139,44 @@ class EditorShortcodeParser
             }
 
             $handlerArray = explode('.', $handler);
-            $handler = '{' . $handler . '}';
+
             if (count($handlerArray) > 1) {
                 // it's a grouped handler
                 $group = array_shift($handlerArray);
-                $handler = apply_filters_deprecated(
-                    'fluentform_editor_shortcode_callback_group_' . $group,
-                    [
-                        $handler,
-                        $form,
-                        $handlerArray
-                    ],
-                    FLUENTFORM_FRAMEWORK_UPGRADE,
-                    'fluentform/editor_shortcode_callback_group_' . $group,
-                    'Use fluentform/editor_shortcode_callback_group_' . $group . ' instead of fluentform_editor_shortcode_callback_group_' . $group
-                );
-                return apply_filters('fluentform/editor_shortcode_callback_group_' . $group, $handler, $form, $handlerArray);
+                $parsedValue = apply_filters('fluentform_editor_shortcode_callback_group_' . $group, '{' . $handler . '}', $form, $handlerArray);
+                return apply_filters('fluentform/editor_shortcode_callback_group_' . $group, $parsedValue, $form, $handlerArray);
             }
-    
-            $handler = apply_filters_deprecated(
-                'fluentform_editor_shortcode_callback_' . $handler,
-                [
-                    $handler, $form
-                ],
-                FLUENTFORM_FRAMEWORK_UPGRADE,
-                'fluentform/editor_shortcode_callback_' . $handler,
-                'Use fluentform/editor_shortcode_callback_' . $handler . ' instead of fluentform_editor_shortcode_callback_' . $handler
-            );
 
-            return apply_filters('fluentform/editor_shortcode_callback_' . $handler, $handler, $form);
+            $parsedValue = apply_filters('fluentform_editor_shortcode_callback_' . $handler, '{' . $handler . '}', $form);
+            return apply_filters('fluentform/editor_shortcode_callback_' . $handler, $parsedValue, $form);
         }
 
         return $filteredValue;
+    }
+
+    /**
+     * Parse request query param.
+     *
+     * @param string    $value
+     * @param \stdClass $form
+     *
+     * @return string
+     */
+    public static function parseRequestParam($value)
+    {
+        $exploded = explode('.', $value);
+        $param = array_pop($exploded);
+        $value = wpFluentForm('request')->get($param);
+
+        if (! $value) {
+            return '';
+        }
+
+        if (is_array($value)) {
+            return esc_attr(implode(', ', $value));
+        }
+
+        return esc_attr($value);
     }
 
     /**
@@ -389,6 +395,8 @@ class EditorShortcodeParser
     {
         $exploded = explode('.', $value);
         $prefix = array_pop($exploded);
-        return $prefix . uniqid();
+        $value = $prefix . uniqid();
+
+        return apply_filters('fluentform/shortcode_parser_callback_random_string', $value, $prefix, new static());
     }
 }

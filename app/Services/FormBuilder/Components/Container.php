@@ -45,8 +45,8 @@ class Container extends BaseComponent
                 $form
             ],
             FLUENTFORM_FRAMEWORK_UPGRADE,
-            'fluentform_rendering_field_data_' . $elementName,
-            'Use fluentform_rendering_field_data_' . $elementName . ' instead of fluentform_rendering_field_data_' . $elementName
+            'fluentform/rendering_field_data_' . $elementName,
+            'Use fluentform/rendering_field_data_' . $elementName . ' instead of fluentform_rendering_field_data_' . $elementName
         );
 
         $data = apply_filters('fluentform/rendering_field_data_' . $elementName, $data, $form);

@@ -45,7 +45,13 @@ class ValidationRuleParser
     protected function explodeRules($rules)
     {
         foreach ($rules as $attribute => $rule) {
-            if (mb_strpos($attribute, '*') !== false) {
+
+            if(function_exists('mb_strpos')) {
+                $result = mb_strpos($attribute, '*');
+            } else {
+                $result = strpos($attribute, '*');
+            }
+            if ($result) {
                 $rules = $this->explodeWildcardRules($rules, $attribute, [$rule]);
 
                 unset($rules[$attribute]);
