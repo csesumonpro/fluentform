@@ -329,6 +329,10 @@
       margin-left: 0;
     }
   }
+  .ff-form-item-flex{
+    flex-wrap: wrap;
+    gap: 10px;
+  }
 }
 
 .el-popover {

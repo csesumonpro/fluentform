@@ -117,10 +117,3 @@
         ?>
 	</div>
 </div>
-
-<script>
-	let targetElem = jQuery('.ff_settings_sidebar_wrap');
-		jQuery('.ff_sidebar_toggle').on('click', function() {
-			targetElem.toggleClass('active');
-		});
-</script>
