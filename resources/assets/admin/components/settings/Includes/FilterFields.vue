@@ -19,7 +19,7 @@
                 <el-col :md="8">
                     <div class="mb-2">
                         <el-select v-model="items[key].field" style="width: 100%" @change="items[key].value = ''">
-                            <el-option 
+                            <el-option
                                 v-for="(field, key) in fields" :key="key"
                                 :label="field.admin_label" :value="key"
                             ></el-option>
@@ -33,7 +33,8 @@
                             <el-option-group :label="$t('General Operators')">
                                 <el-option value="=" :label="$t('equal')"></el-option>
                                 <el-option value="!=" :label="$t('not equal')"></el-option>
-                                <template v-if="fields[logic.field] && !Object.keys(fields[logic.field].options).length">
+                                <!-- @todo : refactor quiz module -->
+                                <template v-if="(fields[logic.field] && !Object.keys(fields[logic.field].options).length) || fields[logic.field].element === 'quiz_score'  ">
                                     <el-option value=">" :label="$t('greater than')"></el-option>
                                     <el-option value="<" :label="$t('less than')"></el-option>
                                     <el-option value=">=" :label="$t('greater than or equal')"></el-option>
@@ -60,7 +61,8 @@
                             <el-input type="number" step="1" :placeholder="('Enter length in number')" v-model="items[key].value" />
                         </template>
                         <template v-else>
-                            <el-select v-if="fields[logic.field] && Object.keys(fields[logic.field].options).length"
+                            <!-- @todo : refactor quiz module -->
+                            <el-select v-if="fields[logic.field] && Object.keys(fields[logic.field].options).length && fields[logic.field].element != 'quiz_score' "
                                     v-model="items[key].value" style="width: 100%">
                                 <el-option v-for="(label, value) in fields[logic.field].options" :key="value"
                                         :label="label" :value="value"
