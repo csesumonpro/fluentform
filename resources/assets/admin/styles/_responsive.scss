@@ -103,6 +103,7 @@
 
 @media (max-width: 768px) {
   .form_internal_menu {
+    margin-left: -10px;
     ul.ff_setting_menu {
       float: right;
       padding-right: 10px !important;
@@ -248,9 +249,27 @@
   .ff_sidebar_toggle{
    display: flex; 
   }
+  .ff_header{
+    margin-left: -10px;
+    position: relative;
+    .global-search-menu-button{
+      position: absolute;
+      top: 12px;
+      right: 60px;
+    }
+  }
 }
 
 @media (max-width: 425px) {
+  label.el-checkbox{
+    display: inline-flex;
+  }
+  .el-checkbox__label{
+    white-space: initial;
+  }
+  .el-checkbox__input{
+    line-height: 1.6;
+  }
   .wrap.ff_form_wrap.ff_screen_editor .form_internal_menu .ff-navigation-right {
     margin-right: 0;
     button, a, span {
@@ -267,11 +286,6 @@
   }
 
   .form_internal_menu {
-    // position: relative;
-    // display: block !important;
-    // background: white;
-    // overflow: hidden;
-    // top: 0 !important;
     margin: 0 -10px;
     width: auto;
     ul.ff_setting_menu {
@@ -293,13 +307,6 @@
 
   ul.el-pager {
     display: none !important;
-  }
-
-  .ff_settings_wrapper {
-    //min-width: 600px;
-  }
-  .ff_form_wrap .ff_form_wrap_area {
-    overflow: scroll;
   }
   button.el-button.pull-right {
     float: left !important;

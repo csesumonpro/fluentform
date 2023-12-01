@@ -428,17 +428,15 @@ a.lead-text{
       justify-content: space-between;
     }
     .plugin-name {
-      //margin-right: 32px;
       height: 30px;
       img {
         height: 100%;
       }
     }
   .global-search-menu-button {
-    //color: #9A9FA5;
     color: #3c3c3cb3;
     background-color: transparent;
-    padding: 0 5px;
+    padding: 0 0 0 5px;
     display: inline-block;
     font-size: 15px;
     font-weight: normal;
@@ -1139,6 +1137,12 @@ label.el-radio, label.el-checkbox {
   &.reverse{
     flex-direction: row-reverse;
     justify-content: flex-end;
+  }
+}
+
+.ff-form-setting-label-width{
+  .el-form-item__label{
+    width: 390px;
   }
 }
 
