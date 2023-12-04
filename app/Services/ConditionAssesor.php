@@ -49,6 +49,10 @@ class ConditionAssesor
             
             $inputValue = Arr::get($inputs, $accessor);
 
+            if ($inputValue === null) {
+                return false;
+            }
+
             switch ($conditional['operator']) {
                 case '=':
                     if(is_array($inputValue)) {
