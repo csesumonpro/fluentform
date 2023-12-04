@@ -32,11 +32,7 @@ use FluentForm\Framework\Helpers\ArrayHelper;
             ?>
             <div class="ff_settings_sidebar ff_layout_section_sidebar">
                 <ul class="ff_settings_list ff_list_button">
-<<<<<<<< HEAD:app/Views/admin/globalSettings/global_settings.php
-                    <li class="ff_list_button_item has_sub_menu">
-========
                     <li class="ff_list_button_item has_sub_menu ">
->>>>>>>> release:app/Views/admin/globalSettings/menu.php
                         <a
                             class="ff_list_button_link"
                             href="#">

@@ -31,8 +31,13 @@
                                 <template slot-scope="scope">
                                     <el-table  v-if="scope.row.details" :data="formatTableData(scope.row.details, scope.row.quantity)" border style="width: 100%">
                                         <el-table-column prop="name" label="Name"  />
-                                        <el-table-column prop="used_count" label="Used Count"  />
-                                        <el-table-column prop="remaining" label="Remaining" />
+                                        <el-table-column prop="total" label="Total"  />
+                                        <el-table-column prop="stock" label="Stock" >
+                                            <template slot-scope="scope">
+                                                <span v-html="stockFormatHtml(scope.row.stock)"></span>
+                                            </template>
+                                        </el-table-column>
+
                                     </el-table>
                                     <span v-else>
                                       <div class="text-center">   No data available yet </div>
@@ -355,22 +360,31 @@
                 let sum =
                     {
                         'name': 'Total',
-                        'used_count': 0,
-                        'remaining': 0,
+                        'total': 0,
+                        'stock': 0,
                     };
                 for (const [name, used_count] of Object.entries(usedItems)) {
                     let item = {
                         'name': name,
-                        'used_count': parseInt(used_count),
-                        'remaining': parseInt(totalQuantity) - parseInt(used_count),
+                        'total': parseInt(totalQuantity),
+                        'stock': parseInt(totalQuantity) - parseInt(used_count),
                     }
                     items.push(item);
-                    sum.used_count += item.used_count;
-                    sum.remaining += item.remaining;
+                    sum.total += item.total;
+                    sum.stock += item.stock;
                 }
                 items.push(sum)
                 return items;
+            },
+            stockFormatHtml(stock){
+                const inStock = this.$t('In Stock');
+                const outOfStock =  this.$t('Out of Stock');
+
+                return stock > 0
+                    ? `<span class="text-success">${inStock}</span><span> (${stock})</span>`
+                    : `<span class="text-danger">${outOfStock}</span><span> (${stock})</span>`;
             }
+
         },
         computed: {
             pagedTableData() {
