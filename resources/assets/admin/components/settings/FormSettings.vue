@@ -213,7 +213,7 @@
                                             </el-tooltip>
                                         </template>
 
-                                        <el-select class="ff_input_width" v-model="admin_approval.email_field" :placeholder="$t('Select an email field')">
+                                        <el-select class="ff_input_width" clearable v-model="admin_approval.email_field" :placeholder="$t('Select an email field')">
                                             <el-option
                                                     v-for="(item, index) in emailFields"
                                                     :key="index"
@@ -269,12 +269,13 @@
                                             <p class="mt-2 fs-14">{{ $t('Use #confirmation_url# smartcode for double optin confirmation URL') }}</p>
                                         </el-form-item>
 
-                                        <div class="form_item">
-                                            <el-checkbox true-label="yes" false-label="no" v-model="admin_approval.skip_if_logged_in">
-                                                {{ $t('Disable Admin Approval for Logged in users') }}
-                                            </el-checkbox>
-                                        </div>
+
                                     </template>
+                                    <div class="form_item">
+                                        <el-checkbox true-label="yes" false-label="no" v-model="admin_approval.skip_if_logged_in">
+                                            {{ $t('Disable Admin Approval for Logged in users') }}
+                                        </el-checkbox>
+                                    </div>
                                 </el-col>
 
                             </el-row>
