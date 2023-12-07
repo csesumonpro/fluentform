@@ -1123,7 +1123,10 @@ class TranslationString
             'No Active Payment Method Found.Please configure from Fluent Forms Settings' => __('No Active Payment Method Found. Please configure from Fluent Forms Settings', 'fluentform'),
             'Layout Type' => __('Layout Type', 'fluentform'),
             'Captcha has been enabled globally' => __('Captcha has been enabled globally', 'fluentform'),
-            'Auto Width' => __('Auto Width', 'fluentform')
+            'Auto Width' => __('Auto Width', 'fluentform'),
+            'Error Message' => __('Error Message', 'fluentform'),
+            'Custom' => __('Custom', 'fluentform'),
+            'Global' => __('Global', 'fluentform'),
         );
 
         return apply_filters('fluentform/editor_i18n', $i18n);

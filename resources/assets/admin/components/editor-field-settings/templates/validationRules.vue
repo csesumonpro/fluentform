@@ -16,21 +16,23 @@
 
             <transition name="slide-fade">
                 <div v-if="validation_rules[key].value" class="ff_validation_rule_error_choice">
-                   <div class="ff_validation_rule_error_label_wrap">
-                       <label class="el-form-item__label">
-                           Error Message
-                           <el-tooltip popper-class="ff_tooltip_wrap" :content="`${$t('This message will be shown if validation fails for')} ${repoItem.label}`" placement="top">
-                               <i class="tooltip-icon el-icon-info"></i>
-                           </el-tooltip>
-                       </label>
-                       <el-switch
-                               class="ff-switch-sm"
-                               active-text="Global"
-                               inactive-text="Custom"
-                               inactive-color="#409eff"
-                               v-model="validation_rules[key].global"
-                       />
-                   </div>
+                    <div class="ff_validation_rule_error_label_wrap">
+                        <label class="el-form-item__label">
+                            <span v-if="validation_rules[key].global == true "> {{$t('Global')}} </span>
+                            <span v-else> {{$t('Custom')}} </span>
+                            {{$t('Error Message')}}
+                            <el-tooltip popper-class="ff_tooltip_wrap"
+                                        :content="`${$t('This message will be shown if validation fails for')} ${repoItem.label}. Configure Global Message from: Global settings > Validation Messages`"
+                                        placement="top">
+                                <i class="tooltip-icon el-icon-info"></i>
+                            </el-tooltip>
+                        </label>
+                        <el-switch
+                                class="ff-switch-sm"
+                                inactive-color="#409eff"
+                                v-model="validation_rules[key].global"
+                        />
+                    </div>
                     <transition name="slide-fade">
                         <div style="max-height: 60px;">
                             <el-form-item>
